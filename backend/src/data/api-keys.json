@@ -1,0 +1,5 @@
+[
+  { "keyId": "k-basic", "key": "basic-key-123", "userId": "u-basic", "active": true, "label": "basic default" },
+  { "keyId": "k-premium", "key": "premium-key-123", "userId": "u-premium", "active": true, "label": "premium default" },
+  { "keyId": "k-admin", "key": "admin-key-123", "userId": "u-admin", "active": true, "label": "admin default" }
+]

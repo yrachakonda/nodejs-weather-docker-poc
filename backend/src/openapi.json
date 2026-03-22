@@ -1,0 +1,16 @@
+{
+  "openapi": "3.0.3",
+  "info": {
+    "title": "Weather Simulation API",
+    "version": "1.0.0"
+  },
+  "servers": [{ "url": "/api/v1" }],
+  "paths": {
+    "/auth/register": { "post": { "summary": "Register", "responses": { "201": { "description": "Created" } } } },
+    "/auth/login": { "post": { "summary": "Login", "responses": { "200": { "description": "OK" } } } },
+    "/auth/logout": { "post": { "summary": "Logout", "responses": { "200": { "description": "OK" } } } },
+    "/auth/me": { "get": { "summary": "Me", "responses": { "200": { "description": "OK" } } } },
+    "/weather/current": { "get": { "summary": "Current weather", "parameters": [{"name":"city","in":"query","schema":{"type":"string"}}], "responses": { "200": { "description": "OK" } } } },
+    "/weather/premium/forecast": { "get": { "summary": "Premium forecast", "parameters": [{"name":"city","in":"query","schema":{"type":"string"}}], "responses": { "200": { "description": "OK" }, "403": {"description":"Premium required"} } } }
+  }
+}

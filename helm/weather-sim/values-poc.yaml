@@ -1,0 +1,4 @@
+ingress:
+  host: poc.weather.example.com
+cloudWatch:
+  logGroup: /weather-sim/poc/app

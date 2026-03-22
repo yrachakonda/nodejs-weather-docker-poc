@@ -1,0 +1,4 @@
+ingress:
+  enabled: false
+env:
+  NODE_ENV: development

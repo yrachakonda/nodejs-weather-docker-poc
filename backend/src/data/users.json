@@ -1,0 +1,5 @@
+[
+  { "id": "u-admin", "username": "admin", "passwordHash": "$2a$10$QfBHQfTnR6QW2uSUr6oKfOJfliS4vSI0RQ4kgvJ4dlYh3sPsh7L.O", "role": "admin", "isPremium": true },
+  { "id": "u-basic", "username": "basicuser", "passwordHash": "$2a$10$QfBHQfTnR6QW2uSUr6oKfOJfliS4vSI0RQ4kgvJ4dlYh3sPsh7L.O", "role": "basic", "isPremium": false },
+  { "id": "u-premium", "username": "premiumuser", "passwordHash": "$2a$10$QfBHQfTnR6QW2uSUr6oKfOJfliS4vSI0RQ4kgvJ4dlYh3sPsh7L.O", "role": "premium", "isPremium": true }
+]

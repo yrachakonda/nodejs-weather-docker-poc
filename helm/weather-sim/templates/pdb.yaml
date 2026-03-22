@@ -1,0 +1,8 @@
+apiVersion: policy/v1
+kind: PodDisruptionBudget
+metadata:
+  name: weather-sim-api
+spec:
+  minAvailable: 1
+  selector:
+    matchLabels: { app: weather-sim-api }

@@ -1,0 +1,4 @@
+ingress:
+  host: qa.weather.example.com
+cloudWatch:
+  logGroup: /weather-sim/qa/app

@@ -1,0 +1,802 @@
+[
+  {
+    "city": "Seattle",
+    "date": "2026-01-01",
+    "condition": "Sunny",
+    "temperatureC": 0,
+    "humidity": 35,
+    "windKph": 5
+  },
+  {
+    "city": "New York",
+    "date": "2026-01-02",
+    "condition": "Cloudy",
+    "temperatureC": 3,
+    "humidity": 36,
+    "windKph": 6
+  },
+  {
+    "city": "Chicago",
+    "date": "2026-01-03",
+    "condition": "Rain",
+    "temperatureC": 6,
+    "humidity": 37,
+    "windKph": 7
+  },
+  {
+    "city": "Austin",
+    "date": "2026-01-04",
+    "condition": "Windy",
+    "temperatureC": 9,
+    "humidity": 38,
+    "windKph": 8
+  },
+  {
+    "city": "Miami",
+    "date": "2026-01-05",
+    "condition": "Storm",
+    "temperatureC": 12,
+    "humidity": 39,
+    "windKph": 9
+  },
+  {
+    "city": "Denver",
+    "date": "2026-01-06",
+    "condition": "Fog",
+    "temperatureC": 15,
+    "humidity": 40,
+    "windKph": 10
+  },
+  {
+    "city": "San Diego",
+    "date": "2026-01-07",
+    "condition": "Sunny",
+    "temperatureC": 18,
+    "humidity": 41,
+    "windKph": 11
+  },
+  {
+    "city": "Boston",
+    "date": "2026-01-08",
+    "condition": "Cloudy",
+    "temperatureC": 21,
+    "humidity": 42,
+    "windKph": 12
+  },
+  {
+    "city": "Portland",
+    "date": "2026-01-09",
+    "condition": "Rain",
+    "temperatureC": 24,
+    "humidity": 43,
+    "windKph": 13
+  },
+  {
+    "city": "Atlanta",
+    "date": "2026-01-10",
+    "condition": "Windy",
+    "temperatureC": 27,
+    "humidity": 44,
+    "windKph": 14
+  },
+  {
+    "city": "Seattle",
+    "date": "2026-01-11",
+    "condition": "Storm",
+    "temperatureC": 30,
+    "humidity": 45,
+    "windKph": 15
+  },
+  {
+    "city": "New York",
+    "date": "2026-01-12",
+    "condition": "Fog",
+    "temperatureC": 33,
+    "humidity": 46,
+    "windKph": 16
+  },
+  {
+    "city": "Chicago",
+    "date": "2026-01-13",
+    "condition": "Sunny",
+    "temperatureC": 1,
+    "humidity": 47,
+    "windKph": 17
+  },
+  {
+    "city": "Austin",
+    "date": "2026-01-14",
+    "condition": "Cloudy",
+    "temperatureC": 4,
+    "humidity": 48,
+    "windKph": 18
+  },
+  {
+    "city": "Miami",
+    "date": "2026-01-15",
+    "condition": "Rain",
+    "temperatureC": 7,
+    "humidity": 49,
+    "windKph": 19
+  },
+  {
+    "city": "Denver",
+    "date": "2026-01-16",
+    "condition": "Windy",
+    "temperatureC": 10,
+    "humidity": 50,
+    "windKph": 20
+  },
+  {
+    "city": "San Diego",
+    "date": "2026-01-17",
+    "condition": "Storm",
+    "temperatureC": 13,
+    "humidity": 51,
+    "windKph": 21
+  },
+  {
+    "city": "Boston",
+    "date": "2026-01-18",
+    "condition": "Fog",
+    "temperatureC": 16,
+    "humidity": 52,
+    "windKph": 22
+  },
+  {
+    "city": "Portland",
+    "date": "2026-01-19",
+    "condition": "Sunny",
+    "temperatureC": 19,
+    "humidity": 53,
+    "windKph": 23
+  },
+  {
+    "city": "Atlanta",
+    "date": "2026-01-20",
+    "condition": "Cloudy",
+    "temperatureC": 22,
+    "humidity": 54,
+    "windKph": 24
+  },
+  {
+    "city": "Seattle",
+    "date": "2026-01-21",
+    "condition": "Rain",
+    "temperatureC": 25,
+    "humidity": 55,
+    "windKph": 25
+  },
+  {
+    "city": "New York",
+    "date": "2026-01-22",
+    "condition": "Windy",
+    "temperatureC": 28,
+    "humidity": 56,
+    "windKph": 26
+  },
+  {
+    "city": "Chicago",
+    "date": "2026-01-23",
+    "condition": "Storm",
+    "temperatureC": 31,
+    "humidity": 57,
+    "windKph": 27
+  },
+  {
+    "city": "Austin",
+    "date": "2026-01-24",
+    "condition": "Fog",
+    "temperatureC": 34,
+    "humidity": 58,
+    "windKph": 28
+  },
+  {
+    "city": "Miami",
+    "date": "2026-01-25",
+    "condition": "Sunny",
+    "temperatureC": 2,
+    "humidity": 59,
+    "windKph": 29
+  },
+  {
+    "city": "Denver",
+    "date": "2026-01-26",
+    "condition": "Cloudy",
+    "temperatureC": 5,
+    "humidity": 60,
+    "windKph": 30
+  },
+  {
+    "city": "San Diego",
+    "date": "2026-01-27",
+    "condition": "Rain",
+    "temperatureC": 8,
+    "humidity": 61,
+    "windKph": 31
+  },
+  {
+    "city": "Boston",
+    "date": "2026-01-28",
+    "condition": "Windy",
+    "temperatureC": 11,
+    "humidity": 62,
+    "windKph": 32
+  },
+  {
+    "city": "Portland",
+    "date": "2026-01-29",
+    "condition": "Storm",
+    "temperatureC": 14,
+    "humidity": 63,
+    "windKph": 33
+  },
+  {
+    "city": "Atlanta",
+    "date": "2026-01-30",
+    "condition": "Fog",
+    "temperatureC": 17,
+    "humidity": 64,
+    "windKph": 34
+  },
+  {
+    "city": "Seattle",
+    "date": "2026-01-31",
+    "condition": "Sunny",
+    "temperatureC": 20,
+    "humidity": 65,
+    "windKph": 35
+  },
+  {
+    "city": "New York",
+    "date": "2026-02-01",
+    "condition": "Cloudy",
+    "temperatureC": 23,
+    "humidity": 66,
+    "windKph": 36
+  },
+  {
+    "city": "Chicago",
+    "date": "2026-02-02",
+    "condition": "Rain",
+    "temperatureC": 26,
+    "humidity": 67,
+    "windKph": 37
+  },
+  {
+    "city": "Austin",
+    "date": "2026-02-03",
+    "condition": "Windy",
+    "temperatureC": 29,
+    "humidity": 68,
+    "windKph": 38
+  },
+  {
+    "city": "Miami",
+    "date": "2026-02-04",
+    "condition": "Storm",
+    "temperatureC": 32,
+    "humidity": 69,
+    "windKph": 39
+  },
+  {
+    "city": "Denver",
+    "date": "2026-02-05",
+    "condition": "Fog",
+    "temperatureC": 0,
+    "humidity": 70,
+    "windKph": 40
+  },
+  {
+    "city": "San Diego",
+    "date": "2026-02-06",
+    "condition": "Sunny",
+    "temperatureC": 3,
+    "humidity": 71,
+    "windKph": 41
+  },
+  {
+    "city": "Boston",
+    "date": "2026-02-07",
+    "condition": "Cloudy",
+    "temperatureC": 6,
+    "humidity": 72,
+    "windKph": 42
+  },
+  {
+    "city": "Portland",
+    "date": "2026-02-08",
+    "condition": "Rain",
+    "temperatureC": 9,
+    "humidity": 73,
+    "windKph": 43
+  },
+  {
+    "city": "Atlanta",
+    "date": "2026-02-09",
+    "condition": "Windy",
+    "temperatureC": 12,
+    "humidity": 74,
+    "windKph": 44
+  },
+  {
+    "city": "Seattle",
+    "date": "2026-02-10",
+    "condition": "Storm",
+    "temperatureC": 15,
+    "humidity": 75,
+    "windKph": 5
+  },
+  {
+    "city": "New York",
+    "date": "2026-02-11",
+    "condition": "Fog",
+    "temperatureC": 18,
+    "humidity": 76,
+    "windKph": 6
+  },
+  {
+    "city": "Chicago",
+    "date": "2026-02-12",
+    "condition": "Sunny",
+    "temperatureC": 21,
+    "humidity": 77,
+    "windKph": 7
+  },
+  {
+    "city": "Austin",
+    "date": "2026-02-13",
+    "condition": "Cloudy",
+    "temperatureC": 24,
+    "humidity": 78,
+    "windKph": 8
+  },
+  {
+    "city": "Miami",
+    "date": "2026-02-14",
+    "condition": "Rain",
+    "temperatureC": 27,
+    "humidity": 79,
+    "windKph": 9
+  },
+  {
+    "city": "Denver",
+    "date": "2026-02-15",
+    "condition": "Windy",
+    "temperatureC": 30,
+    "humidity": 80,
+    "windKph": 10
+  },
+  {
+    "city": "San Diego",
+    "date": "2026-02-16",
+    "condition": "Storm",
+    "temperatureC": 33,
+    "humidity": 81,
+    "windKph": 11
+  },
+  {
+    "city": "Boston",
+    "date": "2026-02-17",
+    "condition": "Fog",
+    "temperatureC": 1,
+    "humidity": 82,
+    "windKph": 12
+  },
+  {
+    "city": "Portland",
+    "date": "2026-02-18",
+    "condition": "Sunny",
+    "temperatureC": 4,
+    "humidity": 83,
+    "windKph": 13
+  },
+  {
+    "city": "Atlanta",
+    "date": "2026-02-19",
+    "condition": "Cloudy",
+    "temperatureC": 7,
+    "humidity": 84,
+    "windKph": 14
+  },
+  {
+    "city": "Seattle",
+    "date": "2026-02-20",
+    "condition": "Rain",
+    "temperatureC": 10,
+    "humidity": 85,
+    "windKph": 15
+  },
+  {
+    "city": "New York",
+    "date": "2026-02-21",
+    "condition": "Windy",
+    "temperatureC": 13,
+    "humidity": 86,
+    "windKph": 16
+  },
+  {
+    "city": "Chicago",
+    "date": "2026-02-22",
+    "condition": "Storm",
+    "temperatureC": 16,
+    "humidity": 87,
+    "windKph": 17
+  },
+  {
+    "city": "Austin",
+    "date": "2026-02-23",
+    "condition": "Fog",
+    "temperatureC": 19,
+    "humidity": 88,
+    "windKph": 18
+  },
+  {
+    "city": "Miami",
+    "date": "2026-02-24",
+    "condition": "Sunny",
+    "temperatureC": 22,
+    "humidity": 89,
+    "windKph": 19
+  },
+  {
+    "city": "Denver",
+    "date": "2026-02-25",
+    "condition": "Cloudy",
+    "temperatureC": 25,
+    "humidity": 90,
+    "windKph": 20
+  },
+  {
+    "city": "San Diego",
+    "date": "2026-02-26",
+    "condition": "Rain",
+    "temperatureC": 28,
+    "humidity": 91,
+    "windKph": 21
+  },
+  {
+    "city": "Boston",
+    "date": "2026-02-27",
+    "condition": "Windy",
+    "temperatureC": 31,
+    "humidity": 92,
+    "windKph": 22
+  },
+  {
+    "city": "Portland",
+    "date": "2026-02-28",
+    "condition": "Storm",
+    "temperatureC": 34,
+    "humidity": 93,
+    "windKph": 23
+  },
+  {
+    "city": "Atlanta",
+    "date": "2026-03-01",
+    "condition": "Fog",
+    "temperatureC": 2,
+    "humidity": 94,
+    "windKph": 24
+  },
+  {
+    "city": "Seattle",
+    "date": "2026-03-02",
+    "condition": "Sunny",
+    "temperatureC": 5,
+    "humidity": 35,
+    "windKph": 25
+  },
+  {
+    "city": "New York",
+    "date": "2026-03-03",
+    "condition": "Cloudy",
+    "temperatureC": 8,
+    "humidity": 36,
+    "windKph": 26
+  },
+  {
+    "city": "Chicago",
+    "date": "2026-03-04",
+    "condition": "Rain",
+    "temperatureC": 11,
+    "humidity": 37,
+    "windKph": 27
+  },
+  {
+    "city": "Austin",
+    "date": "2026-03-05",
+    "condition": "Windy",
+    "temperatureC": 14,
+    "humidity": 38,
+    "windKph": 28
+  },
+  {
+    "city": "Miami",
+    "date": "2026-03-06",
+    "condition": "Storm",
+    "temperatureC": 17,
+    "humidity": 39,
+    "windKph": 29
+  },
+  {
+    "city": "Denver",
+    "date": "2026-03-07",
+    "condition": "Fog",
+    "temperatureC": 20,
+    "humidity": 40,
+    "windKph": 30
+  },
+  {
+    "city": "San Diego",
+    "date": "2026-03-08",
+    "condition": "Sunny",
+    "temperatureC": 23,
+    "humidity": 41,
+    "windKph": 31
+  },
+  {
+    "city": "Boston",
+    "date": "2026-03-09",
+    "condition": "Cloudy",
+    "temperatureC": 26,
+    "humidity": 42,
+    "windKph": 32
+  },
+  {
+    "city": "Portland",
+    "date": "2026-03-10",
+    "condition": "Rain",
+    "temperatureC": 29,
+    "humidity": 43,
+    "windKph": 33
+  },
+  {
+    "city": "Atlanta",
+    "date": "2026-03-11",
+    "condition": "Windy",
+    "temperatureC": 32,
+    "humidity": 44,
+    "windKph": 34
+  },
+  {
+    "city": "Seattle",
+    "date": "2026-03-12",
+    "condition": "Storm",
+    "temperatureC": 0,
+    "humidity": 45,
+    "windKph": 35
+  },
+  {
+    "city": "New York",
+    "date": "2026-03-13",
+    "condition": "Fog",
+    "temperatureC": 3,
+    "humidity": 46,
+    "windKph": 36
+  },
+  {
+    "city": "Chicago",
+    "date": "2026-03-14",
+    "condition": "Sunny",
+    "temperatureC": 6,
+    "humidity": 47,
+    "windKph": 37
+  },
+  {
+    "city": "Austin",
+    "date": "2026-03-15",
+    "condition": "Cloudy",
+    "temperatureC": 9,
+    "humidity": 48,
+    "windKph": 38
+  },
+  {
+    "city": "Miami",
+    "date": "2026-03-16",
+    "condition": "Rain",
+    "temperatureC": 12,
+    "humidity": 49,
+    "windKph": 39
+  },
+  {
+    "city": "Denver",
+    "date": "2026-03-17",
+    "condition": "Windy",
+    "temperatureC": 15,
+    "humidity": 50,
+    "windKph": 40
+  },
+  {
+    "city": "San Diego",
+    "date": "2026-03-18",
+    "condition": "Storm",
+    "temperatureC": 18,
+    "humidity": 51,
+    "windKph": 41
+  },
+  {
+    "city": "Boston",
+    "date": "2026-03-19",
+    "condition": "Fog",
+    "temperatureC": 21,
+    "humidity": 52,
+    "windKph": 42
+  },
+  {
+    "city": "Portland",
+    "date": "2026-03-20",
+    "condition": "Sunny",
+    "temperatureC": 24,
+    "humidity": 53,
+    "windKph": 43
+  },
+  {
+    "city": "Atlanta",
+    "date": "2026-03-21",
+    "condition": "Cloudy",
+    "temperatureC": 27,
+    "humidity": 54,
+    "windKph": 44
+  },
+  {
+    "city": "Seattle",
+    "date": "2026-03-22",
+    "condition": "Rain",
+    "temperatureC": 30,
+    "humidity": 55,
+    "windKph": 5
+  },
+  {
+    "city": "New York",
+    "date": "2026-03-23",
+    "condition": "Windy",
+    "temperatureC": 33,
+    "humidity": 56,
+    "windKph": 6
+  },
+  {
+    "city": "Chicago",
+    "date": "2026-03-24",
+    "condition": "Storm",
+    "temperatureC": 1,
+    "humidity": 57,
+    "windKph": 7
+  },
+  {
+    "city": "Austin",
+    "date": "2026-03-25",
+    "condition": "Fog",
+    "temperatureC": 4,
+    "humidity": 58,
+    "windKph": 8
+  },
+  {
+    "city": "Miami",
+    "date": "2026-03-26",
+    "condition": "Sunny",
+    "temperatureC": 7,
+    "humidity": 59,
+    "windKph": 9
+  },
+  {
+    "city": "Denver",
+    "date": "2026-03-27",
+    "condition": "Cloudy",
+    "temperatureC": 10,
+    "humidity": 60,
+    "windKph": 10
+  },
+  {
+    "city": "San Diego",
+    "date": "2026-03-28",
+    "condition": "Rain",
+    "temperatureC": 13,
+    "humidity": 61,
+    "windKph": 11
+  },
+  {
+    "city": "Boston",
+    "date": "2026-03-29",
+    "condition": "Windy",
+    "temperatureC": 16,
+    "humidity": 62,
+    "windKph": 12
+  },
+  {
+    "city": "Portland",
+    "date": "2026-03-30",
+    "condition": "Storm",
+    "temperatureC": 19,
+    "humidity": 63,
+    "windKph": 13
+  },
+  {
+    "city": "Atlanta",
+    "date": "2026-03-31",
+    "condition": "Fog",
+    "temperatureC": 22,
+    "humidity": 64,
+    "windKph": 14
+  },
+  {
+    "city": "Seattle",
+    "date": "2026-04-01",
+    "condition": "Sunny",
+    "temperatureC": 25,
+    "humidity": 65,
+    "windKph": 15
+  },
+  {
+    "city": "New York",
+    "date": "2026-04-02",
+    "condition": "Cloudy",
+    "temperatureC": 28,
+    "humidity": 66,
+    "windKph": 16
+  },
+  {
+    "city": "Chicago",
+    "date": "2026-04-03",
+    "condition": "Rain",
+    "temperatureC": 31,
+    "humidity": 67,
+    "windKph": 17
+  },
+  {
+    "city": "Austin",
+    "date": "2026-04-04",
+    "condition": "Windy",
+    "temperatureC": 34,
+    "humidity": 68,
+    "windKph": 18
+  },
+  {
+    "city": "Miami",
+    "date": "2026-04-05",
+    "condition": "Storm",
+    "temperatureC": 2,
+    "humidity": 69,
+    "windKph": 19
+  },
+  {
+    "city": "Denver",
+    "date": "2026-04-06",
+    "condition": "Fog",
+    "temperatureC": 5,
+    "humidity": 70,
+    "windKph": 20
+  },
+  {
+    "city": "San Diego",
+    "date": "2026-04-07",
+    "condition": "Sunny",
+    "temperatureC": 8,
+    "humidity": 71,
+    "windKph": 21
+  },
+  {
+    "city": "Boston",
+    "date": "2026-04-08",
+    "condition": "Cloudy",
+    "temperatureC": 11,
+    "humidity": 72,
+    "windKph": 22
+  },
+  {
+    "city": "Portland",
+    "date": "2026-04-09",
+    "condition": "Rain",
+    "temperatureC": 14,
+    "humidity": 73,
+    "windKph": 23
+  },
+  {
+    "city": "Atlanta",
+    "date": "2026-04-10",
+    "condition": "Windy",
+    "temperatureC": 17,
+    "humidity": 74,
+    "windKph": 24
+  }
+]

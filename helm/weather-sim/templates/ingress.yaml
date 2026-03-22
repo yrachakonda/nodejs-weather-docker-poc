@@ -1,0 +1,19 @@
+{{- if .Values.ingress.enabled }}
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: weather-sim
+spec:
+  rules:
+    - host: {{ .Values.ingress.host }}
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service: { name: weather-sim-web, port: { number: {{ .Values.service.webPort }} } }
+          - path: /api
+            pathType: Prefix
+            backend:
+              service: { name: weather-sim-api, port: { number: {{ .Values.service.apiPort }} } }
+{{- end }}

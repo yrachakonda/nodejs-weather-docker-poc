@@ -1,0 +1,28 @@
+services:
+  redis:
+    image: redis:7-alpine
+    ports: ["6379:6379"]
+
+  api:
+    build: ./backend
+    environment:
+      NODE_ENV: development
+      PORT: 8080
+      SESSION_SECRET: change-me-in-prod
+      REDIS_URL: redis://redis:6379
+      CORS_ORIGIN: http://localhost:3000
+      LOG_LEVEL: info
+      APP_VERSION: 1.0.0
+    ports: ["8080:8080"]
+    depends_on: [redis]
+
+  web:
+    build: ./frontend
+    ports: ["3000:80"]
+    depends_on: [api]
+
+  fluent-bit:
+    image: cr.fluentbit.io/fluent/fluent-bit:3.2
+    volumes:
+      - ./fluent-bit/fluent-bit.conf:/fluent-bit/etc/fluent-bit.conf:ro
+    depends_on: [api]

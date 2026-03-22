@@ -1,0 +1,6 @@
+steps:
+  - task: NodeTool@0
+    inputs:
+      versionSpec: '22.x'
+  - script: node -v
+    displayName: Show Node version
