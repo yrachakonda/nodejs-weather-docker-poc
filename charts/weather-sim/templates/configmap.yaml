@@ -1,0 +1,15 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: weather-sim-config
+data:
+  NODE_ENV: {{ .Values.env.NODE_ENV | quote }}
+  API_PORT: {{ .Values.env.API_PORT | quote }}
+  REDIS_URL: {{ .Values.env.REDIS_URL | quote }}
+  CORS_ORIGIN: {{ .Values.env.CORS_ORIGIN | quote }}
+  LOG_LEVEL: {{ .Values.env.LOG_LEVEL | quote }}
+  APP_VERSION: {{ .Values.env.APP_VERSION | quote }}
+  RATE_LIMIT_WINDOW_MS: {{ .Values.env.RATE_LIMIT_WINDOW_MS | quote }}
+  RATE_LIMIT_MAX: {{ .Values.env.RATE_LIMIT_MAX | quote }}
+  CLOUDWATCH_LOG_GROUP: {{ .Values.cloudwatch.logGroup | quote }}
+  AWS_REGION: {{ .Values.cloudwatch.region | quote }}

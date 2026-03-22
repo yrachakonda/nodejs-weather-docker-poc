@@ -1,0 +1,9 @@
+jobs:
+  - job: docker
+    pool: { vmImage: ubuntu-latest }
+    steps:
+      - script: docker build -t $(apiImage) ./backend
+      - script: docker build -t $(webImage) ./frontend
+      - script: |
+          docker push $(apiImage)
+          docker push $(webImage)

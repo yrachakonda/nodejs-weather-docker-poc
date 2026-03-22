@@ -1,0 +1,14 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: weather-sim-web
+spec:
+  replicas: {{ .Values.replicaCount }}
+  selector: { matchLabels: { app: weather-sim-web } }
+  template:
+    metadata: { labels: { app: weather-sim-web } }
+    spec:
+      containers:
+        - name: web
+          image: {{ .Values.image.web }}
+          ports: [{ containerPort: 80 }]
