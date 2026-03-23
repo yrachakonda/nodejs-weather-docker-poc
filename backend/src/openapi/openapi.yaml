@@ -1,0 +1,50 @@
+openapi: 3.0.3
+info:
+  title: Weather Simulation API
+  version: 1.0.0
+servers:
+  - url: /api/v1
+components:
+  securitySchemes:
+    apiKeyAuth:
+      type: apiKey
+      in: header
+      name: x-api-key
+paths:
+  /auth/register:
+    post:
+      summary: Register
+  /auth/login:
+    post:
+      summary: Login
+  /auth/logout:
+    post:
+      summary: Logout
+  /auth/me:
+    get:
+      summary: Current user
+  /weather/current:
+    get:
+      security:
+        - apiKeyAuth: []
+      summary: Current weather
+      parameters:
+        - in: query
+          name: location
+          schema:
+            type: string
+          required: false
+  /weather/premium-forecast:
+    get:
+      security:
+        - apiKeyAuth: []
+      summary: Premium forecast
+      parameters:
+        - in: query
+          name: location
+          schema:
+            type: string
+          required: false
+  /system/health:
+    get:
+      summary: Health check

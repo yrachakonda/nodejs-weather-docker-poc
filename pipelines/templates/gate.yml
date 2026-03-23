@@ -1,0 +1,5 @@
+jobs:
+  - job: quality_gate
+    steps:
+      - script: echo "Fail if DAST high findings exceed threshold"
+      - script: echo "Rollback placeholder: helm rollback weather-sim"

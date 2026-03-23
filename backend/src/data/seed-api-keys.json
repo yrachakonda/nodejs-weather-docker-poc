@@ -1,0 +1,5 @@
+[
+  { "key": "poc-basic-key-001", "owner": "basicuser", "role": "basic", "active": true },
+  { "key": "poc-premium-key-001", "owner": "premiumuser", "role": "premium", "active": true },
+  { "key": "poc-admin-key-001", "owner": "admin", "role": "admin", "active": true }
+]

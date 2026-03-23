@@ -1,0 +1,5 @@
+aws_region    = "us-east-1"
+project_name  = "weather-sim"
+domain_name   = "weather-poc.example.com"
+hosted_zone_id = "ZXXXXXXXXXXXX"
+alb_dns_name  = "internal-alb.example.local"

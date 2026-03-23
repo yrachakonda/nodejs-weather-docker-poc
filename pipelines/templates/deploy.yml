@@ -1,0 +1,9 @@
+jobs:
+  - deployment: deploy_poc
+    environment: weather-sim-poc
+    strategy:
+      runOnce:
+        deploy:
+          steps:
+            - script: helm upgrade --install weather-sim charts/weather-sim -f charts/weather-sim/values-poc.yaml
+            - script: curl -f https://$(POC_HOST)/api/v1/system/health

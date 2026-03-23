@@ -1,0 +1,702 @@
+[
+  {
+    "dayOffset": 0,
+    "condition": "Sunny",
+    "temperatureC": 5,
+    "humidity": 40,
+    "windKph": 5
+  },
+  {
+    "dayOffset": 1,
+    "condition": "Cloudy",
+    "temperatureC": 8,
+    "humidity": 47,
+    "windKph": 10
+  },
+  {
+    "dayOffset": 2,
+    "condition": "Rain",
+    "temperatureC": 11,
+    "humidity": 54,
+    "windKph": 15
+  },
+  {
+    "dayOffset": 3,
+    "condition": "Snow",
+    "temperatureC": 14,
+    "humidity": 61,
+    "windKph": 20
+  },
+  {
+    "dayOffset": 4,
+    "condition": "Windy",
+    "temperatureC": 17,
+    "humidity": 68,
+    "windKph": 25
+  },
+  {
+    "dayOffset": 5,
+    "condition": "Fog",
+    "temperatureC": 20,
+    "humidity": 75,
+    "windKph": 30
+  },
+  {
+    "dayOffset": 6,
+    "condition": "Sunny",
+    "temperatureC": 23,
+    "humidity": 82,
+    "windKph": 35
+  },
+  {
+    "dayOffset": 7,
+    "condition": "Cloudy",
+    "temperatureC": 26,
+    "humidity": 89,
+    "windKph": 40
+  },
+  {
+    "dayOffset": 8,
+    "condition": "Rain",
+    "temperatureC": 29,
+    "humidity": 96,
+    "windKph": 45
+  },
+  {
+    "dayOffset": 9,
+    "condition": "Snow",
+    "temperatureC": 7,
+    "humidity": 43,
+    "windKph": 50
+  },
+  {
+    "dayOffset": 0,
+    "condition": "Windy",
+    "temperatureC": 10,
+    "humidity": 50,
+    "windKph": 5
+  },
+  {
+    "dayOffset": 1,
+    "condition": "Fog",
+    "temperatureC": 13,
+    "humidity": 57,
+    "windKph": 10
+  },
+  {
+    "dayOffset": 2,
+    "condition": "Sunny",
+    "temperatureC": 16,
+    "humidity": 64,
+    "windKph": 15
+  },
+  {
+    "dayOffset": 3,
+    "condition": "Cloudy",
+    "temperatureC": 19,
+    "humidity": 71,
+    "windKph": 20
+  },
+  {
+    "dayOffset": 4,
+    "condition": "Rain",
+    "temperatureC": 22,
+    "humidity": 78,
+    "windKph": 25
+  },
+  {
+    "dayOffset": 5,
+    "condition": "Snow",
+    "temperatureC": 25,
+    "humidity": 85,
+    "windKph": 30
+  },
+  {
+    "dayOffset": 6,
+    "condition": "Windy",
+    "temperatureC": 28,
+    "humidity": 92,
+    "windKph": 35
+  },
+  {
+    "dayOffset": 7,
+    "condition": "Fog",
+    "temperatureC": 6,
+    "humidity": 99,
+    "windKph": 40
+  },
+  {
+    "dayOffset": 8,
+    "condition": "Sunny",
+    "temperatureC": 9,
+    "humidity": 46,
+    "windKph": 45
+  },
+  {
+    "dayOffset": 9,
+    "condition": "Cloudy",
+    "temperatureC": 12,
+    "humidity": 53,
+    "windKph": 50
+  },
+  {
+    "dayOffset": 0,
+    "condition": "Rain",
+    "temperatureC": 15,
+    "humidity": 60,
+    "windKph": 5
+  },
+  {
+    "dayOffset": 1,
+    "condition": "Snow",
+    "temperatureC": 18,
+    "humidity": 67,
+    "windKph": 10
+  },
+  {
+    "dayOffset": 2,
+    "condition": "Windy",
+    "temperatureC": 21,
+    "humidity": 74,
+    "windKph": 15
+  },
+  {
+    "dayOffset": 3,
+    "condition": "Fog",
+    "temperatureC": 24,
+    "humidity": 81,
+    "windKph": 20
+  },
+  {
+    "dayOffset": 4,
+    "condition": "Sunny",
+    "temperatureC": 27,
+    "humidity": 88,
+    "windKph": 25
+  },
+  {
+    "dayOffset": 5,
+    "condition": "Cloudy",
+    "temperatureC": 5,
+    "humidity": 95,
+    "windKph": 30
+  },
+  {
+    "dayOffset": 6,
+    "condition": "Rain",
+    "temperatureC": 8,
+    "humidity": 42,
+    "windKph": 35
+  },
+  {
+    "dayOffset": 7,
+    "condition": "Snow",
+    "temperatureC": 11,
+    "humidity": 49,
+    "windKph": 40
+  },
+  {
+    "dayOffset": 8,
+    "condition": "Windy",
+    "temperatureC": 14,
+    "humidity": 56,
+    "windKph": 45
+  },
+  {
+    "dayOffset": 9,
+    "condition": "Fog",
+    "temperatureC": 17,
+    "humidity": 63,
+    "windKph": 50
+  },
+  {
+    "dayOffset": 0,
+    "condition": "Sunny",
+    "temperatureC": 20,
+    "humidity": 70,
+    "windKph": 5
+  },
+  {
+    "dayOffset": 1,
+    "condition": "Cloudy",
+    "temperatureC": 23,
+    "humidity": 77,
+    "windKph": 10
+  },
+  {
+    "dayOffset": 2,
+    "condition": "Rain",
+    "temperatureC": 26,
+    "humidity": 84,
+    "windKph": 15
+  },
+  {
+    "dayOffset": 3,
+    "condition": "Snow",
+    "temperatureC": 29,
+    "humidity": 91,
+    "windKph": 20
+  },
+  {
+    "dayOffset": 4,
+    "condition": "Windy",
+    "temperatureC": 7,
+    "humidity": 98,
+    "windKph": 25
+  },
+  {
+    "dayOffset": 5,
+    "condition": "Fog",
+    "temperatureC": 10,
+    "humidity": 45,
+    "windKph": 30
+  },
+  {
+    "dayOffset": 6,
+    "condition": "Sunny",
+    "temperatureC": 13,
+    "humidity": 52,
+    "windKph": 35
+  },
+  {
+    "dayOffset": 7,
+    "condition": "Cloudy",
+    "temperatureC": 16,
+    "humidity": 59,
+    "windKph": 40
+  },
+  {
+    "dayOffset": 8,
+    "condition": "Rain",
+    "temperatureC": 19,
+    "humidity": 66,
+    "windKph": 45
+  },
+  {
+    "dayOffset": 9,
+    "condition": "Snow",
+    "temperatureC": 22,
+    "humidity": 73,
+    "windKph": 50
+  },
+  {
+    "dayOffset": 0,
+    "condition": "Windy",
+    "temperatureC": 25,
+    "humidity": 80,
+    "windKph": 5
+  },
+  {
+    "dayOffset": 1,
+    "condition": "Fog",
+    "temperatureC": 28,
+    "humidity": 87,
+    "windKph": 10
+  },
+  {
+    "dayOffset": 2,
+    "condition": "Sunny",
+    "temperatureC": 6,
+    "humidity": 94,
+    "windKph": 15
+  },
+  {
+    "dayOffset": 3,
+    "condition": "Cloudy",
+    "temperatureC": 9,
+    "humidity": 41,
+    "windKph": 20
+  },
+  {
+    "dayOffset": 4,
+    "condition": "Rain",
+    "temperatureC": 12,
+    "humidity": 48,
+    "windKph": 25
+  },
+  {
+    "dayOffset": 5,
+    "condition": "Snow",
+    "temperatureC": 15,
+    "humidity": 55,
+    "windKph": 30
+  },
+  {
+    "dayOffset": 6,
+    "condition": "Windy",
+    "temperatureC": 18,
+    "humidity": 62,
+    "windKph": 35
+  },
+  {
+    "dayOffset": 7,
+    "condition": "Fog",
+    "temperatureC": 21,
+    "humidity": 69,
+    "windKph": 40
+  },
+  {
+    "dayOffset": 8,
+    "condition": "Sunny",
+    "temperatureC": 24,
+    "humidity": 76,
+    "windKph": 45
+  },
+  {
+    "dayOffset": 9,
+    "condition": "Cloudy",
+    "temperatureC": 27,
+    "humidity": 83,
+    "windKph": 50
+  },
+  {
+    "dayOffset": 0,
+    "condition": "Rain",
+    "temperatureC": 5,
+    "humidity": 90,
+    "windKph": 5
+  },
+  {
+    "dayOffset": 1,
+    "condition": "Snow",
+    "temperatureC": 8,
+    "humidity": 97,
+    "windKph": 10
+  },
+  {
+    "dayOffset": 2,
+    "condition": "Windy",
+    "temperatureC": 11,
+    "humidity": 44,
+    "windKph": 15
+  },
+  {
+    "dayOffset": 3,
+    "condition": "Fog",
+    "temperatureC": 14,
+    "humidity": 51,
+    "windKph": 20
+  },
+  {
+    "dayOffset": 4,
+    "condition": "Sunny",
+    "temperatureC": 17,
+    "humidity": 58,
+    "windKph": 25
+  },
+  {
+    "dayOffset": 5,
+    "condition": "Cloudy",
+    "temperatureC": 20,
+    "humidity": 65,
+    "windKph": 30
+  },
+  {
+    "dayOffset": 6,
+    "condition": "Rain",
+    "temperatureC": 23,
+    "humidity": 72,
+    "windKph": 35
+  },
+  {
+    "dayOffset": 7,
+    "condition": "Snow",
+    "temperatureC": 26,
+    "humidity": 79,
+    "windKph": 40
+  },
+  {
+    "dayOffset": 8,
+    "condition": "Windy",
+    "temperatureC": 29,
+    "humidity": 86,
+    "windKph": 45
+  },
+  {
+    "dayOffset": 9,
+    "condition": "Fog",
+    "temperatureC": 7,
+    "humidity": 93,
+    "windKph": 50
+  },
+  {
+    "dayOffset": 0,
+    "condition": "Sunny",
+    "temperatureC": 10,
+    "humidity": 40,
+    "windKph": 5
+  },
+  {
+    "dayOffset": 1,
+    "condition": "Cloudy",
+    "temperatureC": 13,
+    "humidity": 47,
+    "windKph": 10
+  },
+  {
+    "dayOffset": 2,
+    "condition": "Rain",
+    "temperatureC": 16,
+    "humidity": 54,
+    "windKph": 15
+  },
+  {
+    "dayOffset": 3,
+    "condition": "Snow",
+    "temperatureC": 19,
+    "humidity": 61,
+    "windKph": 20
+  },
+  {
+    "dayOffset": 4,
+    "condition": "Windy",
+    "temperatureC": 22,
+    "humidity": 68,
+    "windKph": 25
+  },
+  {
+    "dayOffset": 5,
+    "condition": "Fog",
+    "temperatureC": 25,
+    "humidity": 75,
+    "windKph": 30
+  },
+  {
+    "dayOffset": 6,
+    "condition": "Sunny",
+    "temperatureC": 28,
+    "humidity": 82,
+    "windKph": 35
+  },
+  {
+    "dayOffset": 7,
+    "condition": "Cloudy",
+    "temperatureC": 6,
+    "humidity": 89,
+    "windKph": 40
+  },
+  {
+    "dayOffset": 8,
+    "condition": "Rain",
+    "temperatureC": 9,
+    "humidity": 96,
+    "windKph": 45
+  },
+  {
+    "dayOffset": 9,
+    "condition": "Snow",
+    "temperatureC": 12,
+    "humidity": 43,
+    "windKph": 50
+  },
+  {
+    "dayOffset": 0,
+    "condition": "Windy",
+    "temperatureC": 15,
+    "humidity": 50,
+    "windKph": 5
+  },
+  {
+    "dayOffset": 1,
+    "condition": "Fog",
+    "temperatureC": 18,
+    "humidity": 57,
+    "windKph": 10
+  },
+  {
+    "dayOffset": 2,
+    "condition": "Sunny",
+    "temperatureC": 21,
+    "humidity": 64,
+    "windKph": 15
+  },
+  {
+    "dayOffset": 3,
+    "condition": "Cloudy",
+    "temperatureC": 24,
+    "humidity": 71,
+    "windKph": 20
+  },
+  {
+    "dayOffset": 4,
+    "condition": "Rain",
+    "temperatureC": 27,
+    "humidity": 78,
+    "windKph": 25
+  },
+  {
+    "dayOffset": 5,
+    "condition": "Snow",
+    "temperatureC": 5,
+    "humidity": 85,
+    "windKph": 30
+  },
+  {
+    "dayOffset": 6,
+    "condition": "Windy",
+    "temperatureC": 8,
+    "humidity": 92,
+    "windKph": 35
+  },
+  {
+    "dayOffset": 7,
+    "condition": "Fog",
+    "temperatureC": 11,
+    "humidity": 99,
+    "windKph": 40
+  },
+  {
+    "dayOffset": 8,
+    "condition": "Sunny",
+    "temperatureC": 14,
+    "humidity": 46,
+    "windKph": 45
+  },
+  {
+    "dayOffset": 9,
+    "condition": "Cloudy",
+    "temperatureC": 17,
+    "humidity": 53,
+    "windKph": 50
+  },
+  {
+    "dayOffset": 0,
+    "condition": "Rain",
+    "temperatureC": 20,
+    "humidity": 60,
+    "windKph": 5
+  },
+  {
+    "dayOffset": 1,
+    "condition": "Snow",
+    "temperatureC": 23,
+    "humidity": 67,
+    "windKph": 10
+  },
+  {
+    "dayOffset": 2,
+    "condition": "Windy",
+    "temperatureC": 26,
+    "humidity": 74,
+    "windKph": 15
+  },
+  {
+    "dayOffset": 3,
+    "condition": "Fog",
+    "temperatureC": 29,
+    "humidity": 81,
+    "windKph": 20
+  },
+  {
+    "dayOffset": 4,
+    "condition": "Sunny",
+    "temperatureC": 7,
+    "humidity": 88,
+    "windKph": 25
+  },
+  {
+    "dayOffset": 5,
+    "condition": "Cloudy",
+    "temperatureC": 10,
+    "humidity": 95,
+    "windKph": 30
+  },
+  {
+    "dayOffset": 6,
+    "condition": "Rain",
+    "temperatureC": 13,
+    "humidity": 42,
+    "windKph": 35
+  },
+  {
+    "dayOffset": 7,
+    "condition": "Snow",
+    "temperatureC": 16,
+    "humidity": 49,
+    "windKph": 40
+  },
+  {
+    "dayOffset": 8,
+    "condition": "Windy",
+    "temperatureC": 19,
+    "humidity": 56,
+    "windKph": 45
+  },
+  {
+    "dayOffset": 9,
+    "condition": "Fog",
+    "temperatureC": 22,
+    "humidity": 63,
+    "windKph": 50
+  },
+  {
+    "dayOffset": 0,
+    "condition": "Sunny",
+    "temperatureC": 25,
+    "humidity": 70,
+    "windKph": 5
+  },
+  {
+    "dayOffset": 1,
+    "condition": "Cloudy",
+    "temperatureC": 28,
+    "humidity": 77,
+    "windKph": 10
+  },
+  {
+    "dayOffset": 2,
+    "condition": "Rain",
+    "temperatureC": 6,
+    "humidity": 84,
+    "windKph": 15
+  },
+  {
+    "dayOffset": 3,
+    "condition": "Snow",
+    "temperatureC": 9,
+    "humidity": 91,
+    "windKph": 20
+  },
+  {
+    "dayOffset": 4,
+    "condition": "Windy",
+    "temperatureC": 12,
+    "humidity": 98,
+    "windKph": 25
+  },
+  {
+    "dayOffset": 5,
+    "condition": "Fog",
+    "temperatureC": 15,
+    "humidity": 45,
+    "windKph": 30
+  },
+  {
+    "dayOffset": 6,
+    "condition": "Sunny",
+    "temperatureC": 18,
+    "humidity": 52,
+    "windKph": 35
+  },
+  {
+    "dayOffset": 7,
+    "condition": "Cloudy",
+    "temperatureC": 21,
+    "humidity": 59,
+    "windKph": 40
+  },
+  {
+    "dayOffset": 8,
+    "condition": "Rain",
+    "temperatureC": 24,
+    "humidity": 66,
+    "windKph": 45
+  },
+  {
+    "dayOffset": 9,
+    "condition": "Snow",
+    "temperatureC": 27,
+    "humidity": 73,
+    "windKph": 50
+  }
+]
