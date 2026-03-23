@@ -5,8 +5,8 @@
 - `POST /api/v1/auth/login`
 - `POST /api/v1/auth/logout`
 - `GET /api/v1/auth/me`
-- `GET /api/v1/weather/current?city=<city>`
-- `GET /api/v1/weather/premium-forecast?city=<city>`
+- `GET /api/v1/weather/current?location=<location>`
+- `GET /api/v1/weather/premium-forecast?location=<location>`
 - `GET /api/v1/system/live|ready|health|version`
 
 ## Response/error contract

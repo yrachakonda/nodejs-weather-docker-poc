@@ -5,7 +5,7 @@ import { requireRole, requireSession } from '../middleware/auth';
 
 const router = Router();
 
-router.get('/current', requireApiKey, requireSession, getCurrent);
+router.get('/current', requireApiKey, getCurrent);
 router.get('/premium-forecast', requireApiKey, requireSession, requireRole(['premium', 'admin']), getPremiumForecast);
 
 export default router;

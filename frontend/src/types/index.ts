@@ -6,7 +6,7 @@ export interface SessionUser {
 
 export interface WeatherReport {
   dayOffset: number;
-  city: string;
+  location: string;
   condition: string;
   temperatureC: number;
   humidity: number;

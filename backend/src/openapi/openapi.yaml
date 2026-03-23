@@ -28,11 +28,23 @@ paths:
       security:
         - apiKeyAuth: []
       summary: Current weather
+      parameters:
+        - in: query
+          name: location
+          schema:
+            type: string
+          required: false
   /weather/premium-forecast:
     get:
       security:
         - apiKeyAuth: []
       summary: Premium forecast
+      parameters:
+        - in: query
+          name: location
+          schema:
+            type: string
+          required: false
   /system/health:
     get:
       summary: Health check

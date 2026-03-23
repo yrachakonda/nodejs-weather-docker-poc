@@ -1,21 +1,46 @@
-import { Link } from 'react-router-dom';
+import { NavLink } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 
 export function NavBar() {
   const { user, logout } = useAuth();
 
   return (
-    <nav>
-      <Link to="/">Home</Link> | <Link to="/weather">Current Weather</Link> | <Link to="/forecast">Premium Forecast</Link>
-      {user ? (
-        <>
-          {' '}| <span>{user.username} ({user.role})</span> <button onClick={() => logout()}>Logout</button>
-        </>
-      ) : (
-        <>
-          {' '}| <Link to="/login">Login</Link> <Link to="/register">Register</Link>
-        </>
-      )}
-    </nav>
+    <header className="topbar">
+      <div className="topbar__brand">
+        <p className="eyebrow">Atmospheric Control Center</p>
+        <NavLink to="/" className="brand-mark">
+          WeatherScope
+        </NavLink>
+      </div>
+      <nav className="topbar__nav">
+        <NavLink to="/" className={({ isActive }) => `nav-link${isActive ? ' nav-link--active' : ''}`} end>
+          Current Weather
+        </NavLink>
+        <NavLink to="/forecast" className={({ isActive }) => `nav-link${isActive ? ' nav-link--active' : ''}`}>
+          Premium Forecast
+        </NavLink>
+      </nav>
+      <div className="topbar__auth">
+        {user ? (
+          <>
+            <div className="user-pill">
+              <span className="user-pill__label">Signed In</span>
+              <span>{user.username} ({user.role})</span>
+            </div>
+            <button className="ghost-button" onClick={() => logout()}>Logout</button>
+          </>
+        ) : (
+          <>
+            <NavLink to="/login" className={({ isActive }) => `nav-link${isActive ? ' nav-link--active' : ''}`}>
+              Login
+            </NavLink>
+            <span className="nav-divider">|</span>
+            <NavLink to="/register" className={({ isActive }) => `nav-link${isActive ? ' nav-link--active' : ''}`}>
+              Register
+            </NavLink>
+          </>
+        )}
+      </div>
+    </header>
   );
 }
