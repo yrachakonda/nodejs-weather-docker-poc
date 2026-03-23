@@ -1,6 +1,6 @@
 services:
   redis:
-    image: redis:7-alpine
+    image: redis:8.6.1
     ports: ["6379:6379"]
 
   api:
@@ -22,7 +22,7 @@ services:
     depends_on: [api]
 
   fluent-bit:
-    image: cr.fluentbit.io/fluent/fluent-bit:3.2
+    image: fluent/fluent-bit:5.0.0-oauth2-rfc
     volumes:
       - ./fluent-bit/fluent-bit.conf:/fluent-bit/etc/fluent-bit.conf:ro
     depends_on: [api]
