@@ -1,11 +1,11 @@
-FROM node:22-alpine AS build
+FROM node:25.8.1-alpine3.23 AS build
 WORKDIR /app
 COPY package.json tsconfig.json ./
 RUN npm install
 COPY src ./src
 RUN npm run build
 
-FROM node:22-alpine
+FROM node:25.8.1-alpine3.23
 WORKDIR /app
 COPY package.json ./
 RUN npm install --omit=dev
