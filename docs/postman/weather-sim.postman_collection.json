@@ -15,6 +15,10 @@
       "value": "poc-premium-key-001"
     },
     {
+      "key": "basicApiKey",
+      "value": "poc-basic-key-001"
+    },
+    {
       "key": "location",
       "value": "seattle"
     },
@@ -25,6 +29,26 @@
     {
       "key": "password",
       "value": "premium-pass"
+    },
+    {
+      "key": "basicUsername",
+      "value": "basicuser"
+    },
+    {
+      "key": "basicPassword",
+      "value": "basic-pass"
+    },
+    {
+      "key": "generatedUsername",
+      "value": ""
+    },
+    {
+      "key": "generatedPassword",
+      "value": ""
+    },
+    {
+      "key": "lastLoggedInUsername",
+      "value": ""
     }
   ],
   "item": [
@@ -33,6 +57,24 @@
       "item": [
         {
           "name": "Live",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('status is 200', function () {",
+                  "  pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "const body = pm.response.json();",
+                  "pm.test('status payload is ok', function () {",
+                  "  pm.expect(body.status).to.eql('ok');",
+                  "});"
+                ]
+              }
+            }
+          ],
           "request": {
             "method": "GET",
             "header": [],
@@ -41,6 +83,24 @@
         },
         {
           "name": "Ready",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('status is 200', function () {",
+                  "  pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "const body = pm.response.json();",
+                  "pm.test('status payload is ready', function () {",
+                  "  pm.expect(body.status).to.eql('ready');",
+                  "});"
+                ]
+              }
+            }
+          ],
           "request": {
             "method": "GET",
             "header": [],
@@ -49,6 +109,24 @@
         },
         {
           "name": "Health",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('status is 200', function () {",
+                  "  pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "const body = pm.response.json();",
+                  "pm.test('status payload is healthy', function () {",
+                  "  pm.expect(body.status).to.eql('healthy');",
+                  "});"
+                ]
+              }
+            }
+          ],
           "request": {
             "method": "GET",
             "header": [],
@@ -57,6 +135,24 @@
         },
         {
           "name": "Version",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('status is 200', function () {",
+                  "  pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "const body = pm.response.json();",
+                  "pm.test('version is present', function () {",
+                  "  pm.expect(body.version).to.be.a('string').and.not.empty;",
+                  "});"
+                ]
+              }
+            }
+          ],
           "request": {
             "method": "GET",
             "header": [],
@@ -70,6 +166,42 @@
       "item": [
         {
           "name": "Register User",
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const runId = Date.now().toString();",
+                  "const generatedUsername = `newuser-${runId}`;",
+                  "const generatedPassword = `newuser-pass-${runId}`;",
+                  "pm.collectionVariables.set('generatedUsername', generatedUsername);",
+                  "pm.collectionVariables.set('generatedPassword', generatedPassword);"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('status is 201', function () {",
+                  "  pm.response.to.have.status(201);",
+                  "});",
+                  "",
+                  "const body = pm.response.json();",
+                  "const expectedUsername = pm.collectionVariables.get('generatedUsername');",
+                  "pm.test('registered username matches generated username', function () {",
+                  "  pm.expect(body.user.username).to.eql(expectedUsername);",
+                  "});",
+                  "",
+                  "pm.test('registered role defaults to basic', function () {",
+                  "  pm.expect(body.user.role).to.eql('basic');",
+                  "});"
+                ]
+              }
+            }
+          ],
           "request": {
             "method": "POST",
             "header": [
@@ -80,13 +212,37 @@
             ],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"username\": \"newuser\",\n  \"password\": \"newuser-pass\"\n}"
+              "raw": "{\n  \"username\": \"{{generatedUsername}}\",\n  \"password\": \"{{generatedPassword}}\"\n}"
             },
             "url": "{{baseUrl}}/auth/register"
           }
         },
         {
           "name": "Login",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('status is 200', function () {",
+                  "  pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "const body = pm.response.json();",
+                  "pm.collectionVariables.set('lastLoggedInUsername', body.user.username);",
+                  "",
+                  "pm.test('logged-in user matches requested username', function () {",
+                  "  pm.expect(body.user.username).to.eql(pm.variables.get('username'));",
+                  "});",
+                  "",
+                  "pm.test('logged-in role is premium', function () {",
+                  "  pm.expect(body.user.role).to.eql('premium');",
+                  "});"
+                ]
+              }
+            }
+          ],
           "request": {
             "method": "POST",
             "header": [
@@ -104,6 +260,24 @@
         },
         {
           "name": "Me",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('status is 200', function () {",
+                  "  pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "const body = pm.response.json();",
+                  "pm.test('me returns the logged-in user', function () {",
+                  "  pm.expect(body.user.username).to.eql(pm.collectionVariables.get('lastLoggedInUsername'));",
+                  "});"
+                ]
+              }
+            }
+          ],
           "request": {
             "method": "GET",
             "header": [],
@@ -112,6 +286,19 @@
         },
         {
           "name": "Logout",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('status is 204', function () {",
+                  "  pm.response.to.have.status(204);",
+                  "});"
+                ]
+              }
+            }
+          ],
           "request": {
             "method": "POST",
             "header": [],
@@ -125,6 +312,29 @@
       "item": [
         {
           "name": "Current Weather",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('status is 200', function () {",
+                  "  pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "const body = pm.response.json();",
+                  "pm.test('current weather contains the requested location', function () {",
+                  "  pm.expect(body.data.location).to.eql(pm.variables.get('location'));",
+                  "});",
+                  "",
+                  "pm.test('current weather includes condition and temperature', function () {",
+                  "  pm.expect(body.data.condition).to.be.a('string').and.not.empty;",
+                  "  pm.expect(body.data.temperatureC).to.be.a('number');",
+                  "});"
+                ]
+              }
+            }
+          ],
           "request": {
             "method": "GET",
             "header": [
@@ -138,6 +348,28 @@
         },
         {
           "name": "Premium Forecast",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('status is 200', function () {",
+                  "  pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "const body = pm.response.json();",
+                  "pm.test('premium forecast returns seven entries', function () {",
+                  "  pm.expect(body.data).to.be.an('array').with.lengthOf(7);",
+                  "});",
+                  "",
+                  "pm.test('forecast entries match the requested location', function () {",
+                  "  body.data.forEach((entry) => pm.expect(entry.location).to.eql(pm.variables.get('location')));",
+                  "});"
+                ]
+              }
+            }
+          ],
           "request": {
             "method": "GET",
             "header": [
@@ -151,6 +383,24 @@
         },
         {
           "name": "Current Weather Without API Key",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('status is 401', function () {",
+                  "  pm.response.to.have.status(401);",
+                  "});",
+                  "",
+                  "const body = pm.response.json();",
+                  "pm.test('error is Unauthorized', function () {",
+                  "  pm.expect(body.error).to.eql('Unauthorized');",
+                  "});"
+                ]
+              }
+            }
+          ],
           "request": {
             "method": "GET",
             "header": [],
@@ -159,6 +409,24 @@
         },
         {
           "name": "Premium Forecast Without Session",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('status is 401', function () {",
+                  "  pm.response.to.have.status(401);",
+                  "});",
+                  "",
+                  "const body = pm.response.json();",
+                  "pm.test('error is Unauthorized', function () {",
+                  "  pm.expect(body.error).to.eql('Unauthorized');",
+                  "});"
+                ]
+              }
+            }
+          ],
           "request": {
             "method": "GET",
             "header": [
@@ -170,6 +438,73 @@
             "auth": {
               "type": "noauth"
             },
+            "url": "{{baseUrl}}/weather/premium-forecast?location={{location}}"
+          }
+        },
+        {
+          "name": "Login As Basic User",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('status is 200', function () {",
+                  "  pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "const body = pm.response.json();",
+                  "pm.collectionVariables.set('lastLoggedInUsername', body.user.username);",
+                  "pm.test('logged-in role is basic', function () {",
+                  "  pm.expect(body.user.role).to.eql('basic');",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"username\": \"{{basicUsername}}\",\n  \"password\": \"{{basicPassword}}\"\n}"
+            },
+            "url": "{{baseUrl}}/auth/login"
+          }
+        },
+        {
+          "name": "Premium Forecast As Basic User",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('status is 403', function () {",
+                  "  pm.response.to.have.status(403);",
+                  "});",
+                  "",
+                  "const body = pm.response.json();",
+                  "pm.test('error is Forbidden', function () {",
+                  "  pm.expect(body.error).to.eql('Forbidden');",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "x-api-key",
+                "value": "{{basicApiKey}}"
+              }
+            ],
             "url": "{{baseUrl}}/weather/premium-forecast?location={{location}}"
           }
         }
