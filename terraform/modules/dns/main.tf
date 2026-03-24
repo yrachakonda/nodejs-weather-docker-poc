@@ -1,6 +1,18 @@
-variable "hosted_zone_id" { type = string }
-variable "domain_name" { type = string }
-variable "alb_dns_name" { type = string }
+variable "hosted_zone_id" {
+  description = "Hosted zone ID where the application record is created."
+  type        = string
+}
+
+variable "domain_name" {
+  description = "Application hostname."
+  type        = string
+}
+
+variable "alb_dns_name" {
+  description = "DNS name of the application load balancer."
+  type        = string
+}
+
 resource "aws_route53_record" "app" {
   zone_id = var.hosted_zone_id
   name    = var.domain_name
