@@ -3,6 +3,11 @@ import { apiRequest } from '../api/client';
 import { WeatherIcon } from '../components/WeatherIcon';
 import { WeatherReport } from '../types';
 
+type CurrentWeatherPageProps = {
+  location: string;
+  onLocationChange: (location: string) => void;
+};
+
 const conditionThemes: Record<string, string> = {
   Sunny: 'Mostly Sunny',
   Cloudy: 'Partly Cloudy',
@@ -32,10 +37,9 @@ function deriveRainChance(condition: string, humidity: number): number {
   return Math.min(95, Math.max(base, Math.round(humidity * 0.7)));
 }
 
-export function CurrentWeatherPage() {
+export function CurrentWeatherPage({ location, onLocationChange }: CurrentWeatherPageProps) {
   const [report, setReport] = useState<WeatherReport | null>(null);
   const [error, setError] = useState('');
-  const [location, setLocation] = useState('Seattle');
   const [loading, setLoading] = useState(true);
   const now = useClock();
 
@@ -117,7 +121,7 @@ export function CurrentWeatherPage() {
           <input
             className="signage-search__input"
             value={location}
-            onChange={(e) => setLocation(e.target.value)}
+            onChange={(e) => onLocationChange(e.target.value)}
             placeholder="Search for a location..."
           />
           <button className="signage-search__button" type="submit">Update</button>
