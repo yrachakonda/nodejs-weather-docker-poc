@@ -2,6 +2,10 @@ apiVersion: v1
 kind: Service
 metadata:
   name: weather-sim-api
+  {{- with .Values.service.apiAnnotations }}
+  annotations:
+    {{- toYaml . | nindent 4 }}
+  {{- end }}
 spec:
   selector: { app: weather-sim-api }
   ports: [{ port: 8080, targetPort: 8080 }]
@@ -10,6 +14,10 @@ apiVersion: v1
 kind: Service
 metadata:
   name: weather-sim-web
+  {{- with .Values.service.webAnnotations }}
+  annotations:
+    {{- toYaml . | nindent 4 }}
+  {{- end }}
 spec:
   selector: { app: weather-sim-web }
   ports: [{ port: 80, targetPort: 80 }]

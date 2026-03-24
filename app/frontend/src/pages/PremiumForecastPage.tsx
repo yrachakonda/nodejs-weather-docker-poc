@@ -5,6 +5,11 @@ import { WeatherIcon } from '../components/WeatherIcon';
 import { useAuth } from '../context/AuthContext';
 import { WeatherReport } from '../types';
 
+type PremiumForecastPageProps = {
+  location: string;
+  onLocationChange: (location: string) => void;
+};
+
 function useClock() {
   const [now, setNow] = useState(() => new Date());
 
@@ -33,10 +38,9 @@ function deriveSummary(reports: WeatherReport[]) {
   return { avgTemp, maxWind, rainDays, avgHumidity };
 }
 
-export function PremiumForecastPage() {
+export function PremiumForecastPage({ location, onLocationChange }: PremiumForecastPageProps) {
   const [reports, setReports] = useState<WeatherReport[]>([]);
   const [error, setError] = useState('');
-  const [location, setLocation] = useState('Seattle');
   const [loading, setLoading] = useState(true);
   const { user } = useAuth();
   const now = useClock();
@@ -139,7 +143,7 @@ export function PremiumForecastPage() {
           <input
             className="signage-search__input"
             value={location}
-            onChange={(e) => setLocation(e.target.value)}
+            onChange={(e) => onLocationChange(e.target.value)}
             placeholder="Search for a location..."
           />
           <button className="signage-search__button" type="submit">Load Forecast</button>

@@ -1,0 +1,334 @@
+openapi: 3.0.3
+info:
+  title: Weather Simulation API
+  version: 1.0.0
+  description: API contract for the Weather Simulation POC application.
+servers:
+  - url: http://localhost:8080/api/v1
+    description: Local development
+  - url: https://weather-poc.example.com/api/v1
+    description: POC environment
+tags:
+  - name: Auth
+  - name: Weather
+  - name: System
+components:
+  securitySchemes:
+    apiKeyAuth:
+      type: apiKey
+      in: header
+      name: x-api-key
+  schemas:
+    ErrorResponse:
+      type: object
+      required:
+        - error
+      properties:
+        error:
+          type: string
+          example: Unauthorized
+    User:
+      type: object
+      required:
+        - id
+        - username
+        - role
+      properties:
+        id:
+          type: string
+          example: u-premium
+        username:
+          type: string
+          example: premiumuser
+        role:
+          type: string
+          enum:
+            - basic
+            - premium
+            - admin
+    AuthResponse:
+      type: object
+      required:
+        - user
+      properties:
+        user:
+          $ref: '#/components/schemas/User'
+    LoginRequest:
+      type: object
+      required:
+        - username
+        - password
+      properties:
+        username:
+          type: string
+          example: premiumuser
+        password:
+          type: string
+          example: premium-pass
+    RegisterRequest:
+      type: object
+      required:
+        - username
+        - password
+      properties:
+        username:
+          type: string
+          example: newuser
+        password:
+          type: string
+          example: newuser-pass
+    WeatherReport:
+      type: object
+      required:
+        - dayOffset
+        - location
+        - condition
+        - temperatureC
+        - humidity
+        - windKph
+      properties:
+        dayOffset:
+          type: integer
+          example: 0
+        location:
+          type: string
+          example: seattle
+        condition:
+          type: string
+          example: Cloudy
+        temperatureC:
+          type: number
+          example: 12
+        humidity:
+          type: number
+          example: 74
+        windKph:
+          type: number
+          example: 18
+    CurrentWeatherResponse:
+      type: object
+      required:
+        - data
+      properties:
+        data:
+          $ref: '#/components/schemas/WeatherReport'
+    PremiumForecastResponse:
+      type: object
+      required:
+        - data
+      properties:
+        data:
+          type: array
+          items:
+            $ref: '#/components/schemas/WeatherReport'
+    StatusResponse:
+      type: object
+      required:
+        - status
+      properties:
+        status:
+          type: string
+          example: healthy
+    VersionResponse:
+      type: object
+      required:
+        - version
+      properties:
+        version:
+          type: string
+          example: 1.0.0
+paths:
+  /auth/register:
+    post:
+      tags:
+        - Auth
+      summary: Register a new basic user
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RegisterRequest'
+      responses:
+        '201':
+          description: User created and session established
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthResponse'
+        '400':
+          description: Invalid credentials or duplicate username
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+  /auth/login:
+    post:
+      tags:
+        - Auth
+      summary: Login with a seeded or registered user
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LoginRequest'
+      responses:
+        '200':
+          description: Authenticated session established
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthResponse'
+        '401':
+          description: Invalid credentials
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '400':
+          description: Invalid request payload
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+  /auth/logout:
+    post:
+      tags:
+        - Auth
+      summary: Logout the current user
+      responses:
+        '204':
+          description: Session destroyed
+        '401':
+          description: No active session
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+  /auth/me:
+    get:
+      tags:
+        - Auth
+      summary: Get the current authenticated user
+      responses:
+        '200':
+          description: Current user returned
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthResponse'
+        '401':
+          description: No active session
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+  /weather/current:
+    get:
+      tags:
+        - Weather
+      summary: Get the current weather
+      security:
+        - apiKeyAuth: []
+      parameters:
+        - in: query
+          name: location
+          required: false
+          schema:
+            type: string
+          description: Optional location. Defaults to `seattle` when omitted or blank.
+      responses:
+        '200':
+          description: Current weather report
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CurrentWeatherResponse'
+        '401':
+          description: Missing or invalid API key
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+  /weather/premium-forecast:
+    get:
+      tags:
+        - Weather
+      summary: Get a seven day premium forecast
+      security:
+        - apiKeyAuth: []
+      parameters:
+        - in: query
+          name: location
+          required: false
+          schema:
+            type: string
+          description: Optional location. Defaults to `seattle` when omitted or blank.
+      responses:
+        '200':
+          description: Premium forecast results
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PremiumForecastResponse'
+        '401':
+          description: Missing session or invalid API key
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '403':
+          description: Authenticated user does not have the required role
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+  /system/live:
+    get:
+      tags:
+        - System
+      summary: Liveness probe
+      responses:
+        '200':
+          description: API is live
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StatusResponse'
+  /system/ready:
+    get:
+      tags:
+        - System
+      summary: Readiness probe
+      responses:
+        '200':
+          description: API is ready
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StatusResponse'
+  /system/health:
+    get:
+      tags:
+        - System
+      summary: Health endpoint
+      responses:
+        '200':
+          description: API is healthy
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StatusResponse'
+  /system/version:
+    get:
+      tags:
+        - System
+      summary: Application version
+      responses:
+        '200':
+          description: Current application version
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/VersionResponse'

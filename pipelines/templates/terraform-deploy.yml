@@ -1,0 +1,45 @@
+parameters:
+  - name: awsRegion
+    type: string
+  - name: workingDirectory
+    type: string
+  - name: varFile
+    type: string
+
+jobs:
+  - deployment: terraform_apply
+    displayName: Plan and apply Terraform
+    environment: weather-sim-poc-infra
+    pool:
+      vmImage: ubuntu-latest
+    strategy:
+      runOnce:
+        deploy:
+          steps:
+            - checkout: self
+
+            - bash: |
+                set -euo pipefail
+
+                if ! command -v terraform >/dev/null 2>&1; then
+                  TERRAFORM_VERSION="1.11.4"
+                  curl -fsSL "https://releases.hashicorp.com/terraform/${TERRAFORM_VERSION}/terraform_${TERRAFORM_VERSION}_linux_amd64.zip" -o terraform.zip
+                  unzip terraform.zip
+                  sudo mv terraform /usr/local/bin/terraform
+                fi
+              displayName: Ensure Terraform is installed
+
+            - bash: |
+                set -euo pipefail
+                terraform init
+                terraform plan -var-file="${TF_VAR_FILE}" -out=tfplan
+                terraform apply -auto-approve tfplan
+              displayName: Terraform plan and apply
+              workingDirectory: ${{ parameters.workingDirectory }}
+              env:
+                AWS_ACCESS_KEY_ID: $(AWS_ACCESS_KEY_ID)
+                AWS_DEFAULT_REGION: ${{ parameters.awsRegion }}
+                AWS_REGION: ${{ parameters.awsRegion }}
+                AWS_SECRET_ACCESS_KEY: $(AWS_SECRET_ACCESS_KEY)
+                AWS_SESSION_TOKEN: $(AWS_SESSION_TOKEN)
+                TF_VAR_FILE: ${{ parameters.varFile }}

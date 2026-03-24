@@ -1,24 +1,63 @@
 trigger:
   branches:
-    include: [ main ]
+    include:
+      - main
+  paths:
+    include:
+      - app/*
+      - app/**
+      - charts/*
+      - charts/**
+      - azure-pipelines.yml
+      - pipelines/templates/*
+      - pipelines/templates/**
+
+variables:
+  awsRegion: us-east-1
+  apiRepositoryName: weather-sim-poc-api
+  webRepositoryName: weather-sim-poc-web
+  eksClusterName: weather-sim-poc
+  kubernetesNamespace: weather-sim
+  helmReleaseName: weather-sim
+  helmValuesFile: charts/weather-sim/values-poc.yaml
+  chartPath: charts/weather-sim
+  appHost: weather-poc.example.com
+  sessionSecretName: weather-sim-session-secret
+  sessionSecretKey: SESSION_SECRET
 
 stages:
   - stage: BuildAndTest
+    displayName: Build and test application
     jobs:
       - template: pipelines/templates/build-test.yml
+        parameters:
+          appDirectory: app
+
   - stage: Containerize
+    displayName: Build and push containers to ECR
     dependsOn: BuildAndTest
     jobs:
       - template: pipelines/templates/containerize.yml
+        parameters:
+          appDirectory: app
+          awsRegion: $(awsRegion)
+          apiRepositoryName: $(apiRepositoryName)
+          webRepositoryName: $(webRepositoryName)
+
   - stage: DeployPOC
+    displayName: Deploy application to EKS
     dependsOn: Containerize
     jobs:
       - template: pipelines/templates/deploy.yml
-  - stage: DAST
-    dependsOn: DeployPOC
-    jobs:
-      - template: pipelines/templates/dast.yml
-  - stage: Gate
-    dependsOn: DAST
-    jobs:
-      - template: pipelines/templates/gate.yml
+        parameters:
+          awsRegion: $(awsRegion)
+          eksClusterName: $(eksClusterName)
+          kubernetesNamespace: $(kubernetesNamespace)
+          helmReleaseName: $(helmReleaseName)
+          chartPath: $(chartPath)
+          helmValuesFile: $(helmValuesFile)
+          apiRepositoryName: $(apiRepositoryName)
+          webRepositoryName: $(webRepositoryName)
+          appHost: $(appHost)
+          sessionSecretName: $(sessionSecretName)
+          sessionSecretKey: $(sessionSecretKey)

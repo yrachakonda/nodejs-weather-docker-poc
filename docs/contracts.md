@@ -1,4 +1,13 @@
-# Wave 0 Contract Lock
+# Contract Reference
+
+## API base path
+- `/api/v1`
+
+## Roles
+- `anonymous`
+- `basic`
+- `premium`
+- `admin`
 
 ## API endpoint contract
 - `POST /api/v1/auth/register`
@@ -7,25 +16,67 @@
 - `GET /api/v1/auth/me`
 - `GET /api/v1/weather/current?location=<location>`
 - `GET /api/v1/weather/premium-forecast?location=<location>`
-- `GET /api/v1/system/live|ready|health|version`
+- `GET /api/v1/system/live`
+- `GET /api/v1/system/ready`
+- `GET /api/v1/system/health`
+- `GET /api/v1/system/version`
 
-## Response/error contract
-- Success payload: `{ data: ... }` for weather, `{ user: ... }` for auth.
-- Generic errors: `{ error: 'Unauthorized'|'Forbidden'|'Invalid request'|'Internal server error' }`.
+## Auth and authorization contract
+- Session cookie is the authoritative authenticated identity state.
+- `x-api-key` is required on both weather endpoints.
+- `GET /api/v1/weather/current` does not require a session.
+- `GET /api/v1/weather/premium-forecast` requires both a valid session and role `premium` or `admin`.
+- `POST /api/v1/auth/logout` requires a session.
+- `GET /api/v1/auth/me` requires a session.
 
-## Auth/session/API key contract
-- Session cookie is authoritative identity state.
-- `x-api-key` required for weather endpoints.
-- Premium route requires role in `premium|admin`.
+## Response and error contract
+Success payloads:
+- Auth endpoints return `{ user: ... }`
+- Weather endpoints return `{ data: ... }`
+- Logout returns `204 No Content`
+- System endpoints return simple JSON status payloads such as `{ status: "healthy" }` or `{ version: "1.0.0" }`
+
+Common error payloads:
+- `{ error: "Unauthorized" }`
+- `{ error: "Forbidden" }`
+- `{ error: "Invalid credentials" }`
+- `{ error: "Too many requests" }`
+
+Validation failures from request parsing can also surface through the shared error handler.
 
 ## Environment variable catalog
-- `NODE_ENV`, `API_PORT`, `SESSION_SECRET`, `REDIS_URL`, `CORS_ORIGIN`
-- `LOG_LEVEL`, `APP_VERSION`, `RATE_LIMIT_WINDOW_MS`, `RATE_LIMIT_MAX`
-- `VITE_API_BASE_URL`, `VITE_API_KEY`
-- `AWS_REGION`, `CLOUDWATCH_LOG_GROUP`
+Backend:
+- `NODE_ENV`
+- `API_PORT`
+- `SESSION_SECRET`
+- `REDIS_URL`
+- `CORS_ORIGIN`
+- `LOG_LEVEL`
+- `APP_VERSION`
+- `RATE_LIMIT_WINDOW_MS`
+- `RATE_LIMIT_MAX`
+- `WEATHER_SEED_CITY`
 
-## Naming conventions
+Frontend:
+- `VITE_API_BASE_URL`
+- `VITE_API_KEY`
+
+Operational and local compose defaults:
+- `AWS_REGION`
+- `CLOUDWATCH_LOG_GROUP`
+- `DEFAULT_API_KEY`
+
+## Platform naming conventions
 - Project slug: `weather-sim`
-- CloudWatch group: `/weather-sim/poc/app`
+- Default environment: `poc`
+- Terraform cluster name pattern: `<project_name>-<environment>`
 - Helm release: `weather-sim`
-- Terraform project_name: `weather-sim`
+- Kubernetes namespace: `weather-sim`
+- Default Terraform VPC CIDR: `10.0.0.0/16`
+
+## Logging and security controls
+- `helmet` is enabled globally on the API
+- CORS is enabled with credentials support
+- Global rate limiting is enabled
+- Session state is stored in Redis
+- ALB ingress is intended to be protected by a regional WAFv2 ACL in AWS
