@@ -3,6 +3,7 @@ services:
     image: redis:8.6.1
     ports: ["6379:6379"]
   api:
+    image: weather-sim-api:1.0.0
     build: ./backend
     environment:
       NODE_ENV: development
@@ -24,6 +25,7 @@ services:
         fluentd-async: "true"
         fluentd-sub-second-precision: "true"
   web:
+    image: weather-sim-web:1.0.0
     build: ./frontend
     environment:
       VITE_API_BASE_URL: http://localhost:8080/api/v1
