@@ -1,9 +1,28 @@
+parameters:
+  - name: appDirectory
+    type: string
+    default: app
+
 jobs:
   - job: build_test
-    pool: { vmImage: ubuntu-latest }
+    displayName: Build and test workspaces
+    pool:
+      vmImage: ubuntu-latest
     steps:
+      - checkout: self
+
       - task: NodeTool@0
-        inputs: { versionSpec: '22.x' }
-      - script: npm install
+        inputs:
+          versionSpec: "22.x"
+
+      - script: npm ci
+        displayName: Install workspace dependencies
+        workingDirectory: ${{ parameters.appDirectory }}
+
       - script: npm run build
+        displayName: Build backend and frontend
+        workingDirectory: ${{ parameters.appDirectory }}
+
       - script: npm run test
+        displayName: Run workspace tests
+        workingDirectory: ${{ parameters.appDirectory }}

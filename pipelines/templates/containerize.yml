@@ -1,9 +1,57 @@
+parameters:
+  - name: appDirectory
+    type: string
+    default: app
+  - name: awsRegion
+    type: string
+  - name: apiRepositoryName
+    type: string
+  - name: webRepositoryName
+    type: string
+
 jobs:
-  - job: docker
-    pool: { vmImage: ubuntu-latest }
+  - job: containerize
+    displayName: Build and push container images
+    pool:
+      vmImage: ubuntu-latest
     steps:
-      - script: docker build -t $(apiImage) ./backend
-      - script: docker build -t $(webImage) ./frontend
-      - script: |
-          docker push $(apiImage)
-          docker push $(webImage)
+      - checkout: self
+
+      - bash: |
+          set -euo pipefail
+
+          IMAGE_TAG="$(Build.SourceVersion)"
+          AWS_ACCOUNT_ID="$(aws sts get-caller-identity --query Account --output text)"
+          ECR_REGISTRY="${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com"
+
+          aws ecr get-login-password --region "${AWS_REGION}" | docker login --username AWS --password-stdin "${ECR_REGISTRY}"
+
+          aws ecr describe-repositories --repository-names "${API_REPOSITORY}" --region "${AWS_REGION}" >/dev/null 2>&1 || \
+            aws ecr create-repository --repository-name "${API_REPOSITORY}" --region "${AWS_REGION}" >/dev/null
+
+          aws ecr describe-repositories --repository-names "${WEB_REPOSITORY}" --region "${AWS_REGION}" >/dev/null 2>&1 || \
+            aws ecr create-repository --repository-name "${WEB_REPOSITORY}" --region "${AWS_REGION}" >/dev/null
+
+          docker build \
+            -t "${ECR_REGISTRY}/${API_REPOSITORY}:${IMAGE_TAG}" \
+            -t "${ECR_REGISTRY}/${API_REPOSITORY}:latest" \
+            "${APP_DIRECTORY}/backend"
+
+          docker build \
+            -t "${ECR_REGISTRY}/${WEB_REPOSITORY}:${IMAGE_TAG}" \
+            -t "${ECR_REGISTRY}/${WEB_REPOSITORY}:latest" \
+            "${APP_DIRECTORY}/frontend"
+
+          docker push "${ECR_REGISTRY}/${API_REPOSITORY}:${IMAGE_TAG}"
+          docker push "${ECR_REGISTRY}/${API_REPOSITORY}:latest"
+          docker push "${ECR_REGISTRY}/${WEB_REPOSITORY}:${IMAGE_TAG}"
+          docker push "${ECR_REGISTRY}/${WEB_REPOSITORY}:latest"
+        displayName: Push API and Web images to ECR
+        env:
+          API_REPOSITORY: ${{ parameters.apiRepositoryName }}
+          APP_DIRECTORY: ${{ parameters.appDirectory }}
+          AWS_ACCESS_KEY_ID: $(AWS_ACCESS_KEY_ID)
+          AWS_REGION: ${{ parameters.awsRegion }}
+          AWS_SECRET_ACCESS_KEY: $(AWS_SECRET_ACCESS_KEY)
+          AWS_SESSION_TOKEN: $(AWS_SESSION_TOKEN)
+          WEB_REPOSITORY: ${{ parameters.webRepositoryName }}

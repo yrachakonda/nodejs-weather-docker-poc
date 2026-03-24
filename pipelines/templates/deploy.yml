@@ -1,9 +1,138 @@
+parameters:
+  - name: awsRegion
+    type: string
+  - name: eksClusterName
+    type: string
+  - name: kubernetesNamespace
+    type: string
+  - name: helmReleaseName
+    type: string
+  - name: chartPath
+    type: string
+  - name: helmValuesFile
+    type: string
+  - name: apiRepositoryName
+    type: string
+  - name: webRepositoryName
+    type: string
+  - name: appHost
+    type: string
+  - name: sessionSecretName
+    type: string
+  - name: sessionSecretKey
+    type: string
+
 jobs:
   - deployment: deploy_poc
-    environment: weather-sim-poc
+    displayName: Deploy Helm release to EKS
+    environment: weather-sim-poc-app
+    pool:
+      vmImage: ubuntu-latest
     strategy:
       runOnce:
         deploy:
           steps:
-            - script: helm upgrade --install weather-sim charts/weather-sim -f charts/weather-sim/values-poc.yaml
-            - script: curl -f https://$(POC_HOST)/api/v1/system/health
+            - checkout: self
+
+            - bash: |
+                set -euo pipefail
+
+                if ! command -v kubectl >/dev/null 2>&1; then
+                  curl -fsSL "https://dl.k8s.io/release/$(curl -fsSL https://dl.k8s.io/release/stable.txt)/bin/linux/amd64/kubectl" -o kubectl
+                  chmod +x kubectl
+                  sudo mv kubectl /usr/local/bin/kubectl
+                fi
+
+                if ! command -v helm >/dev/null 2>&1; then
+                  curl -fsSL https://raw.githubusercontent.com/helm/helm/main/scripts/get-helm-3 | bash
+                fi
+              displayName: Ensure kubectl and helm are installed
+
+            - bash: |
+                set -euo pipefail
+
+                AWS_ACCOUNT_ID="$(aws sts get-caller-identity --query Account --output text)"
+                ECR_REGISTRY="${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com"
+
+                aws eks update-kubeconfig --name "${EKS_CLUSTER_NAME}" --region "${AWS_REGION}"
+
+                kubectl create namespace "${KUBERNETES_NAMESPACE}" --dry-run=client -o yaml | kubectl apply -f -
+
+                kubectl create secret generic "${SESSION_SECRET_NAME}" \
+                  --namespace "${KUBERNETES_NAMESPACE}" \
+                  --from-literal="${SESSION_SECRET_KEY}=${SESSION_SECRET_VALUE}" \
+                  --dry-run=client -o yaml | kubectl apply -f -
+
+                HELM_ARGS=(
+                  upgrade --install "${HELM_RELEASE_NAME}" "${CHART_PATH}"
+                  --namespace "${KUBERNETES_NAMESPACE}"
+                  --create-namespace
+                  --wait
+                  -f "${HELM_VALUES_FILE}"
+                  --set "image.api=${ECR_REGISTRY}/${API_REPOSITORY}:latest"
+                  --set "image.web=${ECR_REGISTRY}/${WEB_REPOSITORY}:latest"
+                  --set "env.CORS_ORIGIN=https://${APP_HOST}"
+                  --set "env.APP_VERSION=$(Build.SourceVersion)"
+                  --set "ingress.enabled=true"
+                  --set "ingress.className=alb"
+                  --set "ingress.host=${APP_HOST}"
+                  --set "secrets.sessionSecretName=${SESSION_SECRET_NAME}"
+                  --set "secrets.sessionSecretKey=${SESSION_SECRET_KEY}"
+                  --set-string "ingress.annotations.kubernetes\\.io/ingress\\.class=alb"
+                  --set-string "ingress.annotations.alb\\.ingress\\.kubernetes\\.io/scheme=internet-facing"
+                  --set-string "ingress.annotations.alb\\.ingress\\.kubernetes\\.io/target-type=ip"
+                  --set-string "ingress.annotations.alb\\.ingress\\.kubernetes\\.io/listen-ports=[{\"HTTP\":80},{\"HTTPS\":443}]"
+                  --set-string "ingress.annotations.alb\\.ingress\\.kubernetes\\.io/ssl-redirect=443"
+                  --set-string "service.apiAnnotations.alb\\.ingress\\.kubernetes\\.io/healthcheck-path=/api/v1/system/health"
+                )
+
+                if [ -n "${ALB_CERTIFICATE_ARN:-}" ]; then
+                  HELM_ARGS+=(--set-string "ingress.annotations.alb\\.ingress\\.kubernetes\\.io/certificate-arn=${ALB_CERTIFICATE_ARN}")
+                fi
+
+                if [ -n "${ALB_WAF_ACL_ARN:-}" ]; then
+                  HELM_ARGS+=(--set-string "ingress.annotations.alb\\.ingress\\.kubernetes\\.io/wafv2-acl-arn=${ALB_WAF_ACL_ARN}")
+                fi
+
+                helm "${HELM_ARGS[@]}"
+
+                kubectl rollout status deployment/weather-sim-api --namespace "${KUBERNETES_NAMESPACE}" --timeout=5m
+                kubectl rollout status deployment/weather-sim-web --namespace "${KUBERNETES_NAMESPACE}" --timeout=5m
+                kubectl get ingress --namespace "${KUBERNETES_NAMESPACE}"
+              displayName: Deploy application with Helm
+              env:
+                ALB_CERTIFICATE_ARN: $(ALB_CERTIFICATE_ARN)
+                ALB_WAF_ACL_ARN: $(ALB_WAF_ACL_ARN)
+                API_REPOSITORY: ${{ parameters.apiRepositoryName }}
+                AWS_ACCESS_KEY_ID: $(AWS_ACCESS_KEY_ID)
+                AWS_REGION: ${{ parameters.awsRegion }}
+                AWS_SECRET_ACCESS_KEY: $(AWS_SECRET_ACCESS_KEY)
+                AWS_SESSION_TOKEN: $(AWS_SESSION_TOKEN)
+                CHART_PATH: ${{ parameters.chartPath }}
+                EKS_CLUSTER_NAME: ${{ parameters.eksClusterName }}
+                HELM_RELEASE_NAME: ${{ parameters.helmReleaseName }}
+                HELM_VALUES_FILE: ${{ parameters.helmValuesFile }}
+                KUBERNETES_NAMESPACE: ${{ parameters.kubernetesNamespace }}
+                SESSION_SECRET_KEY: ${{ parameters.sessionSecretKey }}
+                SESSION_SECRET_NAME: ${{ parameters.sessionSecretName }}
+                SESSION_SECRET_VALUE: $(SESSION_SECRET)
+                WEB_REPOSITORY: ${{ parameters.webRepositoryName }}
+                APP_HOST: ${{ parameters.appHost }}
+
+            - bash: |
+                set -euo pipefail
+
+                for attempt in $(seq 1 20); do
+                  if curl -fsS "https://${APP_HOST}/api/v1/system/health"; then
+                    exit 0
+                  fi
+
+                  echo "Health endpoint not ready yet, retrying..."
+                  sleep 15
+                done
+
+                echo "Application health check did not succeed in time."
+                exit 1
+              displayName: Smoke test application through ALB
+              env:
+                APP_HOST: ${{ parameters.appHost }}

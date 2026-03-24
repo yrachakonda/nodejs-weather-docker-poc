@@ -27,11 +27,28 @@ What this does not currently provision:
 The Terraform stack assumes images are available in ECR. Build and push both application images before or after infrastructure creation, depending on your deployment flow.
 
 Example high-level sequence:
-1. Build the API image from `backend/`
-2. Build the Web image from `frontend/`
+1. Build the API image from `app/backend`
+2. Build the Web image from `app/frontend`
 3. Authenticate to ECR
 4. Push both images to the Terraform-created repositories
 5. Update the deployed tags if you are not using `:latest`
+
+## Default POC credentials
+These credentials are hard-coded in the application seed files and are valid in the local POC unless changed in code.
+
+Default users:
+- `admin` / `admin-pass`
+- `basicuser` / `basic-pass`
+- `premiumuser` / `premium-pass`
+
+Default valid `x-api-key` values:
+- `poc-basic-key-001`
+- `poc-premium-key-001`
+- `poc-admin-key-001`
+
+Source of truth:
+- `app/backend/src/data/seed-users.json`
+- `app/backend/src/data/seed-api-keys.json`
 
 ## Verify deployment
 Infrastructure checks:
@@ -53,6 +70,175 @@ Authorization checks:
 - `GET /api/v1/weather/premium-forecast` with a valid `x-api-key` but no session should return `401`
 - `GET /api/v1/weather/premium-forecast` as `basicuser` should return `403`
 - `GET /api/v1/weather/premium-forecast` as `premiumuser` should return `200`
+
+## API endpoint testing with curl
+Set these shell variables first. Replace the host value for a deployed environment.
+
+```bash
+export BASE_URL="http://localhost:8080/api/v1"
+export APP_URL="http://localhost:8080"
+export API_KEY="poc-premium-key-001"
+export COOKIE_JAR="./weather-sim.cookies.txt"
+```
+
+### System endpoints
+
+Live:
+
+```bash
+curl -i "${BASE_URL}/system/live"
+```
+
+Ready:
+
+```bash
+curl -i "${BASE_URL}/system/ready"
+```
+
+Health:
+
+```bash
+curl -i "${BASE_URL}/system/health"
+```
+
+Version:
+
+```bash
+curl -i "${BASE_URL}/system/version"
+```
+
+### Auth endpoints
+
+Register a new basic user:
+
+```bash
+curl -i \
+  -c "${COOKIE_JAR}" \
+  -H "Content-Type: application/json" \
+  -X POST "${BASE_URL}/auth/register" \
+  -d '{"username":"newuser","password":"newuser-pass"}'
+```
+
+Login as premium user:
+
+```bash
+curl -i \
+  -c "${COOKIE_JAR}" \
+  -H "Content-Type: application/json" \
+  -X POST "${BASE_URL}/auth/login" \
+  -d '{"username":"premiumuser","password":"premium-pass"}'
+```
+
+Get current authenticated user:
+
+```bash
+curl -i \
+  -b "${COOKIE_JAR}" \
+  "${BASE_URL}/auth/me"
+```
+
+Logout:
+
+```bash
+curl -i \
+  -b "${COOKIE_JAR}" \
+  -X POST "${BASE_URL}/auth/logout"
+```
+
+### Weather endpoints
+
+Current weather with API key only:
+
+```bash
+curl -i \
+  -H "x-api-key: ${API_KEY}" \
+  "${BASE_URL}/weather/current?location=seattle"
+```
+
+Premium forecast with API key and authenticated premium session:
+
+```bash
+curl -i \
+  -b "${COOKIE_JAR}" \
+  -H "x-api-key: ${API_KEY}" \
+  "${BASE_URL}/weather/premium-forecast?location=seattle"
+```
+
+### Negative tests
+
+Current weather without API key:
+
+```bash
+curl -i "${BASE_URL}/weather/current?location=seattle"
+```
+
+Premium forecast without session:
+
+```bash
+curl -i \
+  -H "x-api-key: ${API_KEY}" \
+  "${BASE_URL}/weather/premium-forecast?location=seattle"
+```
+
+Premium forecast as `basicuser`:
+
+```bash
+curl -i \
+  -c "${COOKIE_JAR}" \
+  -H "Content-Type: application/json" \
+  -X POST "${BASE_URL}/auth/login" \
+  -d '{"username":"basicuser","password":"basic-pass"}'
+
+curl -i \
+  -b "${COOKIE_JAR}" \
+  -H "x-api-key: poc-basic-key-001" \
+  "${BASE_URL}/weather/premium-forecast?location=seattle"
+```
+
+### Full endpoint coverage checklist
+- `POST /auth/register`
+- `POST /auth/login`
+- `POST /auth/logout`
+- `GET /auth/me`
+- `GET /weather/current`
+- `GET /weather/premium-forecast`
+- `GET /system/live`
+- `GET /system/ready`
+- `GET /system/health`
+- `GET /system/version`
+
+## Swagger UI
+Swagger assets are available in `docs/`:
+- OpenAPI spec: `docs/openapi.yaml`
+- Swagger UI page: `docs/swagger.html`
+
+To use the Swagger page locally:
+1. Start the API locally from `app/`
+2. Open `docs/swagger.html` in a browser
+3. Set the server URL to `http://localhost:8080/api/v1`
+4. Click `Authorize` and supply an API key when testing weather endpoints
+5. Login first if you want to test session-protected routes such as `/auth/me`, `/auth/logout`, or `/weather/premium-forecast`
+
+Note:
+- Browser-based session testing works best when the Swagger page is served from the same origin as the API or from a local static server that can send cookies correctly.
+
+## Postman collection
+The Postman collection is available at:
+- `docs/postman/weather-sim.postman_collection.json`
+
+Recommended Postman variables:
+- `baseUrl`
+- `apiKey`
+- `username`
+- `password`
+- `location`
+
+The collection includes:
+- System checks
+- Auth flows
+- Current weather
+- Premium forecast
+- Negative authorization scenarios
 
 ## Terraform quality checks
 Run from `terraform/`:

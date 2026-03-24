@@ -1,6 +1,0 @@
-jobs:
-  - job: rapid7_zap
-    pool: { vmImage: ubuntu-latest }
-    steps:
-      - script: echo "Run Rapid7 DAST via API" 
-      - script: docker run --rm -t owasp/zap2docker-stable zap-baseline.py -t https://$(POC_HOST)

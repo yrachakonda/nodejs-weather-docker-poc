@@ -1,0 +1,179 @@
+{
+  "info": {
+    "_postman_id": "7eb390d8-5270-4c6d-99b5-0c35db6172b3",
+    "name": "Weather Simulation API",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+    "description": "Postman collection for the Weather Simulation POC API."
+  },
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://localhost:8080/api/v1"
+    },
+    {
+      "key": "apiKey",
+      "value": "poc-premium-key-001"
+    },
+    {
+      "key": "location",
+      "value": "seattle"
+    },
+    {
+      "key": "username",
+      "value": "premiumuser"
+    },
+    {
+      "key": "password",
+      "value": "premium-pass"
+    }
+  ],
+  "item": [
+    {
+      "name": "System",
+      "item": [
+        {
+          "name": "Live",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/system/live"
+          }
+        },
+        {
+          "name": "Ready",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/system/ready"
+          }
+        },
+        {
+          "name": "Health",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/system/health"
+          }
+        },
+        {
+          "name": "Version",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/system/version"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Auth",
+      "item": [
+        {
+          "name": "Register User",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"username\": \"newuser\",\n  \"password\": \"newuser-pass\"\n}"
+            },
+            "url": "{{baseUrl}}/auth/register"
+          }
+        },
+        {
+          "name": "Login",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"username\": \"{{username}}\",\n  \"password\": \"{{password}}\"\n}"
+            },
+            "url": "{{baseUrl}}/auth/login"
+          }
+        },
+        {
+          "name": "Me",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/auth/me"
+          }
+        },
+        {
+          "name": "Logout",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": "{{baseUrl}}/auth/logout"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Weather",
+      "item": [
+        {
+          "name": "Current Weather",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "x-api-key",
+                "value": "{{apiKey}}"
+              }
+            ],
+            "url": "{{baseUrl}}/weather/current?location={{location}}"
+          }
+        },
+        {
+          "name": "Premium Forecast",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "x-api-key",
+                "value": "{{apiKey}}"
+              }
+            ],
+            "url": "{{baseUrl}}/weather/premium-forecast?location={{location}}"
+          }
+        },
+        {
+          "name": "Current Weather Without API Key",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/weather/current?location={{location}}"
+          }
+        },
+        {
+          "name": "Premium Forecast Without Session",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "x-api-key",
+                "value": "{{apiKey}}"
+              }
+            ],
+            "auth": {
+              "type": "noauth"
+            },
+            "url": "{{baseUrl}}/weather/premium-forecast?location={{location}}"
+          }
+        }
+      ]
+    }
+  ]
+}

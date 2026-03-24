@@ -1,0 +1,35 @@
+trigger:
+  branches:
+    include:
+      - main
+  paths:
+    include:
+      - terraform/*
+      - terraform/**
+      - azure-pipelines-terraform.yml
+      - pipelines/templates/*
+      - pipelines/templates/**
+
+variables:
+  awsRegion: us-east-1
+  terraformWorkingDirectory: terraform
+  terraformVarFile: environments/poc/terraform.tfvars
+
+stages:
+  - stage: ValidateTerraform
+    displayName: Validate Terraform
+    jobs:
+      - template: pipelines/templates/terraform-validate.yml
+        parameters:
+          awsRegion: $(awsRegion)
+          workingDirectory: $(terraformWorkingDirectory)
+
+  - stage: DeployTerraform
+    displayName: Plan and apply Terraform
+    dependsOn: ValidateTerraform
+    jobs:
+      - template: pipelines/templates/terraform-deploy.yml
+        parameters:
+          awsRegion: $(awsRegion)
+          workingDirectory: $(terraformWorkingDirectory)
+          varFile: $(terraformVarFile)
