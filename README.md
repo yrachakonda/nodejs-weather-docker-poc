@@ -52,7 +52,7 @@ Local services:
 - `redis`
 - `api`
 - `web`
-- `fluent-bit`
+- `fluent-bit` in local stdout mode
 
 ## Application workspace commands
 Run from `app/`:
@@ -127,6 +127,7 @@ For local API testing:
 - Start the application from `app/`
 - Use `http://localhost:8080/api/v1` as the base URL
 - Use `http://localhost:8080/api/v1/system/health` as the fastest connectivity check
+- Use `docker compose logs api web` to inspect local application logs; the Docker Compose Fluent Bit config does not ship logs to CloudWatch
 
 ## Related docs
 - [Architecture](/./docs/architecture.md)

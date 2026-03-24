@@ -16,6 +16,13 @@ services:
       RATE_LIMIT_MAX: 120
     ports: ["8080:8080"]
     depends_on: [redis]
+    logging:
+      driver: fluentd
+      options:
+        fluentd-address: localhost:24224
+        tag: api.{{.Name}}
+        fluentd-async: "true"
+        fluentd-sub-second-precision: "true"
   web:
     build: ./frontend
     environment:
@@ -24,6 +31,6 @@ services:
     depends_on: [api]
   fluent-bit:
     image: fluent/fluent-bit:5.0.0-oauth2-rfc
+    ports: ["24224:24224"]
     volumes:
-      - ./fluent-bit/fluent-bit.conf:/fluent-bit/etc/fluent-bit.conf:ro
-    depends_on: [api]
+      - ./fluent-bit/fluent-bit.local.conf:/fluent-bit/etc/fluent-bit.conf:ro
