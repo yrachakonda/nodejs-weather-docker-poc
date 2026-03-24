@@ -1,5 +1,5 @@
 [
-  { "key": "poc-basic-key-001", "owner": "basicuser", "role": "basic", "active": true },
-  { "key": "poc-premium-key-001", "owner": "premiumuser", "role": "premium", "active": true },
-  { "key": "poc-admin-key-001", "owner": "admin", "role": "admin", "active": true }
+  { "keyHash": "scrypt$0b62f0c60412f745b7a4b73371841597$07fcd8b93060bb1177b9e39520415f58e35ccf2a8860693d82eb6d7387bb8f07d26274b9d26d41c8dd62ad86b2bc766c6e55494f33111eecbe826407dffdd218", "owner": "basicuser", "role": "basic", "active": true },
+  { "keyHash": "scrypt$ff0b34b4a482017254668109b793183a$dacba9dc1918af1fdef989844f0492b1b96d7397496bf7d2580dfb84503ebda9c6abf35fa88d5415ca0f7c6f915f91c9b94e72a0d0d961da9844934c7afe244e", "owner": "premiumuser", "role": "premium", "active": true },
+  { "keyHash": "scrypt$1ccdb26bfe1e6fa32418927759c29a78$b121c007c7f1bb29f6d40a9eedebdea57663ec5bacf4b25ff7f42865cbe072253319237f7b5803944e423f1108360d8521f6e66ec0d217dd316fed6fd71949c8", "owner": "admin", "role": "admin", "active": true }
 ]

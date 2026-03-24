@@ -34,7 +34,7 @@ Example high-level sequence:
 5. Update the deployed tags if you are not using `:latest`
 
 ## Default POC credentials
-These credentials are hard-coded in the application seed files and are valid in the local POC unless changed in code.
+These demo credentials are valid in the local POC unless changed in code. The API stores the corresponding passwords and API keys as salted `scrypt` hashes, not plaintext.
 
 Default users:
 - `admin` / `admin-pass`
@@ -67,7 +67,8 @@ Application smoke checks:
 
 Authorization checks:
 - `GET /api/v1/weather/current` with a valid `x-api-key` should succeed without a session
-- `GET /api/v1/weather/premium-forecast` with a valid `x-api-key` but no session should return `401`
+- `GET /api/v1/weather/current` with a valid session should also succeed without an API key
+- `GET /api/v1/weather/premium-forecast` with a valid premium `x-api-key` should return `200`
 - `GET /api/v1/weather/premium-forecast` as `basicuser` should return `403`
 - `GET /api/v1/weather/premium-forecast` as `premiumuser` should return `200`
 
@@ -78,6 +79,7 @@ Set these shell variables first. Replace the host value for a deployed environme
 export BASE_URL="http://localhost:8080/api/v1"
 export APP_URL="http://localhost:8080"
 export API_KEY="poc-premium-key-001"
+export BASIC_API_KEY="poc-basic-key-001"
 export COOKIE_JAR="./weather-sim.cookies.txt"
 ```
 
@@ -155,28 +157,43 @@ curl -i \
   "${BASE_URL}/weather/current?location=seattle"
 ```
 
-Premium forecast with API key and authenticated premium session:
+Current weather with session only:
 
 ```bash
 curl -i \
   -b "${COOKIE_JAR}" \
+  "${BASE_URL}/weather/current?location=seattle"
+```
+
+Premium forecast with premium API key only:
+
+```bash
+curl -i \
   -H "x-api-key: ${API_KEY}" \
+  "${BASE_URL}/weather/premium-forecast?location=seattle"
+```
+
+Premium forecast with authenticated premium session:
+
+```bash
+curl -i \
+  -b "${COOKIE_JAR}" \
   "${BASE_URL}/weather/premium-forecast?location=seattle"
 ```
 
 ### Negative tests
 
-Current weather without API key:
+Current weather without session or API key:
 
 ```bash
 curl -i "${BASE_URL}/weather/current?location=seattle"
 ```
 
-Premium forecast without session:
+Premium forecast with a basic API key:
 
 ```bash
 curl -i \
-  -H "x-api-key: ${API_KEY}" \
+  -H "x-api-key: ${BASIC_API_KEY}" \
   "${BASE_URL}/weather/premium-forecast?location=seattle"
 ```
 
@@ -191,7 +208,6 @@ curl -i \
 
 curl -i \
   -b "${COOKIE_JAR}" \
-  -H "x-api-key: poc-basic-key-001" \
   "${BASE_URL}/weather/premium-forecast?location=seattle"
 ```
 
@@ -217,7 +233,7 @@ To use the Swagger page locally:
 2. Open `docs/swagger.html` in a browser
 3. Set the server URL to `http://localhost:8080/api/v1`
 4. Click `Authorize` and supply an API key when testing weather endpoints
-5. Login first if you want to test session-protected routes such as `/auth/me`, `/auth/logout`, or `/weather/premium-forecast`
+5. Login first if you want to test session-backed weather access without an API key, or session routes such as `/auth/me` and `/auth/logout`
 
 Note:
 - Browser-based session testing works best when the Swagger page is served from the same origin as the API or from a local static server that can send cookies correctly.
@@ -261,9 +277,9 @@ Primary places to inspect:
 - WAF telemetry for blocked or sampled requests
 
 Useful symptoms and checks:
-- `401 Unauthorized` on `/weather/current`: missing or invalid `x-api-key`
-- `401 Unauthorized` on `/weather/premium-forecast`: missing session
-- `403 Forbidden` on `/weather/premium-forecast`: wrong role
+- `401 Unauthorized` on `/weather/current`: missing both session and `x-api-key`, or invalid `x-api-key`
+- `401 Unauthorized` on `/weather/premium-forecast`: missing both session and `x-api-key`, or invalid `x-api-key`
+- `403 Forbidden` on `/weather/premium-forecast`: wrong role for the session or API key
 - Ingress missing address: inspect AWS Load Balancer Controller logs
 - TLS issues: verify ACM validation completed and ingress certificate annotation is correct
 

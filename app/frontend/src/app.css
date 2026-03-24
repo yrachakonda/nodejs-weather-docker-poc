@@ -333,12 +333,13 @@ h2 {
 .signage-widget {
   position: relative;
   overflow: hidden;
-  padding: 22px;
+  padding: 18px;
   border-radius: 18px;
   background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
   color: #fff;
   box-shadow: 0 20px 48px rgba(0, 0, 0, 0.32);
   font-family: "Montserrat", Arial, sans-serif;
+  font-size: 0.88rem;
 }
 
 .signage-widget--forecast {
@@ -398,33 +399,33 @@ h2 {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 24px;
-  padding-bottom: 16px;
+  margin-bottom: 14px;
+  padding-bottom: 12px;
   border-bottom: 2px solid rgba(255, 255, 255, 0.18);
 }
 
 .signage-brand {
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: 10px;
 }
 
 .signage-brand__icon {
-  width: 28px;
-  height: 28px;
+  width: 20px;
+  height: 20px;
   filter: drop-shadow(0 0 6px rgba(255, 255, 255, 0.4));
 }
 
 .signage-brand__eyebrow {
   margin: 0 0 4px;
-  font-size: 0.72rem;
+  font-size: 0.62rem;
   letter-spacing: 0.18em;
   text-transform: uppercase;
   color: rgba(255, 255, 255, 0.72);
 }
 
 .signage-brand__title {
-  font-size: 1.5rem;
+  font-size: 1rem;
   font-weight: 700;
   letter-spacing: 0.05em;
   text-transform: uppercase;
@@ -435,7 +436,7 @@ h2 {
 }
 
 .signage-clock__time {
-  font-size: 1.9rem;
+  font-size: 1.15rem;
   font-weight: 700;
   text-shadow: 0 0 10px rgba(255, 255, 255, 0.25);
 }
@@ -443,22 +444,22 @@ h2 {
 .signage-clock__date {
   margin-top: 4px;
   color: rgba(224, 224, 224, 0.88);
-  font-size: 1rem;
+  font-size: 0.76rem;
 }
 
 .signage-search {
-  margin-bottom: 22px;
+  margin-bottom: 14px;
 }
 
 .signage-search__form {
   display: grid;
   grid-template-columns: minmax(0, 1fr) auto;
-  gap: 12px;
+  gap: 10px;
 }
 
 .signage-search__input {
-  min-height: 52px;
-  padding: 0 18px;
+  min-height: 40px;
+  padding: 0 14px;
   border: 2px solid rgba(255, 255, 255, 0.18);
   border-radius: 999px;
   background: rgba(255, 255, 255, 0.08);
@@ -476,8 +477,8 @@ h2 {
 }
 
 .signage-search__button {
-  min-height: 52px;
-  padding: 0 18px;
+  min-height: 40px;
+  padding: 0 14px;
   border: none;
   border-radius: 999px;
   background: rgba(255, 255, 255, 0.14);
@@ -491,9 +492,9 @@ h2 {
   justify-content: space-between;
   align-items: center;
   gap: 24px;
-  min-height: 240px;
-  margin-bottom: 24px;
-  padding: 24px;
+  min-height: 160px;
+  margin-bottom: 14px;
+  padding: 16px;
   border-radius: 12px;
   background: rgba(0, 0, 0, 0.2);
   backdrop-filter: blur(5px);
@@ -501,7 +502,7 @@ h2 {
 }
 
 .signage-current--forecast {
-  min-height: 210px;
+  min-height: 150px;
 }
 
 .signage-current__details {
@@ -512,47 +513,47 @@ h2 {
 
 .signage-location {
   margin-bottom: 6px;
-  font-size: clamp(2rem, 4vw, 2.8rem);
+  font-size: clamp(1.15rem, 2.2vw, 1.6rem);
   font-weight: 700;
   color: #fff;
   text-shadow: 0 0 10px rgba(255, 255, 255, 0.25);
 }
 
 .signage-temperature {
-  font-size: clamp(4rem, 9vw, 5.4rem);
+  font-size: clamp(2rem, 5vw, 2.8rem);
   font-weight: 700;
   line-height: 1;
 }
 
 .signage-condition {
-  margin-top: 10px;
+  margin-top: 6px;
   color: #e0e0e0;
-  font-size: 1.35rem;
+  font-size: 0.82rem;
 }
 
 .signage-current__icon {
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 160px;
-  height: 160px;
+  width: 96px;
+  height: 96px;
 }
 
 .signage-weather-icon {
-  width: 160px;
-  height: 160px;
+  width: 96px;
+  height: 96px;
   filter: drop-shadow(0 0 12px rgba(255, 255, 255, 0.32));
 }
 
 .signage-stats {
   display: grid;
   grid-template-columns: repeat(4, minmax(0, 1fr));
-  gap: 16px;
-  margin-bottom: 24px;
+  gap: 10px;
+  margin-bottom: 14px;
 }
 
 .signage-stat {
-  padding: 16px;
+  padding: 12px;
   border-radius: 10px;
   text-align: center;
   background: rgba(255, 255, 255, 0.1);
@@ -565,38 +566,38 @@ h2 {
 }
 
 .signage-stat__icon {
-  margin-bottom: 10px;
-  font-size: 1.45rem;
+  margin-bottom: 6px;
+  font-size: 1rem;
 }
 
 .signage-stat__label {
   margin-bottom: 6px;
-  font-size: 0.82rem;
+  font-size: 0.7rem;
   color: #e0e0e0;
   text-transform: uppercase;
   letter-spacing: 0.12em;
 }
 
 .signage-stat__value {
-  font-size: 1.4rem;
+  font-size: 0.95rem;
   font-weight: 600;
 }
 
 .signage-forecast {
-  padding: 18px;
+  padding: 12px;
   border-radius: 12px;
   background: rgba(0, 0, 0, 0.15);
 }
 
 .signage-forecast__title {
-  margin-bottom: 14px;
-  font-size: 1.4rem;
+  margin-bottom: 10px;
+  font-size: 0.9rem;
   font-weight: 600;
 }
 
 .signage-forecast__row {
   display: flex;
-  gap: 16px;
+  gap: 10px;
 }
 
 .signage-forecast__row--scroll {
@@ -616,7 +617,7 @@ h2 {
 .signage-forecast-card {
   flex: 1;
   min-width: 0;
-  padding: 16px;
+  padding: 12px;
   border-radius: 10px;
   text-align: center;
   background: rgba(255, 255, 255, 0.1);
@@ -624,7 +625,7 @@ h2 {
 }
 
 .signage-forecast-card--full {
-  flex: 0 0 148px;
+  flex: 0 0 118px;
 }
 
 .signage-forecast-card:hover {
@@ -633,8 +634,8 @@ h2 {
 }
 
 .signage-forecast-card__day {
-  margin-bottom: 10px;
-  font-size: 1rem;
+  margin-bottom: 6px;
+  font-size: 0.72rem;
   font-weight: 700;
   letter-spacing: 0.08em;
 }
@@ -642,30 +643,30 @@ h2 {
 .signage-forecast-card__icon {
   display: flex;
   justify-content: center;
-  margin-bottom: 10px;
+  margin-bottom: 8px;
 }
 
 .signage-mini-icon {
-  width: 54px;
-  height: 54px;
+  width: 36px;
+  height: 36px;
   filter: drop-shadow(0 0 8px rgba(255, 255, 255, 0.2));
 }
 
 .signage-forecast-card__temp {
-  font-size: 1.3rem;
+  font-size: 0.9rem;
   font-weight: 700;
 }
 
 .signage-forecast-card__meta {
-  font-size: 0.92rem;
+  font-size: 0.72rem;
   color: #e0e0e0;
 }
 
 .signage-forecast-card__stats {
   display: grid;
-  gap: 6px;
-  margin-top: 12px;
-  font-size: 0.8rem;
+  gap: 4px;
+  margin-top: 10px;
+  font-size: 0.66rem;
   color: #d3def3;
 }
 
@@ -673,16 +674,17 @@ h2 {
   display: flex;
   align-items: center;
   gap: 12px;
-  margin-top: 20px;
-  padding: 15px;
+  margin-top: 12px;
+  padding: 10px 12px;
   border-radius: 10px;
   background: rgba(255, 65, 54, 0.88);
   animation: signage-alert-pulse 2s infinite;
   font-weight: 600;
+  font-size: 0.78rem;
 }
 
 .signage-alert__icon {
-  font-size: 1.25rem;
+  font-size: 1rem;
 }
 
 .search-bar {
@@ -869,6 +871,11 @@ h2 {
   background:
     linear-gradient(180deg, rgba(255, 253, 248, 0.96), rgba(250, 242, 229, 0.92)),
     linear-gradient(135deg, rgba(240, 180, 95, 0.1), rgba(31, 109, 104, 0.05));
+}
+
+.auth-card__title {
+  font-size: clamp(1.8rem, 3.5vw, 2.6rem);
+  line-height: 1.05;
 }
 
 .auth-card .field + .field {

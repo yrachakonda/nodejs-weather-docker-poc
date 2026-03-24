@@ -5,7 +5,8 @@ These scenarios reflect the current application behavior and the AWS deployment 
 ## Unauthenticated and auth-bound routes
 - Access `GET /api/v1/auth/me` without a session and expect `401`
 - Access `POST /api/v1/auth/logout` without a session and expect `401`
-- Access `GET /api/v1/weather/premium-forecast` without a session but with a valid API key and expect `401`
+- Access `GET /api/v1/weather/current` without a session and without `x-api-key` and expect `401`
+- Access `GET /api/v1/weather/premium-forecast` without a session and without `x-api-key` and expect `401`
 
 ## API key validation
 - Access `GET /api/v1/weather/current` without `x-api-key` and expect `401`
@@ -14,12 +15,14 @@ These scenarios reflect the current application behavior and the AWS deployment 
 
 ## Mixed auth behavior
 - Access `GET /api/v1/weather/current` with a valid `x-api-key` and no session and expect `200`
-- Access `GET /api/v1/weather/premium-forecast` with a valid `x-api-key` and no session and expect `401`
+- Login as `basicuser` and call `GET /api/v1/weather/current` without `x-api-key` and expect `200`
+- Access `GET /api/v1/weather/premium-forecast` with a valid premium `x-api-key` and no session and expect `200`
 
 ## RBAC
-- Login as `basicuser` and call `GET /api/v1/weather/premium-forecast` with a valid API key and expect `403`
-- Login as `premiumuser` and call the same route with a valid API key and expect `200`
-- Login as `admin` and call the same route with a valid API key and expect `200`
+- Access `GET /api/v1/weather/premium-forecast` with a valid basic API key and expect `403`
+- Login as `basicuser` and call `GET /api/v1/weather/premium-forecast` without `x-api-key` and expect `403`
+- Login as `premiumuser` and call the same route without `x-api-key` and expect `200`
+- Login as `admin` and call the same route without `x-api-key` and expect `200`
 
 ## Payload robustness
 - Send malformed JSON to `POST /api/v1/auth/login` and expect request rejection

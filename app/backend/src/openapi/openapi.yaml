@@ -18,6 +18,10 @@ components:
       type: apiKey
       in: header
       name: x-api-key
+    cookieAuth:
+      type: apiKey
+      in: cookie
+      name: connect.sid
   schemas:
     ErrorResponse:
       type: object
@@ -231,6 +235,7 @@ paths:
       summary: Get the current weather
       security:
         - apiKeyAuth: []
+        - cookieAuth: []
       parameters:
         - in: query
           name: location
@@ -246,7 +251,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/CurrentWeatherResponse'
         '401':
-          description: Missing or invalid API key
+          description: Missing authentication or invalid API key
           content:
             application/json:
               schema:
@@ -258,6 +263,7 @@ paths:
       summary: Get a seven day premium forecast
       security:
         - apiKeyAuth: []
+        - cookieAuth: []
       parameters:
         - in: query
           name: location
@@ -273,13 +279,13 @@ paths:
               schema:
                 $ref: '#/components/schemas/PremiumForecastResponse'
         '401':
-          description: Missing session or invalid API key
+          description: Missing authentication or invalid API key
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
         '403':
-          description: Authenticated user does not have the required role
+          description: Authenticated user or API key does not have the required role
           content:
             application/json:
               schema:

@@ -3,15 +3,20 @@ export type Role = 'anonymous' | 'basic' | 'premium' | 'admin';
 export interface UserRecord {
   id: string;
   username: string;
-  password: string;
+  passwordHash: string;
   role: Exclude<Role, 'anonymous'>;
 }
 
 export interface ApiKeyRecord {
-  key: string;
+  keyHash: string;
   owner: string;
   role: Exclude<Role, 'anonymous'>;
   active: boolean;
+}
+
+export interface ApiKeyPrincipal {
+  owner: string;
+  role: Exclude<Role, 'anonymous'>;
 }
 
 export interface WeatherReport {

@@ -3,7 +3,7 @@
     "_postman_id": "7eb390d8-5270-4c6d-99b5-0c35db6172b3",
     "name": "Weather Simulation API",
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
-    "description": "Postman collection for the Weather Simulation POC API."
+    "description": "Postman collection for the Weather Simulation POC API. Set API keys and passwords in your Postman environment or current values; do not commit populated secrets."
   },
   "variable": [
     {
@@ -12,11 +12,11 @@
     },
     {
       "key": "apiKey",
-      "value": "poc-premium-key-001"
+      "value": ""
     },
     {
       "key": "basicApiKey",
-      "value": "poc-basic-key-001"
+      "value": ""
     },
     {
       "key": "location",
@@ -28,7 +28,7 @@
     },
     {
       "key": "password",
-      "value": "premium-pass"
+      "value": ""
     },
     {
       "key": "basicUsername",
@@ -36,7 +36,7 @@
     },
     {
       "key": "basicPassword",
-      "value": "basic-pass"
+      "value": ""
     },
     {
       "key": "generatedUsername",
@@ -221,6 +221,29 @@
           "name": "Login",
           "event": [
             {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const requestedUsername = pm.variables.get('username') || 'premiumuser';",
+                  "let resolvedPassword = pm.variables.get('password');",
+                  "",
+                  "if (!resolvedPassword) {",
+                  "  if (requestedUsername === 'premiumuser') {",
+                  "    resolvedPassword = 'premium-pass';",
+                  "  } else if (requestedUsername === 'basicuser') {",
+                  "    resolvedPassword = 'basic-pass';",
+                  "  } else if (requestedUsername === 'admin') {",
+                  "    resolvedPassword = 'admin-pass';",
+                  "  }",
+                  "}",
+                  "",
+                  "pm.variables.set('loginUsername', requestedUsername);",
+                  "pm.variables.set('loginPassword', resolvedPassword || '');"
+                ]
+              }
+            },
+            {
               "listen": "test",
               "script": {
                 "type": "text/javascript",
@@ -230,14 +253,15 @@
                   "});",
                   "",
                   "const body = pm.response.json();",
+                  "const expectedUsername = pm.variables.get('loginUsername');",
                   "pm.collectionVariables.set('lastLoggedInUsername', body.user.username);",
                   "",
                   "pm.test('logged-in user matches requested username', function () {",
-                  "  pm.expect(body.user.username).to.eql(pm.variables.get('username'));",
+                  "  pm.expect(body.user.username).to.eql(expectedUsername);",
                   "});",
                   "",
-                  "pm.test('logged-in role is premium', function () {",
-                  "  pm.expect(body.user.role).to.eql('premium');",
+                  "pm.test('logged-in user includes a role', function () {",
+                  "  pm.expect(body.user.role).to.be.oneOf(['basic', 'premium', 'admin']);",
                   "});"
                 ]
               }
@@ -253,7 +277,7 @@
             ],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"username\": \"{{username}}\",\n  \"password\": \"{{password}}\"\n}"
+              "raw": "{\n  \"username\": \"{{loginUsername}}\",\n  \"password\": \"{{loginPassword}}\"\n}"
             },
             "url": "{{baseUrl}}/auth/login"
           }
@@ -314,6 +338,18 @@
           "name": "Current Weather",
           "event": [
             {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const resolvedApiKey = pm.variables.get('apiKey') || 'poc-premium-key-001';",
+                  "const resolvedLocation = (pm.variables.get('location') || 'seattle').trim() || 'seattle';",
+                  "pm.variables.set('resolvedApiKey', resolvedApiKey);",
+                  "pm.variables.set('resolvedLocation', resolvedLocation);"
+                ]
+              }
+            },
+            {
               "listen": "test",
               "script": {
                 "type": "text/javascript",
@@ -323,8 +359,9 @@
                   "});",
                   "",
                   "const body = pm.response.json();",
+                  "const expectedLocation = pm.variables.get('resolvedLocation');",
                   "pm.test('current weather contains the requested location', function () {",
-                  "  pm.expect(body.data.location).to.eql(pm.variables.get('location'));",
+                  "  pm.expect(body.data.location).to.eql(expectedLocation);",
                   "});",
                   "",
                   "pm.test('current weather includes condition and temperature', function () {",
@@ -340,15 +377,27 @@
             "header": [
               {
                 "key": "x-api-key",
-                "value": "{{apiKey}}"
+                "value": "{{resolvedApiKey}}"
               }
             ],
-            "url": "{{baseUrl}}/weather/current?location={{location}}"
+            "url": "{{baseUrl}}/weather/current?location={{resolvedLocation}}"
           }
         },
         {
           "name": "Premium Forecast",
           "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const resolvedApiKey = pm.variables.get('apiKey') || 'poc-premium-key-001';",
+                  "const resolvedLocation = (pm.variables.get('location') || 'seattle').trim() || 'seattle';",
+                  "pm.variables.set('resolvedApiKey', resolvedApiKey);",
+                  "pm.variables.set('resolvedLocation', resolvedLocation);"
+                ]
+              }
+            },
             {
               "listen": "test",
               "script": {
@@ -359,12 +408,13 @@
                   "});",
                   "",
                   "const body = pm.response.json();",
+                  "const expectedLocation = pm.variables.get('resolvedLocation');",
                   "pm.test('premium forecast returns seven entries', function () {",
                   "  pm.expect(body.data).to.be.an('array').with.lengthOf(7);",
                   "});",
                   "",
                   "pm.test('forecast entries match the requested location', function () {",
-                  "  body.data.forEach((entry) => pm.expect(entry.location).to.eql(pm.variables.get('location')));",
+                  "  body.data.forEach((entry) => pm.expect(entry.location).to.eql(expectedLocation));",
                   "});"
                 ]
               }
@@ -375,10 +425,10 @@
             "header": [
               {
                 "key": "x-api-key",
-                "value": "{{apiKey}}"
+                "value": "{{resolvedApiKey}}"
               }
             ],
-            "url": "{{baseUrl}}/weather/premium-forecast?location={{location}}"
+            "url": "{{baseUrl}}/weather/premium-forecast?location={{resolvedLocation}}"
           }
         },
         {
@@ -408,20 +458,32 @@
           }
         },
         {
-          "name": "Premium Forecast Without Session",
+          "name": "Premium Forecast With Basic API Key",
           "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const resolvedApiKey = pm.variables.get('basicApiKey') || 'poc-basic-key-001';",
+                  "const resolvedLocation = (pm.variables.get('location') || 'seattle').trim() || 'seattle';",
+                  "pm.variables.set('resolvedBasicApiKey', resolvedApiKey);",
+                  "pm.variables.set('resolvedLocation', resolvedLocation);"
+                ]
+              }
+            },
             {
               "listen": "test",
               "script": {
                 "type": "text/javascript",
                 "exec": [
-                  "pm.test('status is 401', function () {",
-                  "  pm.response.to.have.status(401);",
+                  "pm.test('status is 403', function () {",
+                  "  pm.response.to.have.status(403);",
                   "});",
                   "",
                   "const body = pm.response.json();",
-                  "pm.test('error is Unauthorized', function () {",
-                  "  pm.expect(body.error).to.eql('Unauthorized');",
+                  "pm.test('error is Forbidden', function () {",
+                  "  pm.expect(body.error).to.eql('Forbidden');",
                   "});"
                 ]
               }
@@ -432,18 +494,27 @@
             "header": [
               {
                 "key": "x-api-key",
-                "value": "{{apiKey}}"
+                "value": "{{resolvedBasicApiKey}}"
               }
             ],
-            "auth": {
-              "type": "noauth"
-            },
-            "url": "{{baseUrl}}/weather/premium-forecast?location={{location}}"
+            "url": "{{baseUrl}}/weather/premium-forecast?location={{resolvedLocation}}"
           }
         },
         {
           "name": "Login As Basic User",
           "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const resolvedUsername = pm.variables.get('basicUsername') || 'basicuser';",
+                  "const resolvedPassword = pm.variables.get('basicPassword') || 'basic-pass';",
+                  "pm.variables.set('resolvedBasicUsername', resolvedUsername);",
+                  "pm.variables.set('resolvedBasicPassword', resolvedPassword);"
+                ]
+              }
+            },
             {
               "listen": "test",
               "script": {
@@ -454,7 +525,11 @@
                   "});",
                   "",
                   "const body = pm.response.json();",
+                  "const expectedUsername = pm.variables.get('resolvedBasicUsername');",
                   "pm.collectionVariables.set('lastLoggedInUsername', body.user.username);",
+                  "pm.test('logged-in user matches basic username', function () {",
+                  "  pm.expect(body.user.username).to.eql(expectedUsername);",
+                  "});",
                   "pm.test('logged-in role is basic', function () {",
                   "  pm.expect(body.user.role).to.eql('basic');",
                   "});"
@@ -472,7 +547,7 @@
             ],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"username\": \"{{basicUsername}}\",\n  \"password\": \"{{basicPassword}}\"\n}"
+              "raw": "{\n  \"username\": \"{{resolvedBasicUsername}}\",\n  \"password\": \"{{resolvedBasicPassword}}\"\n}"
             },
             "url": "{{baseUrl}}/auth/login"
           }
@@ -499,12 +574,7 @@
           ],
           "request": {
             "method": "GET",
-            "header": [
-              {
-                "key": "x-api-key",
-                "value": "{{basicApiKey}}"
-              }
-            ],
+            "header": [],
             "url": "{{baseUrl}}/weather/premium-forecast?location={{location}}"
           }
         }
