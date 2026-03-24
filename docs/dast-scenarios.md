@@ -1,32 +1,50 @@
 # DAST Scenarios
 
-## Unauthenticated
-- Access `/api/v1/auth/me` without session -> expect 401.
-- Access `/api/v1/weather/current` without session -> expect 401.
+These scenarios reflect the current application behavior and the AWS deployment model.
+
+## Unauthenticated and auth-bound routes
+- Access `GET /api/v1/auth/me` without a session and expect `401`
+- Access `POST /api/v1/auth/logout` without a session and expect `401`
+- Access `GET /api/v1/weather/premium-forecast` without a session but with a valid API key and expect `401`
 
 ## API key validation
-- Missing `x-api-key` on weather routes -> 401.
-- Invalid `x-api-key` -> 401 with generic error.
+- Access `GET /api/v1/weather/current` without `x-api-key` and expect `401`
+- Access `GET /api/v1/weather/current` with an invalid `x-api-key` and expect `401`
+- Access `GET /api/v1/weather/premium-forecast` with an invalid `x-api-key` and expect `401`
 
-## Authenticated RBAC
-- `basicuser` calling `/api/v1/weather/premium-forecast` -> 403.
-- `premiumuser` calling same route -> 200.
+## Mixed auth behavior
+- Access `GET /api/v1/weather/current` with a valid `x-api-key` and no session and expect `200`
+- Access `GET /api/v1/weather/premium-forecast` with a valid `x-api-key` and no session and expect `401`
+
+## RBAC
+- Login as `basicuser` and call `GET /api/v1/weather/premium-forecast` with a valid API key and expect `403`
+- Login as `premiumuser` and call the same route with a valid API key and expect `200`
+- Login as `admin` and call the same route with a valid API key and expect `200`
 
 ## Payload robustness
-- malformed JSON for `/auth/login` -> 400.
-- short password for `/auth/register` -> 400.
+- Send malformed JSON to `POST /api/v1/auth/login` and expect request rejection
+- Send a short password to `POST /api/v1/auth/register` and expect validation failure
+- Send empty or whitespace `location` values and confirm the API falls back to the default city behavior
 
-## Session scenarios
-- Login then logout then call `/auth/me` -> 401.
-- Replay stale cookie after session expiry -> 401.
+## Session behavior
+- Login, call `GET /api/v1/auth/me`, logout, then call `GET /api/v1/auth/me` again and expect `401`
+- Replay a stale or expired session cookie and expect `401`
 
 ## Headers and hardening
-- Validate helmet headers on API responses.
-- Validate rate limiting returns 429 after configured threshold.
+- Confirm `helmet` headers are present on API responses
+- Confirm rate limiting returns `429` and payload `{ error: "Too many requests" }` after the configured threshold
+- Confirm CORS behavior is limited to the configured origin
 
-## WAF + pipeline gate
-- Trigger known scanner signatures and confirm WAF telemetry.
-- Pipeline gate fails when ZAP reports high severity above threshold.
+## ALB and WAF behavior
+- Confirm the public application hostname resolves to the ALB
+- Confirm HTTP requests are redirected to HTTPS by the ALB ingress configuration
+- Trigger known WAF signatures and confirm WAF telemetry is generated
 
 ## Logging validation
-- Confirm `auth_login_success`, `auth_login_failed`, `authorization_denied`, `request_complete` in CloudWatch.
+- Confirm the API emits events such as:
+  - `auth_register_success`
+  - `auth_login_success`
+  - `auth_login_failed`
+  - `auth_api_key_failed`
+  - `authorization_denied`
+- Confirm request logs and error logs appear in the application logging path configured for the target environment
