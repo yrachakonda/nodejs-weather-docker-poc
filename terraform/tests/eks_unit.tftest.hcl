@@ -1,6 +1,18 @@
 mock_provider "aws" {
   override_during = plan
 
+  mock_data "aws_caller_identity" {
+    defaults = {
+      account_id = "123456789012"
+    }
+  }
+
+  mock_data "aws_region" {
+    defaults = {
+      name = "us-east-1"
+    }
+  }
+
   mock_resource "aws_eks_cluster" {
     defaults = {
       arn = "arn:aws:eks:us-east-1:123456789012:cluster/weather-sim-test"
@@ -22,6 +34,13 @@ mock_provider "aws" {
       platform_version = "eks.1"
       status           = "ACTIVE"
       version          = "1.31"
+    }
+  }
+
+  mock_resource "aws_kms_key" {
+    defaults = {
+      arn    = "arn:aws:kms:us-east-1:123456789012:key/test"
+      key_id = "test"
     }
   }
 
@@ -72,6 +91,7 @@ run "eks_cluster_and_nodes_use_expected_settings" {
   variables {
     cluster_name       = "weather-sim-test"
     desired_node_count = 2
+    kms_key_arn        = "arn:aws:kms:us-east-1:123456789012:key/test"
     private_subnet_ids = ["subnet-private-a", "subnet-private-b"]
     project_name       = "weather-sim"
     public_subnet_ids  = ["subnet-public-a", "subnet-public-b"]
@@ -79,7 +99,8 @@ run "eks_cluster_and_nodes_use_expected_settings" {
       Environment = "test"
       Project     = "weather-sim"
     }
-    vpc_id = "vpc-12345678"
+    vpc_cidr = "10.0.0.0/16"
+    vpc_id   = "vpc-12345678"
   }
 
   assert {
@@ -90,6 +111,16 @@ run "eks_cluster_and_nodes_use_expected_settings" {
   assert {
     condition     = aws_eks_cluster.this.version == "1.31"
     error_message = "The EKS cluster should target Kubernetes version 1.31."
+  }
+
+  assert {
+    condition     = aws_eks_cluster.this.vpc_config[0].endpoint_public_access == false
+    error_message = "The EKS API endpoint must not be publicly accessible."
+  }
+
+  assert {
+    condition     = aws_eks_cluster.this.encryption_config[0].provider[0].key_arn == "arn:aws:kms:us-east-1:123456789012:key/test"
+    error_message = "The EKS cluster must use the shared KMS key for secret encryption."
   }
 
   assert {
@@ -115,5 +146,15 @@ run "eks_cluster_and_nodes_use_expected_settings" {
   assert {
     condition     = aws_iam_openid_connect_provider.this.url == "https://oidc.eks.us-east-1.amazonaws.com/id/test"
     error_message = "The module should expose the expected OIDC provider URL for IRSA."
+  }
+
+  assert {
+    condition     = alltrue([for rule in aws_security_group.cluster.egress : rule.cidr_blocks[0] == "10.0.0.0/16"])
+    error_message = "Cluster security group egress should stay inside the VPC."
+  }
+
+  assert {
+    condition     = alltrue([for rule in aws_security_group.node.egress : rule.cidr_blocks[0] == "10.0.0.0/16"])
+    error_message = "Node security group egress should stay inside the VPC."
   }
 }

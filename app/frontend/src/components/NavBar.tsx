@@ -23,15 +23,15 @@ export function NavBar() {
       <div className="topbar__auth">
         {user ? (
           <>
-            <div className="user-pill">
+            <div className="user-pill" data-testid="user-pill">
               <span className="user-pill__label">Signed In</span>
               <span>{user.username} ({user.role})</span>
             </div>
-            <button className="ghost-button" onClick={() => logout()}>Logout</button>
+            <button className="ghost-button" data-testid="logout-button" onClick={() => logout()}>Logout</button>
           </>
         ) : (
           <>
-            <NavLink to="/login" className={({ isActive }) => `nav-link${isActive ? ' nav-link--active' : ''}`}>
+            <NavLink to="/login" className={({ isActive }) => `nav-link${isActive ? ' nav-link--active' : ''}`} data-testid="login-link">
               Login
             </NavLink>
             <span className="nav-divider">|</span>

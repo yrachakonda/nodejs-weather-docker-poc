@@ -38,6 +38,7 @@ module "networking" {
   source = "./modules/networking"
 
   cluster_name = local.cluster_name
+  kms_key_arn  = module.logging.kms_key_arn
   name         = local.cluster_name
   tags         = local.common_tags
   vpc_cidr     = var.vpc_cidr
@@ -66,10 +67,12 @@ module "eks" {
 
   cluster_name       = local.cluster_name
   desired_node_count = var.desired_node_count
+  kms_key_arn        = module.logging.kms_key_arn
   private_subnet_ids = module.networking.private_subnet_ids
   project_name       = var.project_name
   public_subnet_ids  = module.networking.public_subnet_ids
   tags               = local.common_tags
+  vpc_cidr           = var.vpc_cidr
   vpc_id             = module.networking.vpc_id
 }
 

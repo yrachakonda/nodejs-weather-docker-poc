@@ -159,17 +159,18 @@ export function PremiumForecastPage({ location, onLocationChange }: PremiumForec
         >
           <input
             className="signage-search__input"
+            data-testid="premium-forecast-search"
             value={draftLocation}
             onChange={(e) => setDraftLocation(e.target.value)}
             placeholder="Search for a location..."
           />
-          <button className="signage-search__button" type="submit">Load Forecast</button>
+          <button className="signage-search__button" data-testid="premium-forecast-submit" type="submit">Load Forecast</button>
         </form>
       </div>
 
       <div className="signage-current signage-current--forecast">
         <div className="signage-current__details">
-          <div className="signage-location">{displayLocation}</div>
+          <div className="signage-location" data-testid="premium-forecast-location">{displayLocation}</div>
           <div className="signage-temperature">{summary.avgTemp}°</div>
           <div className="signage-condition">7-Day Forecast Window</div>
         </div>
@@ -205,7 +206,7 @@ export function PremiumForecastPage({ location, onLocationChange }: PremiumForec
         <div className="signage-forecast__title">7-Day Forecast</div>
         <div className="signage-forecast__row signage-forecast__row--scroll">
           {reports.map((entry) => (
-            <article className="signage-forecast-card signage-forecast-card--full" key={`${entry.location}-${entry.dayOffset}-${entry.condition}-${entry.temperatureC}`}>
+            <article className="signage-forecast-card signage-forecast-card--full" data-testid="premium-forecast-card" key={`${entry.location}-${entry.dayOffset}-${entry.condition}-${entry.temperatureC}`}>
               <div className="signage-forecast-card__day">{getDayLabel(entry.dayOffset)}</div>
               <div className="signage-forecast-card__icon">
                 <WeatherIcon condition={entry.condition} className="signage-mini-icon" />

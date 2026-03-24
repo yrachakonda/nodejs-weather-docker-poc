@@ -1,12 +1,57 @@
+data "aws_caller_identity" "current" {}
+
+data "aws_region" "current" {}
+
 data "tls_certificate" "this" {
   url = aws_eks_cluster.this.identity[0].oidc[0].issuer
 }
 
 resource "aws_cloudwatch_log_group" "eks" {
   name              = "/aws/eks/${var.cluster_name}/cluster"
+  kms_key_id        = var.kms_key_arn
   retention_in_days = 14
 
   tags = var.tags
+}
+
+locals {
+  eks_secrets_kms_key_policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Sid    = "EnableAccountAdministration"
+        Effect = "Allow"
+        Principal = {
+          AWS = "arn:aws:iam::${data.aws_caller_identity.current.account_id}:root"
+        }
+        Action   = "kms:*"
+        Resource = "*"
+      },
+      {
+        Sid    = "AllowEKSUseOfKey"
+        Effect = "Allow"
+        Principal = {
+          Service = "eks.amazonaws.com"
+        }
+        Action = [
+          "kms:CreateGrant",
+          "kms:Decrypt",
+          "kms:DescribeKey",
+          "kms:Encrypt",
+          "kms:GenerateDataKey*",
+          "kms:ListGrants",
+          "kms:ReEncrypt*",
+          "kms:RevokeGrant"
+        ]
+        Resource = "*"
+        Condition = {
+          StringEquals = {
+            "kms:ViaService" = "eks.${data.aws_region.current.name}.amazonaws.com"
+          }
+        }
+      }
+    ]
+  })
 }
 
 data "aws_iam_policy_document" "cluster_assume_role" {
@@ -71,10 +116,11 @@ resource "aws_security_group" "cluster" {
   vpc_id      = var.vpc_id
 
   egress {
+    description = "Allow control plane traffic within the VPC and to interface endpoints"
     from_port   = 0
     protocol    = "-1"
     to_port     = 0
-    cidr_blocks = ["0.0.0.0/0"]
+    cidr_blocks = [var.vpc_cidr]
   }
 
   tags = merge(var.tags, {
@@ -88,10 +134,11 @@ resource "aws_security_group" "node" {
   vpc_id      = var.vpc_id
 
   egress {
+    description = "Allow node traffic only to the VPC and private endpoints"
     from_port   = 0
     protocol    = "-1"
     to_port     = 0
-    cidr_blocks = ["0.0.0.0/0"]
+    cidr_blocks = [var.vpc_cidr]
   }
 
   tags = merge(var.tags, {
@@ -100,6 +147,7 @@ resource "aws_security_group" "node" {
 }
 
 resource "aws_security_group_rule" "cluster_ingress_from_node" {
+  description              = "Allow worker nodes to reach the control plane on HTTPS"
   type                     = "ingress"
   from_port                = 443
   protocol                 = "tcp"
@@ -109,6 +157,7 @@ resource "aws_security_group_rule" "cluster_ingress_from_node" {
 }
 
 resource "aws_security_group_rule" "node_ingress_from_cluster" {
+  description              = "Allow the control plane to reach worker nodes"
   type                     = "ingress"
   from_port                = 0
   protocol                 = "-1"
@@ -118,6 +167,7 @@ resource "aws_security_group_rule" "node_ingress_from_cluster" {
 }
 
 resource "aws_security_group_rule" "node_self" {
+  description       = "Allow worker nodes to communicate with each other"
   type              = "ingress"
   from_port         = 0
   protocol          = "-1"
@@ -145,17 +195,33 @@ resource "aws_eks_cluster" "this" {
 
   vpc_config {
     endpoint_private_access = true
-    endpoint_public_access  = true
+    endpoint_public_access  = false
     security_group_ids      = [aws_security_group.cluster.id]
     subnet_ids              = concat(var.private_subnet_ids, var.public_subnet_ids)
   }
 
+  encryption_config {
+    provider {
+      key_arn = aws_kms_key.eks_secrets.arn
+    }
+
+    resources = ["secrets"]
+  }
+
   depends_on = [
     aws_cloudwatch_log_group.eks,
+    aws_kms_key.eks_secrets,
     aws_iam_role_policy_attachment.cluster
   ]
 
   tags = var.tags
+}
+
+resource "aws_kms_key" "eks_secrets" {
+  description             = "KMS key used for EKS secret encryption"
+  enable_key_rotation     = true
+  deletion_window_in_days = 7
+  policy                  = local.eks_secrets_kms_key_policy
 }
 
 resource "aws_iam_openid_connect_provider" "this" {

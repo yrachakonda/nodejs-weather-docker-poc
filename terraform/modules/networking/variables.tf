@@ -8,6 +8,11 @@ variable "name" {
   type        = string
 }
 
+variable "kms_key_arn" {
+  description = "Shared KMS key ARN used for VPC flow log encryption."
+  type        = string
+}
+
 variable "vpc_cidr" {
   description = "CIDR block for the VPC."
   type        = string

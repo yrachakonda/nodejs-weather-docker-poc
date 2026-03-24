@@ -33,11 +33,14 @@ flowchart TB
       EKS["EKS cluster + managed node group"]
       WebUI["Web deployment"]
       API["API deployment"]
+      VPCE["VPC endpoints"]
     end
   end
 
   ECR --> EKS
+  VPCE --> EKS
   EKS --> CloudWatch
+  VPC["VPC 10.0.0.0/16"] --> FlowLogs["VPC Flow Logs"]
 ```
 
 ## Key design points
@@ -45,11 +48,14 @@ flowchart TB
 - The VPC uses a `/16` CIDR and is split across two Availability Zones.
 - Two public `/20` subnets are reserved for internet-facing load balancers and egress infrastructure.
 - Two private `/20` subnets are reserved for EKS worker nodes and in-cluster workloads.
+- The EKS API endpoint is private-only, so cluster administration and Terraform runners must reach it from a VPC-connected network path.
+- Private workloads use VPC endpoints for core AWS services instead of relying on broad security-group egress to the internet.
 - The ALB is created by the AWS Load Balancer Controller from the Kubernetes ingress.
 - WAFv2 is attached to the ALB through ingress annotations.
 - ACM provides the TLS certificate for the ALB listener.
 - Route53 publishes the application DNS name.
 - Application logs are intended to flow into CloudWatch under `/weather-sim-poc/poc/app`.
+- VPC flow logs are enabled for the application VPC and shipped to CloudWatch.
 - The application still depends on Redis for session storage, but this repository does not currently provision Redis for the EKS environment.
 
 ## Application behavior
