@@ -25,9 +25,9 @@ This repository contains a TypeScript weather application plus the infrastructur
 - API base path: `/api/v1`
 - Roles: `anonymous`, `basic`, `premium`, `admin`
 - Sessions are Redis-backed
-- `x-api-key` is required on weather endpoints
-- `GET /api/v1/weather/current` requires a valid API key, but not a session
-- `GET /api/v1/weather/premium-forecast` requires both a valid API key and a `premium` or `admin` session
+- The WebUI uses the authenticated session cookie for weather requests and does not ship an API key in the browser bundle
+- `GET /api/v1/weather/current` requires either a valid session or a valid `x-api-key`
+- `GET /api/v1/weather/premium-forecast` requires either a `premium` or `admin` session, or a `premium`/`admin` `x-api-key`
 - Health endpoints:
   - `/api/v1/system/live`
   - `/api/v1/system/ready`
@@ -76,6 +76,9 @@ API keys:
 - `poc-basic-key-001`
 - `poc-premium-key-001`
 - `poc-admin-key-001`
+
+Security note:
+- Seed passwords and API keys are hashed at rest in the API seed data; the raw demo values above are only for local sign-in and API testing
 
 ## Terraform
 Run from `terraform/`:

@@ -42,12 +42,23 @@ export function PremiumForecastPage({ location, onLocationChange }: PremiumForec
   const [reports, setReports] = useState<WeatherReport[]>([]);
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(true);
+  const [draftLocation, setDraftLocation] = useState(location);
   const { user } = useAuth();
   const now = useClock();
 
   useEffect(() => {
+    setDraftLocation(location);
+  }, [location]);
+
+  useEffect(() => {
+    if (!user || !['premium', 'admin'].includes(user.role)) {
+      setLoading(false);
+      setReports([]);
+      return;
+    }
+
     void loadForecast(location);
-  }, []);
+  }, [location, user]);
 
   async function loadForecast(nextLocation: string) {
     setLoading(true);
@@ -67,13 +78,14 @@ export function PremiumForecastPage({ location, onLocationChange }: PremiumForec
   const timeLabel = now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
   const dateLabel = now.toLocaleDateString([], { weekday: 'long', month: 'long', day: 'numeric' });
   const summary = useMemo(() => deriveSummary(reports), [reports]);
+  const displayLocation = reports[0]?.location || location;
 
   if (!user) {
     return (
       <section className="auth-layout">
         <div className="panel auth-card">
           <p className="eyebrow">Premium Forecast</p>
-          <h1>Sign in to unlock the seven-day board.</h1>
+          <h1 className="auth-card__title">Sign in to unlock the seven-day board.</h1>
           <p className="auth-card__copy">Premium forecasting is reserved for authenticated premium or admin accounts.</p>
           <div className="auth-card__actions">
             <Link className="primary-button" to="/login">Login</Link>
@@ -123,7 +135,7 @@ export function PremiumForecastPage({ location, onLocationChange }: PremiumForec
           <WeatherIcon condition="Cloudy" className="signage-brand__icon" />
           <div>
             <p className="signage-brand__eyebrow">Premium Board</p>
-            <span className="signage-brand__title">Metro Weather</span>
+            <span className="signage-brand__title">Weather</span>
           </div>
         </div>
         <div className="signage-clock">
@@ -137,13 +149,18 @@ export function PremiumForecastPage({ location, onLocationChange }: PremiumForec
           className="signage-search__form"
           onSubmit={(e) => {
             e.preventDefault();
-            void loadForecast(location);
+            const nextLocation = draftLocation.trim() || location;
+            if (nextLocation === location) {
+              void loadForecast(nextLocation);
+              return;
+            }
+            onLocationChange(nextLocation);
           }}
         >
           <input
             className="signage-search__input"
-            value={location}
-            onChange={(e) => onLocationChange(e.target.value)}
+            value={draftLocation}
+            onChange={(e) => setDraftLocation(e.target.value)}
             placeholder="Search for a location..."
           />
           <button className="signage-search__button" type="submit">Load Forecast</button>
@@ -152,7 +169,7 @@ export function PremiumForecastPage({ location, onLocationChange }: PremiumForec
 
       <div className="signage-current signage-current--forecast">
         <div className="signage-current__details">
-          <div className="signage-location">{location}</div>
+          <div className="signage-location">{displayLocation}</div>
           <div className="signage-temperature">{summary.avgTemp}°</div>
           <div className="signage-condition">7-Day Forecast Window</div>
         </div>

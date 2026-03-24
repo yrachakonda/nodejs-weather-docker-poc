@@ -55,8 +55,9 @@ flowchart TB
 ## Application behavior
 - The React frontend calls the Express API under `/api/v1`.
 - `helmet`, CORS, rate limiting, session middleware, and structured request logging run globally in the API.
-- `GET /weather/current` requires `x-api-key`.
-- `GET /weather/premium-forecast` requires both `x-api-key` and a session with role `premium` or `admin`.
+- The WebUI uses the authenticated session cookie for weather requests and does not bundle an API key.
+- `GET /weather/current` requires either a valid session or a valid `x-api-key`.
+- `GET /weather/premium-forecast` requires either a `premium` or `admin` session, or a `premium`/`admin` `x-api-key`.
 
 ## Important AWS constraint
 - An Application Load Balancer cannot be assigned an Elastic IP directly. If static public IPs are required later, use AWS Global Accelerator or redesign around an NLB-based entry pattern.

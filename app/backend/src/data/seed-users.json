@@ -1,5 +1,5 @@
 [
-  { "id": "u-admin", "username": "admin", "password": "admin-pass", "role": "admin" },
-  { "id": "u-basic", "username": "basicuser", "password": "basic-pass", "role": "basic" },
-  { "id": "u-premium", "username": "premiumuser", "password": "premium-pass", "role": "premium" }
+  { "id": "u-admin", "username": "admin", "passwordHash": "scrypt$6bd38060c19dd4f9a2cd248bf1d3a2ac$72e196e5bfff42988e43586c2deac9467b677c3137920fd2519e49f9d80a23904474107a8ad08c1ed67c2f93809ac2dc54d76a50f3877e624b0a8ad56bdddadb", "role": "admin" },
+  { "id": "u-basic", "username": "basicuser", "passwordHash": "scrypt$945dce4b7c097e35d37a4e1421a5d7b4$ab4355447907dd450dfe4fa1b23fc043b99aa8d175e8a12d0e01b7578e11000e4813ae00857e7c202f96bb900d56ff702bf47ac7c0d12d2f7123d0798a3028cd", "role": "basic" },
+  { "id": "u-premium", "username": "premiumuser", "passwordHash": "scrypt$6285927d9bd31e283e314e79c98ff10f$afb57d1988a02191fc8bef690650d75de4d834a4255abb882d82d206ef0d71c59a1fdc46868309dcea37732e2e20444a9a7f34d5d7f1314cb301f2e4c5913b2c", "role": "premium" }
 ]

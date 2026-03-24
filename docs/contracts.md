@@ -23,9 +23,10 @@
 
 ## Auth and authorization contract
 - Session cookie is the authoritative authenticated identity state.
-- `x-api-key` is required on both weather endpoints.
-- `GET /api/v1/weather/current` does not require a session.
-- `GET /api/v1/weather/premium-forecast` requires both a valid session and role `premium` or `admin`.
+- The WebUI does not transmit a bundled API key to the API.
+- `x-api-key` is supported for direct API clients.
+- `GET /api/v1/weather/current` requires either a valid session or a valid `x-api-key`.
+- `GET /api/v1/weather/premium-forecast` requires either a valid `premium` or `admin` session, or a valid `premium`/`admin` `x-api-key`.
 - `POST /api/v1/auth/logout` requires a session.
 - `GET /api/v1/auth/me` requires a session.
 
@@ -59,12 +60,10 @@ Backend:
 
 Frontend:
 - `VITE_API_BASE_URL`
-- `VITE_API_KEY`
 
 Operational and local compose defaults:
 - `AWS_REGION`
 - `CLOUDWATCH_LOG_GROUP`
-- `DEFAULT_API_KEY`
 
 ## Platform naming conventions
 - Project slug: `weather-sim`
@@ -79,4 +78,5 @@ Operational and local compose defaults:
 - CORS is enabled with credentials support
 - Global rate limiting is enabled
 - Session state is stored in Redis
+- Passwords and API keys are stored as salted `scrypt` hashes
 - ALB ingress is intended to be protected by a regional WAFv2 ACL in AWS

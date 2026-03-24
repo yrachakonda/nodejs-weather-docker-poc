@@ -1,5 +1,5 @@
 import 'express-session';
-import { Role } from './index';
+import { ApiKeyPrincipal, Role } from './index';
 
 declare module 'express-session' {
   interface SessionData {
@@ -8,5 +8,13 @@ declare module 'express-session' {
       username: string;
       role: Exclude<Role, 'anonymous'>;
     };
+  }
+}
+
+declare global {
+  namespace Express {
+    interface Request {
+      apiKeyPrincipal?: ApiKeyPrincipal;
+    }
   }
 }

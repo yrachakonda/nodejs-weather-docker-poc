@@ -1,6 +1,8 @@
 import { useEffect, useMemo, useState } from 'react';
+import { Link } from 'react-router-dom';
 import { apiRequest } from '../api/client';
 import { WeatherIcon } from '../components/WeatherIcon';
+import { useAuth } from '../context/AuthContext';
 import { WeatherReport } from '../types';
 
 type CurrentWeatherPageProps = {
@@ -41,11 +43,22 @@ export function CurrentWeatherPage({ location, onLocationChange }: CurrentWeathe
   const [report, setReport] = useState<WeatherReport | null>(null);
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(true);
+  const [draftLocation, setDraftLocation] = useState(location);
+  const { user } = useAuth();
   const now = useClock();
 
   useEffect(() => {
+    setDraftLocation(location);
+  }, [location]);
+
+  useEffect(() => {
+    if (!user) {
+      setLoading(false);
+      setReport(null);
+      return;
+    }
     void loadWeather(location);
-  }, []);
+  }, [location, user]);
 
   async function loadWeather(nextLocation: string) {
     setLoading(true);
@@ -74,6 +87,22 @@ export function CurrentWeatherPage({ location, onLocationChange }: CurrentWeathe
     return '';
   }, [report]);
 
+  if (!user) {
+    return (
+      <section className="auth-layout">
+        <div className="panel auth-card">
+          <p className="eyebrow">Current Weather</p>
+          <h1 className="auth-card__title">Sign in to view the live weather board.</h1>
+          <p className="auth-card__copy">The WebUI now uses the authenticated session cookie for weather requests. API keys remain available for direct API clients only.</p>
+          <div className="auth-card__actions">
+            <Link className="primary-button" to="/login">Login</Link>
+            <Link className="ghost-button ghost-button--link" to="/register">Register</Link>
+          </div>
+        </div>
+      </section>
+    );
+  }
+
   if (error) {
     return (
       <section className="hero-grid">
@@ -101,7 +130,7 @@ export function CurrentWeatherPage({ location, onLocationChange }: CurrentWeathe
           <WeatherIcon condition="Sunny" className="signage-brand__icon" />
           <div>
             <p className="signage-brand__eyebrow">Live Display</p>
-            <span className="signage-brand__title">Metro Weather</span>
+            <span className="signage-brand__title">Weather</span>
           </div>
         </div>
         <div className="signage-clock">
@@ -115,13 +144,18 @@ export function CurrentWeatherPage({ location, onLocationChange }: CurrentWeathe
           className="signage-search__form"
           onSubmit={(e) => {
             e.preventDefault();
-            void loadWeather(location);
+            const nextLocation = draftLocation.trim() || location;
+            if (nextLocation === location) {
+              void loadWeather(nextLocation);
+              return;
+            }
+            onLocationChange(nextLocation);
           }}
         >
           <input
             className="signage-search__input"
-            value={location}
-            onChange={(e) => onLocationChange(e.target.value)}
+            value={draftLocation}
+            onChange={(e) => setDraftLocation(e.target.value)}
             placeholder="Search for a location..."
           />
           <button className="signage-search__button" type="submit">Update</button>
