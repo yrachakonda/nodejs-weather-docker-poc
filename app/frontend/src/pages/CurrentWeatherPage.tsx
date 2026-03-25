@@ -154,17 +154,18 @@ export function CurrentWeatherPage({ location, onLocationChange }: CurrentWeathe
         >
           <input
             className="signage-search__input"
+            data-testid="current-weather-search"
             value={draftLocation}
             onChange={(e) => setDraftLocation(e.target.value)}
             placeholder="Search for a location..."
           />
-          <button className="signage-search__button" type="submit">Update</button>
+          <button className="signage-search__button" data-testid="current-weather-submit" type="submit">Update</button>
         </form>
       </div>
 
       <div className="signage-current">
         <div className="signage-current__details">
-          <div className="signage-location">{report.location}</div>
+          <div className="signage-location" data-testid="current-weather-location">{report.location}</div>
           <div className="signage-temperature">{report.temperatureC}°</div>
           <div className="signage-condition">{themeLabel}</div>
         </div>

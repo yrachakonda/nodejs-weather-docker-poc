@@ -13,6 +13,18 @@ mock_provider "aws" {
     }
   }
 
+  mock_data "aws_caller_identity" {
+    defaults = {
+      account_id = "123456789012"
+    }
+  }
+
+  mock_data "aws_region" {
+    defaults = {
+      name = "us-east-1"
+    }
+  }
+
   mock_resource "aws_eks_cluster" {
     defaults = {
       arn = "arn:aws:eks:us-east-1:123456789012:cluster/weather-sim-poc"
@@ -34,6 +46,13 @@ mock_provider "aws" {
       platform_version = "eks.1"
       status           = "ACTIVE"
       version          = "1.31"
+    }
+  }
+
+  mock_resource "aws_kms_key" {
+    defaults = {
+      arn    = "arn:aws:kms:us-east-1:123456789012:key/test"
+      key_id = "test"
     }
   }
 
@@ -159,6 +178,16 @@ run "root_stack_wires_networking_ingress_and_waf" {
   assert {
     condition     = module.acm.certificate_arn != null
     error_message = "The root stack must produce an ACM certificate ARN for ingress TLS."
+  }
+
+  assert {
+    condition     = module.logging.kms_key_arn == "arn:aws:kms:us-east-1:123456789012:key/test"
+    error_message = "The root stack must expose the shared telemetry KMS key."
+  }
+
+  assert {
+    condition     = module.networking.vpc_flow_log_group_name == "/weather-sim-poc/networking/vpc-flow-logs"
+    error_message = "The root stack must enable VPC flow logs in the expected log group."
   }
 
   assert {

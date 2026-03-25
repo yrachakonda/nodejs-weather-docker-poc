@@ -1,5 +1,21 @@
 import { Request } from 'express';
 
+function getSessionSafely(req: Request) {
+  try {
+    return req.session;
+  } catch {
+    return undefined;
+  }
+}
+
+function getSessionIdSafely(req: Request) {
+  try {
+    return req.sessionID;
+  } catch {
+    return undefined;
+  }
+}
+
 function sanitizeQuery(query: Request['query']): Record<string, string | string[]> {
   const result: Record<string, string | string[]> = {};
 
@@ -18,7 +34,8 @@ function sanitizeQuery(query: Request['query']): Record<string, string | string[
 }
 
 export function getRequestLogContext(req: Request) {
-  const sessionUser = req.session.user;
+  const session = getSessionSafely(req);
+  const sessionUser = session?.user;
   const apiKeyPrincipal = req.apiKeyPrincipal;
   const requestId = req.header('x-correlation-id');
 
@@ -29,7 +46,7 @@ export function getRequestLogContext(req: Request) {
     originalUrl: req.originalUrl,
     ip: req.ip,
     userAgent: req.get('user-agent'),
-    sessionId: req.sessionID,
+    sessionId: getSessionIdSafely(req),
     authType: sessionUser ? 'session' : apiKeyPrincipal ? 'apiKey' : 'anonymous',
     userId: sessionUser?.id || null,
     username: sessionUser?.username || apiKeyPrincipal?.owner || null,

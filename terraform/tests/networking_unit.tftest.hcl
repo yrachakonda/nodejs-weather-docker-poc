@@ -1,9 +1,21 @@
 mock_provider "aws" {
   override_during = plan
 
+  mock_data "aws_caller_identity" {
+    defaults = {
+      account_id = "123456789012"
+    }
+  }
+
   mock_data "aws_availability_zones" {
     defaults = {
       names = ["us-east-1a", "us-east-1b"]
+    }
+  }
+
+  mock_data "aws_region" {
+    defaults = {
+      name = "us-east-1"
     }
   }
 }
@@ -17,6 +29,7 @@ run "networking_builds_expected_subnets" {
 
   variables {
     cluster_name = "weather-sim-test"
+    kms_key_arn  = "arn:aws:kms:us-east-1:123456789012:key/test"
     name         = "weather-sim-test"
     tags = {
       Environment = "test"
@@ -63,5 +76,20 @@ run "networking_builds_expected_subnets" {
   assert {
     condition     = toset([for subnet in values(aws_subnet.private) : subnet.cidr_block]) == toset(["10.0.128.0/20", "10.0.144.0/20"])
     error_message = "Private subnet CIDRs must be carved into /20 blocks from the VPC."
+  }
+
+  assert {
+    condition     = aws_cloudwatch_log_group.vpc_flow_logs.kms_key_id == "arn:aws:kms:us-east-1:123456789012:key/test"
+    error_message = "The VPC flow log group must use the shared KMS key."
+  }
+
+  assert {
+    condition     = aws_flow_log.this.traffic_type == "ALL"
+    error_message = "The module must enable VPC flow logs for all traffic."
+  }
+
+  assert {
+    condition     = length(aws_vpc_endpoint.interface) == 6 && aws_vpc_endpoint.s3.vpc_endpoint_type == "Gateway"
+    error_message = "The module must create the expected interface and S3 endpoints for private EKS nodes."
   }
 }

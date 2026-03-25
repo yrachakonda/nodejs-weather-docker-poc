@@ -6,6 +6,7 @@ This repository contains a TypeScript weather application plus the infrastructur
 - `app/`: application source, local Docker Compose stack, and npm workspaces
 - `app/backend/`: Express API
 - `app/frontend/`: React web UI
+- `app/tests/`: centralized automated test suites and test support assets
 - `app/fluent-bit/`: local Fluent Bit configuration
 - `charts/weather-sim/`: Helm chart for Kubernetes deployment
 - `terraform/`: AWS infrastructure for networking, EKS, ECR, ACM, Route53, WAF, and deployment wiring
@@ -63,8 +64,11 @@ npm run test
 npm run lint
 ```
 
-Current note:
-- The `backend` and `frontend` package test scripts are still placeholders
+Testing note:
+- `npm run test` runs backend and frontend Vitest suites
+- `npm run test:e2e:smoke` and `npm run test:e2e` run Playwright smoke and E2E suites against a running local stack
+- `npm run perf:baseline`, `npm run perf:load`, `npm run perf:stress`, and `npm run perf:soak` run local `k6` performance checks from `app/tests/perf/`
+- Use [Testing Guide](/./docs/testing.md) for prerequisites, exact commands, Docker Compose usage, Terraform checks, and CI order
 
 ## Seed users and API keys
 Users:
@@ -99,6 +103,7 @@ terraform apply -var-file=environments/poc/terraform.tfvars
 
 Terraform currently provisions:
 - VPC, subnets, IGW, NAT, and route tables
+- VPC flow logs and private service endpoints for EKS node and control-plane dependencies
 - ECR repositories
 - EKS cluster and managed node group
 - AWS Load Balancer Controller IAM and Helm release
@@ -114,10 +119,12 @@ Terraform test coverage currently includes:
 
 ## Important limitations
 - This repository does not currently provision a production Redis deployment for the EKS environment, even though the application requires Redis-backed sessions
+- The EKS API endpoint is private-only. Terraform runners and operators that need Kubernetes or Helm access must run from a VPC-connected environment such as a private runner, VPN-connected workstation, or bastion.
 - An Application Load Balancer cannot have an Elastic IP attached directly; if static public IPs are required later, use AWS Global Accelerator or redesign the entry path
 
 ## API docs and test assets
 The repository now includes multiple ways to inspect and test the API:
+- [Testing Guide](/./docs/testing.md): exact test commands, prerequisites, Docker Compose smoke/E2E flow, and CI-friendly execution order
 - [Runbook](/./docs/runbook.md): deployment checks, default credentials, valid `x-api-key` values, and `curl` commands for every endpoint
 - [OpenAPI Spec](/./docs/openapi.yaml): the API contract in OpenAPI 3.0 format
 - [Swagger UI Page](/./docs/swagger.html): browser-based interactive API explorer
@@ -133,6 +140,7 @@ For local API testing:
 - [Architecture](/./docs/architecture.md)
 - [Contracts](/./docs/contracts.md)
 - [Local Development](/./docs/local-development.md)
+- [Testing Guide](/./docs/testing.md)
 - [Runbook](/./docs/runbook.md)
 - [DAST Scenarios](/./docs/dast-scenarios.md)
 - [OpenAPI Spec](/./docs/openapi.yaml)

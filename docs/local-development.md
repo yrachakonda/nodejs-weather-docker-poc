@@ -56,7 +56,7 @@ API runtime defaults also include:
 - The `web` container still uses the default Docker logging path, so use `docker compose logs web` for frontend logs.
 
 ## Workspace commands
-Run from the repository root:
+Run from `app/`:
 
 ```bash
 npm run build
@@ -64,7 +64,18 @@ npm run test
 npm run lint
 ```
 
-Current workspace test scripts are placeholders for the frontend and backend application packages. The Terraform test suite lives separately under `terraform/`.
+Additional test commands live under `app/`:
+
+```bash
+npm run test:e2e:smoke
+npm run test:e2e
+npm run perf:baseline
+npm run perf:load
+```
+
+Automated test assets now live under `app/tests/`.
+
+Use [Testing Guide](/./docs/testing.md) for prerequisites, Docker Compose usage, exact suite coverage, Terraform checks, and troubleshooting.
 
 ## Useful local credentials
 - `admin/admin-pass`

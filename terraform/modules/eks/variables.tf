@@ -18,6 +18,16 @@ variable "project_name" {
   type        = string
 }
 
+variable "kms_key_arn" {
+  description = "Shared KMS key ARN used for EKS secret encryption and log group encryption."
+  type        = string
+}
+
+variable "vpc_cidr" {
+  description = "CIDR block for the VPC that hosts the EKS cluster."
+  type        = string
+}
+
 variable "public_subnet_ids" {
   description = "Public subnets associated with the EKS control plane."
   type        = list(string)

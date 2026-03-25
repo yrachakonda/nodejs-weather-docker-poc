@@ -1,10 +1,28 @@
 {
   "name": "nodejs-weather-docker-poc",
   "private": true,
-  "workspaces": ["backend", "frontend"],
+  "workspaces": [
+    "backend",
+    "frontend"
+  ],
   "scripts": {
     "lint": "npm run lint -w backend && npm run lint -w frontend",
     "build": "npm run build -w backend && npm run build -w frontend",
-    "test": "npm run test -w backend && npm run test -w frontend"
+    "test": "npm run test -w backend && npm run test -w frontend",
+    "test:e2e": "playwright test",
+    "test:e2e:smoke": "playwright test --grep @smoke",
+    "test:e2e:headed": "playwright test --headed",
+    "test:e2e:install": "playwright install chromium",
+    "perf:baseline": "k6 run tests/perf/baseline.js",
+    "perf:baseline:auth": "k6 run -e PERF_INCLUDE_LOGIN=true tests/perf/baseline.js",
+    "perf:load": "k6 run tests/perf/load.js",
+    "perf:load:heavier": "k6 run -e LOAD_PROFILE=heavier tests/perf/load.js",
+    "perf:stress": "k6 run tests/perf/stress.js",
+    "perf:stress:heavier": "k6 run -e STRESS_PROFILE=heavier tests/perf/stress.js",
+    "perf:soak": "k6 run tests/perf/soak.js",
+    "perf:soak:long": "k6 run -e SOAK_PROFILE=long tests/perf/soak.js"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.58.2"
   }
 }

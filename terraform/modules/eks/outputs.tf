@@ -22,3 +22,8 @@ output "oidc_provider_url" {
   description = "OIDC provider URL for IRSA roles."
   value       = aws_iam_openid_connect_provider.this.url
 }
+
+output "eks_secrets_kms_key_arn" {
+  description = "KMS key ARN used for EKS secret encryption."
+  value       = aws_kms_key.eks_secrets.arn
+}
