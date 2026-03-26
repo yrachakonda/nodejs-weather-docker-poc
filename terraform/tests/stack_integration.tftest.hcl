@@ -201,6 +201,11 @@ run "root_stack_wires_networking_ingress_and_waf" {
   }
 
   assert {
+    condition     = kubernetes_namespace.observability.metadata[0].name == "observability"
+    error_message = "The observability namespace should use the dedicated default namespace."
+  }
+
+  assert {
     condition     = helm_release.aws_load_balancer_controller.chart == "aws-load-balancer-controller"
     error_message = "The root stack must install the AWS Load Balancer Controller chart."
   }
@@ -208,6 +213,21 @@ run "root_stack_wires_networking_ingress_and_waf" {
   assert {
     condition     = helm_release.weather_sim.name == "weather-sim" && helm_release.weather_sim.namespace == "weather-sim"
     error_message = "The application Helm release should deploy the weather chart into the application namespace."
+  }
+
+  assert {
+    condition     = module.observability.kafka_topic_name == "weather-sim.logs"
+    error_message = "The observability module should publish the expected log topic name."
+  }
+
+  assert {
+    condition     = module.observability.cloudwatch_log_group_name == "/weather-sim-poc/observability/application"
+    error_message = "The observability module should expose the expected CloudWatch log group for Fluent Bit."
+  }
+
+  assert {
+    condition     = module.observability.kibana_service_name == "weather-sim-kibana-kb-http.observability.svc.cluster.local"
+    error_message = "The observability module should expose the internal Kibana service name."
   }
 
   assert {

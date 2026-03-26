@@ -50,8 +50,86 @@ variable "kubernetes_namespace" {
   default     = "weather-sim"
 }
 
+variable "observability_namespace" {
+  description = "Namespace where Kafka, Fluent Bit, and the Elastic stack are deployed."
+  type        = string
+  default     = "observability"
+}
+
 variable "aws_load_balancer_controller_chart_version" {
   description = "Helm chart version for the AWS Load Balancer Controller."
   type        = string
   default     = "1.11.0"
+}
+
+variable "strimzi_chart_version" {
+  description = "Pinned Helm chart version for the Strimzi operator."
+  type        = string
+  default     = "0.51.0"
+}
+
+variable "kafbat_ui_chart_version" {
+  description = "Pinned Helm chart version for Kafbat UI."
+  type        = string
+  default     = "1.6.0"
+}
+
+variable "fluent_bit_chart_version" {
+  description = "Pinned Helm chart version for Fluent Bit."
+  type        = string
+  default     = "0.56.0"
+}
+
+variable "eck_operator_chart_version" {
+  description = "Pinned Helm chart version for the ECK operator."
+  type        = string
+  default     = "3.3.1"
+}
+
+variable "eck_stack_chart_version" {
+  description = "Pinned Helm chart version for the ECK stack chart."
+  type        = string
+  default     = "0.18.1"
+}
+
+variable "elastic_stack_version" {
+  description = "Pinned Elastic Stack version for ECK-managed Elasticsearch, Kibana, and Logstash."
+  type        = string
+  default     = "9.3.0"
+}
+
+variable "kafka_version" {
+  description = "Pinned Kafka version for the Strimzi cluster."
+  type        = string
+  default     = "4.2.0"
+}
+
+variable "kafka_topic_name" {
+  description = "Kafka topic used for weather-sim logs."
+  type        = string
+  default     = "weather-sim.logs"
+}
+
+variable "kafka_storage_size" {
+  description = "Persistent volume size for the Kafka broker."
+  type        = string
+  default     = "20Gi"
+}
+
+variable "elasticsearch_storage_size" {
+  description = "Persistent volume size for the Elasticsearch node."
+  type        = string
+  default     = "20Gi"
+}
+
+variable "kafka_retention_hours" {
+  description = "Kafka retention for the weather-sim logs topic in hours."
+  type        = number
+  default     = 72
+}
+
+variable "cloudwatch_log_retention_days" {
+  description = "CloudWatch retention in days for Fluent Bit application logs."
+  type        = number
+  default     = 30
 }

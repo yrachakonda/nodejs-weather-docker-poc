@@ -21,7 +21,7 @@ mock_provider "aws" {
   }
 }
 
-run "logging_uses_shared_kms_key_for_application_logs" {
+run "logging_exposes_shared_telemetry_key" {
   command = plan
 
   module {
@@ -33,8 +33,8 @@ run "logging_uses_shared_kms_key_for_application_logs" {
   }
 
   assert {
-    condition     = aws_cloudwatch_log_group.app.kms_key_id == "arn:aws:kms:us-east-1:123456789012:key/test"
-    error_message = "Application log groups must use the shared customer-managed KMS key."
+    condition     = aws_kms_key.telemetry.description == "Shared key for VPC flow logs and EKS secret encryption"
+    error_message = "The telemetry KMS key description should match the shared telemetry scope."
   }
 
   assert {

@@ -1,7 +1,165 @@
 services:
   redis:
     image: redis:8.6.1
-    ports: ["6379:6379"]
+    ports:
+      - "6379:6379"
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+      start_period: 5s
+
+  kafka:
+    image: apache/kafka:4.0.2
+    hostname: kafka
+    ports:
+      - "9092:9092"
+    environment:
+      CLUSTER_ID: "MkU3OEVBNTcwNTJENDM2Qk"
+      KAFKA_NODE_ID: "1"
+      KAFKA_PROCESS_ROLES: "broker,controller"
+      KAFKA_CONTROLLER_LISTENER_NAMES: "CONTROLLER"
+      KAFKA_CONTROLLER_QUORUM_VOTERS: "1@kafka:9093"
+      KAFKA_INTER_BROKER_LISTENER_NAME: "PLAINTEXT"
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: "CONTROLLER:PLAINTEXT,PLAINTEXT:PLAINTEXT,PLAINTEXT_HOST:PLAINTEXT"
+      KAFKA_LISTENERS: "PLAINTEXT://:29092,PLAINTEXT_HOST://:9092,CONTROLLER://:9093"
+      KAFKA_ADVERTISED_LISTENERS: "PLAINTEXT://kafka:29092,PLAINTEXT_HOST://localhost:9092"
+      KAFKA_LOG_DIRS: "/var/lib/kafka/data"
+      KAFKA_AUTO_CREATE_TOPICS_ENABLE: "false"
+      KAFKA_NUM_PARTITIONS: "3"
+      KAFKA_DEFAULT_REPLICATION_FACTOR: "1"
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: "1"
+      KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: "1"
+      KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: "1"
+      KAFKA_MIN_INSYNC_REPLICAS: "1"
+      KAFKA_GROUP_INITIAL_REBALANCE_DELAY_MS: "0"
+      KAFKA_LOG_RETENTION_HOURS: "72"
+      KAFKA_LOG_SEGMENT_BYTES: "1073741824"
+      KAFKA_HEAP_OPTS: "-Xms512m -Xmx512m"
+    volumes:
+      - kafka-data:/var/lib/kafka/data
+    healthcheck:
+      test: ["CMD-SHELL", "/opt/kafka/bin/kafka-broker-api-versions.sh --bootstrap-server localhost:9092 >/dev/null 2>&1"]
+      interval: 10s
+      timeout: 5s
+      retries: 30
+      start_period: 20s
+
+  kafka-init:
+    image: apache/kafka:4.0.2
+    entrypoint: ["/bin/bash"]
+    depends_on:
+      kafka:
+        condition: service_healthy
+    environment:
+      KAFKA_BOOTSTRAP_SERVERS: kafka:29092
+    volumes:
+      - ./kafka/create-topics.sh:/opt/kafka/create-topics.sh:ro
+    command: ["/opt/kafka/create-topics.sh"]
+    restart: "no"
+
+  kafka-ui:
+    image: ghcr.io/kafbat/kafka-ui:v1.4.2
+    ports:
+      - "8081:8080"
+    depends_on:
+      kafka:
+        condition: service_healthy
+    environment:
+      DYNAMIC_CONFIG_ENABLED: "true"
+      KAFKA_CLUSTERS_0_NAME: weather-sim-local
+      KAFKA_CLUSTERS_0_BOOTSTRAPSERVERS: kafka:29092
+      SERVER_PORT: "8080"
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://localhost:8080/actuator/health >/dev/null"]
+      interval: 10s
+      timeout: 5s
+      retries: 20
+      start_period: 20s
+
+  elasticsearch:
+    image: docker.elastic.co/elasticsearch/elasticsearch:9.3.2
+    ports:
+      - "9200:9200"
+    environment:
+      discovery.type: single-node
+      cluster.name: weather-sim-local
+      node.name: weather-sim-local-1
+      xpack.security.enabled: "false"
+      xpack.security.enrollment.enabled: "false"
+      ES_JAVA_OPTS: "-Xms512m -Xmx512m"
+      bootstrap.memory_lock: "true"
+    ulimits:
+      memlock:
+        soft: -1
+        hard: -1
+    volumes:
+      - elasticsearch-data:/usr/share/elasticsearch/data
+      - ./elasticsearch/elasticsearch.yml:/usr/share/elasticsearch/config/elasticsearch.yml:ro
+    healthcheck:
+      test: ["CMD-SHELL", "curl -fsS http://localhost:9200/_cluster/health >/dev/null"]
+      interval: 10s
+      timeout: 5s
+      retries: 40
+      start_period: 40s
+
+  logstash:
+    image: docker.elastic.co/logstash/logstash:9.3.2
+    ports:
+      - "5044:5044"
+    depends_on:
+      kafka-init:
+        condition: service_completed_successfully
+      elasticsearch:
+        condition: service_healthy
+    environment:
+      LS_JAVA_OPTS: "-Xms256m -Xmx256m"
+    volumes:
+      - ./logstash/pipeline:/usr/share/logstash/pipeline:ro
+      - ./logstash/logstash.yml:/usr/share/logstash/config/logstash.yml:ro
+    healthcheck:
+      test: ["CMD-SHELL", "curl -fsS http://localhost:9600/_node/stats >/dev/null"]
+      interval: 10s
+      timeout: 5s
+      retries: 30
+      start_period: 30s
+
+  kibana:
+    image: docker.elastic.co/kibana/kibana:9.3.2
+    ports:
+      - "5601:5601"
+    depends_on:
+      elasticsearch:
+        condition: service_healthy
+    environment:
+      SERVER_HOST: "0.0.0.0"
+      ELASTICSEARCH_HOSTS: http://elasticsearch:9200
+    volumes:
+      - ./kibana/kibana.yml:/usr/share/kibana/config/kibana.yml:ro
+    healthcheck:
+      test: ["CMD-SHELL", "curl -fsS http://localhost:5601/api/status >/dev/null"]
+      interval: 15s
+      timeout: 5s
+      retries: 30
+      start_period: 45s
+
+  fluent-bit:
+    image: cr.fluentbit.io/fluent/fluent-bit:5.0.0
+    ports:
+      - "24224:24224"
+    depends_on:
+      kafka:
+        condition: service_healthy
+    volumes:
+      - ./fluent-bit/fluent-bit.local.conf:/fluent-bit/etc/fluent-bit.conf:ro
+    healthcheck:
+      test: ["CMD", "/fluent-bit/bin/fluent-bit", "--help"]
+      interval: 10s
+      timeout: 5s
+      retries: 20
+      start_period: 5s
+
   api:
     image: weather-sim-api:1.0.0
     build: ./backend
@@ -15,8 +173,13 @@ services:
       APP_VERSION: 1.0.0
       RATE_LIMIT_WINDOW_MS: 60000
       RATE_LIMIT_MAX: 120
-    ports: ["8080:8080"]
-    depends_on: [redis]
+    ports:
+      - "8080:8080"
+    depends_on:
+      redis:
+        condition: service_healthy
+      fluent-bit:
+        condition: service_started
     logging:
       driver: fluentd
       options:
@@ -24,15 +187,37 @@ services:
         tag: api.{{.Name}}
         fluentd-async: "true"
         fluentd-sub-second-precision: "true"
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://localhost:8080/api/v1/system/health >/dev/null"]
+      interval: 10s
+      timeout: 5s
+      retries: 20
+      start_period: 20s
+
   web:
     image: weather-sim-web:1.0.0
     build: ./frontend
     environment:
       VITE_API_BASE_URL: http://localhost:8080/api/v1
-    ports: ["5173:80"]
-    depends_on: [api]
-  fluent-bit:
-    image: fluent/fluent-bit:5.0.0-oauth2-rfc
-    ports: ["24224:24224"]
-    volumes:
-      - ./fluent-bit/fluent-bit.local.conf:/fluent-bit/etc/fluent-bit.conf:ro
+    ports:
+      - "5173:80"
+    depends_on:
+      api:
+        condition: service_healthy
+    logging:
+      driver: fluentd
+      options:
+        fluentd-address: localhost:24224
+        tag: web.{{.Name}}
+        fluentd-async: "true"
+        fluentd-sub-second-precision: "true"
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://localhost/ >/dev/null"]
+      interval: 10s
+      timeout: 5s
+      retries: 20
+      start_period: 20s
+
+volumes:
+  kafka-data:
+  elasticsearch-data:

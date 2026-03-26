@@ -21,6 +21,3 @@ spec:
                   key: {{ .Values.secrets.sessionSecretKey }}
           livenessProbe: { httpGet: { path: /api/v1/system/live, port: 8080 } }
           readinessProbe: { httpGet: { path: /api/v1/system/ready, port: 8080 } }
-        - name: fluent-bit
-          image: fluent/fluent-bit:3.1
-          envFrom: [{ configMapRef: { name: weather-sim-config } }]

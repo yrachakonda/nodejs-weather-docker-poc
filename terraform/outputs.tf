@@ -47,3 +47,43 @@ output "application_hostname" {
   description = "DNS hostname published for the weather application."
   value       = var.domain_name
 }
+
+output "observability_namespace" {
+  description = "Namespace hosting Kafka, Fluent Bit, and the Elastic stack."
+  value       = var.observability_namespace
+}
+
+output "kafka_bootstrap_servers" {
+  description = "Internal bootstrap service address for the observability Kafka cluster."
+  value       = module.observability.kafka_bootstrap_servers
+}
+
+output "kafka_logs_topic" {
+  description = "Kafka topic receiving weather-sim application logs."
+  value       = module.observability.kafka_topic_name
+}
+
+output "kafka_ui_service" {
+  description = "Cluster-internal Kafka UI service name."
+  value       = module.observability.kafka_ui_service_name
+}
+
+output "kibana_service" {
+  description = "Cluster-internal Kibana service name."
+  value       = module.observability.kibana_service_name
+}
+
+output "elasticsearch_service" {
+  description = "Cluster-internal Elasticsearch HTTP service name."
+  value       = module.observability.elasticsearch_service_name
+}
+
+output "logs_index_pattern" {
+  description = "Kibana index pattern for the application logs."
+  value       = module.observability.elasticsearch_index_pattern
+}
+
+output "cloudwatch_log_group" {
+  description = "CloudWatch log group receiving application logs from Fluent Bit."
+  value       = module.observability.cloudwatch_log_group_name
+}

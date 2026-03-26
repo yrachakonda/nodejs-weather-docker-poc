@@ -68,7 +68,7 @@ locals {
 }
 
 resource "aws_kms_key" "telemetry" {
-  description             = "Shared key for CloudWatch log groups, VPC flow logs, and EKS secret encryption"
+  description             = "Shared key for VPC flow logs and EKS secret encryption"
   enable_key_rotation     = true
   deletion_window_in_days = 7
   policy                  = local.telemetry_kms_key_policy
@@ -77,17 +77,6 @@ resource "aws_kms_key" "telemetry" {
 resource "aws_kms_alias" "telemetry" {
   name          = "alias/${var.project_name}-telemetry"
   target_key_id = aws_kms_key.telemetry.key_id
-}
-
-resource "aws_cloudwatch_log_group" "app" {
-  name              = "/${var.project_name}/poc/app"
-  kms_key_id        = aws_kms_key.telemetry.arn
-  retention_in_days = 14
-}
-
-output "log_group_name" {
-  description = "CloudWatch log group name for the application."
-  value       = aws_cloudwatch_log_group.app.name
 }
 
 output "kms_key_arn" {

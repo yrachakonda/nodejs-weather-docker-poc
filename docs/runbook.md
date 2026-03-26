@@ -1,6 +1,6 @@
 # Runbook
 
-## Deploy infrastructure
+## Deploy Infrastructure
 Run from `terraform/`:
 
 ```bash
@@ -18,12 +18,15 @@ What this provisions:
 - AWS Load Balancer Controller IAM wiring
 - ACM certificate with Route53 DNS validation
 - WAFv2 ACL
-- Application Helm release and DNS record
+- `weather-sim` application release
+- `observability` namespace
+- CloudWatch log group for Fluent Bit application logs
+- Strimzi Kafka, Kafbat UI, Fluent Bit, ECK operator, Elasticsearch, Kibana, and Logstash
 
 What this does not currently provision:
 - A production Redis deployment for session storage
 
-## Build and publish images
+## Build and Publish Images
 The Terraform stack assumes images are available in ECR. Build and push both application images before or after infrastructure creation, depending on your deployment flow.
 
 Example high-level sequence:
@@ -33,9 +36,7 @@ Example high-level sequence:
 4. Push both images to the Terraform-created repositories
 5. Update the deployed tags if you are not using `:latest`
 
-## Default POC credentials
-These demo credentials are valid in the local POC unless changed in code. The API stores the corresponding passwords and API keys as salted `scrypt` hashes, not plaintext.
-
+## Default POC Credentials
 Default users:
 - `admin` / `admin-pass`
 - `basicuser` / `basic-pass`
@@ -50,14 +51,25 @@ Source of truth:
 - `app/backend/src/data/seed-users.json`
 - `app/backend/src/data/seed-api-keys.json`
 
-## Verify deployment
+## Verify Deployment
 Infrastructure checks:
 - Confirm the EKS cluster is `ACTIVE`
 - Confirm the managed node group is `ACTIVE`
 - Confirm the AWS Load Balancer Controller pod is running in `kube-system`
+- Confirm `kubectl get pods -n weather-sim` is healthy
+- Confirm `kubectl get pods -n observability` is healthy
 - Confirm the ingress has an ALB hostname
 - Confirm the Route53 record resolves to the ALB hostname
-- Confirm the configured Redis endpoint is reachable by the API workload
+
+Observability checks:
+- Confirm the Strimzi Kafka pod is running
+- Confirm the Kafbat UI pod is running
+- Confirm the Fluent Bit DaemonSet is ready on each node
+- Confirm the CloudWatch log group `/weather-sim-poc/observability/application` exists
+- Confirm the ECK operator pod is running
+- Confirm Elasticsearch, Kibana, and Logstash are running
+- Confirm the Kafka topic `weather-sim.logs` exists
+- Confirm Logstash is consuming from Kafka and indexing into Elasticsearch
 
 Application smoke checks:
 - `GET /api/v1/system/live`
@@ -65,226 +77,43 @@ Application smoke checks:
 - `GET /api/v1/system/health`
 - Load the Web UI through the public hostname in `terraform/environments/poc/terraform.tfvars`
 
-Authorization checks:
-- `GET /api/v1/weather/current` with a valid `x-api-key` should succeed without a session
-- `GET /api/v1/weather/current` with a valid session should also succeed without an API key
-- `GET /api/v1/weather/premium-forecast` with a valid premium `x-api-key` should return `200`
-- `GET /api/v1/weather/premium-forecast` as `basicuser` should return `403`
-- `GET /api/v1/weather/premium-forecast` as `premiumuser` should return `200`
+Log verification:
+- Generate application traffic
+- Check Fluent Bit logs in `observability`
+- Check recent CloudWatch log streams in `/weather-sim-poc/observability/application`
+- Check Logstash logs in `observability`
+- Open Kibana and confirm recent events in the `weather-sim-logs-*` index pattern
 
-## API endpoint testing with curl
-Set these shell variables first. Replace the host value for a deployed environment.
-
-```bash
-export BASE_URL="http://localhost:8080/api/v1"
-export APP_URL="http://localhost:8080"
-export API_KEY="poc-premium-key-001"
-export BASIC_API_KEY="poc-basic-key-001"
-export COOKIE_JAR="./weather-sim.cookies.txt"
-```
-
-### System endpoints
-
-Live:
+## Port Forward Access
+Kafka, Elasticsearch, Kibana, and Kafka UI are internal-only in EKS. Use `kubectl port-forward`:
 
 ```bash
-curl -i "${BASE_URL}/system/live"
+kubectl -n observability port-forward svc/kafbat-ui 8081:80
+kubectl -n observability port-forward svc/weather-sim-kibana-kb-http 5601:5601
+kubectl -n observability port-forward svc/weather-sim-elasticsearch-es-http 9200:9200
 ```
 
-Ready:
-
-```bash
-curl -i "${BASE_URL}/system/ready"
-```
-
-Health:
-
-```bash
-curl -i "${BASE_URL}/system/health"
-```
-
-Version:
-
-```bash
-curl -i "${BASE_URL}/system/version"
-```
-
-### Auth endpoints
-
-Register a new basic user:
-
-```bash
-curl -i \
-  -c "${COOKIE_JAR}" \
-  -H "Content-Type: application/json" \
-  -X POST "${BASE_URL}/auth/register" \
-  -d '{"username":"newuser","password":"newuser-pass"}'
-```
-
-Login as premium user:
-
-```bash
-curl -i \
-  -c "${COOKIE_JAR}" \
-  -H "Content-Type: application/json" \
-  -X POST "${BASE_URL}/auth/login" \
-  -d '{"username":"premiumuser","password":"premium-pass"}'
-```
-
-Get current authenticated user:
-
-```bash
-curl -i \
-  -b "${COOKIE_JAR}" \
-  "${BASE_URL}/auth/me"
-```
-
-Logout:
-
-```bash
-curl -i \
-  -b "${COOKIE_JAR}" \
-  -X POST "${BASE_URL}/auth/logout"
-```
-
-### Weather endpoints
-
-Current weather with API key only:
-
-```bash
-curl -i \
-  -H "x-api-key: ${API_KEY}" \
-  "${BASE_URL}/weather/current?location=seattle"
-```
-
-Current weather with session only:
-
-```bash
-curl -i \
-  -b "${COOKIE_JAR}" \
-  "${BASE_URL}/weather/current?location=seattle"
-```
-
-Premium forecast with premium API key only:
-
-```bash
-curl -i \
-  -H "x-api-key: ${API_KEY}" \
-  "${BASE_URL}/weather/premium-forecast?location=seattle"
-```
-
-Premium forecast with authenticated premium session:
-
-```bash
-curl -i \
-  -b "${COOKIE_JAR}" \
-  "${BASE_URL}/weather/premium-forecast?location=seattle"
-```
-
-### Negative tests
-
-Current weather without session or API key:
-
-```bash
-curl -i "${BASE_URL}/weather/current?location=seattle"
-```
-
-Premium forecast with a basic API key:
-
-```bash
-curl -i \
-  -H "x-api-key: ${BASIC_API_KEY}" \
-  "${BASE_URL}/weather/premium-forecast?location=seattle"
-```
-
-Premium forecast as `basicuser`:
-
-```bash
-curl -i \
-  -c "${COOKIE_JAR}" \
-  -H "Content-Type: application/json" \
-  -X POST "${BASE_URL}/auth/login" \
-  -d '{"username":"basicuser","password":"basic-pass"}'
-
-curl -i \
-  -b "${COOKIE_JAR}" \
-  "${BASE_URL}/weather/premium-forecast?location=seattle"
-```
-
-### Full endpoint coverage checklist
-- `POST /auth/register`
-- `POST /auth/login`
-- `POST /auth/logout`
-- `GET /auth/me`
-- `GET /weather/current`
-- `GET /weather/premium-forecast`
-- `GET /system/live`
-- `GET /system/ready`
-- `GET /system/health`
-- `GET /system/version`
-
-## Swagger UI
-Swagger assets are available in `docs/`:
-- OpenAPI spec: `docs/openapi.yaml`
-- Swagger UI page: `docs/swagger.html`
-
-To use the Swagger page locally:
-1. Start the API locally from `app/`
-2. Open `docs/swagger.html` in a browser
-3. Set the server URL to `http://localhost:8080/api/v1`
-4. Click `Authorize` and supply an API key when testing weather endpoints
-5. Login first if you want to test session-backed weather access without an API key, or session routes such as `/auth/me` and `/auth/logout`
-
-Note:
-- Browser-based session testing works best when the Swagger page is served from the same origin as the API or from a local static server that can send cookies correctly.
-
-## Postman collection
-The Postman collection is available at:
-- `docs/postman/weather-sim.postman_collection.json`
-
-Recommended Postman variables:
-- `baseUrl`
-- `apiKey`
-- `username`
-- `password`
-- `location`
-
-The collection includes:
-- System checks
-- Auth flows
-- Current weather
-- Premium forecast
-- Negative authorization scenarios
-
-## Terraform quality checks
-Run from `terraform/`:
-
-```bash
-terraform validate
-terraform test
-```
-
-Current Terraform tests cover:
-- Networking unit checks
-- EKS unit checks
-- Root stack composition checks with mocked providers
-
-## Incident response
+## Incident Response
 Primary places to inspect:
-- EKS workloads and ingress state
-- AWS Load Balancer Controller logs in `kube-system`
-- CloudWatch application logs under `/weather-sim-poc/poc/app`
-- WAF telemetry for blocked or sampled requests
+- EKS workloads in `weather-sim` and `observability`
+- Fluent Bit logs
+- CloudWatch Logs for `/weather-sim-poc/observability/application`
+- Kafka topic state and Logstash logs
+- Elasticsearch health
+- Kibana access
 
 Useful symptoms and checks:
 - `401 Unauthorized` on `/weather/current`: missing both session and `x-api-key`, or invalid `x-api-key`
 - `401 Unauthorized` on `/weather/premium-forecast`: missing both session and `x-api-key`, or invalid `x-api-key`
 - `403 Forbidden` on `/weather/premium-forecast`: wrong role for the session or API key
 - Ingress missing address: inspect AWS Load Balancer Controller logs
-- TLS issues: verify ACM validation completed and ingress certificate annotation is correct
+- Kibana empty: confirm Logstash is consuming `weather-sim.logs` and Elasticsearch health is green
+- CloudWatch empty: confirm the Fluent Bit service account annotation points at the expected IRSA role and inspect the Fluent Bit pod logs for `cloudwatch_logs` delivery errors
 
 ## Rollback
 - Helm application rollback: `helm rollback weather-sim`
-- Terraform rollback is change-specific; review `terraform plan` before applying reversions
+- Observability rollback depends on the component:
+  - use `helm rollback` for Helm-managed releases
+  - reapply the prior Terraform plan if the change was made through infrastructure code
 
 Do not use destructive Terraform commands against shared environments without first reviewing state and planned deletes.

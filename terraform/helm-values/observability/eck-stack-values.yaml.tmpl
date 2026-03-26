@@ -1,0 +1,126 @@
+eck-elasticsearch:
+  enabled: true
+  fullnameOverride: ${elasticsearch_name}
+  version: ${elastic_stack_version}
+  http:
+    service:
+      spec:
+        type: ClusterIP
+  nodeSets:
+    - name: default
+      count: 1
+      config:
+        node.store.allow_mmap: false
+      volumeClaimTemplates:
+        - metadata:
+            name: elasticsearch-data
+          spec:
+            accessModes:
+              - ReadWriteOnce
+            resources:
+              requests:
+                storage: ${elasticsearch_storage_size}
+      podTemplate:
+        spec:
+          affinity:
+            podAntiAffinity:
+              preferredDuringSchedulingIgnoredDuringExecution:
+                - weight: 100
+                  podAffinityTerm:
+                    topologyKey: kubernetes.io/hostname
+                    labelSelector:
+                      matchLabels:
+                        elasticsearch.k8s.elastic.co/cluster-name: ${elasticsearch_name}
+          containers:
+            - name: elasticsearch
+              resources:
+                requests:
+                  cpu: 500m
+                  memory: 2Gi
+                limits:
+                  cpu: 1000m
+                  memory: 2Gi
+
+eck-kibana:
+  enabled: true
+  fullnameOverride: ${kibana_name}
+  version: ${elastic_stack_version}
+  count: 1
+  elasticsearchRef:
+    name: ${elasticsearch_name}
+  ingress:
+    enabled: false
+  podTemplate:
+    spec:
+      containers:
+        - name: kibana
+          resources:
+            requests:
+              cpu: 100m
+              memory: 512Mi
+            limits:
+              cpu: 500m
+              memory: 1Gi
+
+eck-logstash:
+  enabled: true
+  fullnameOverride: ${logstash_name}
+  version: ${elastic_stack_version}
+  count: 1
+  elasticsearchRefs:
+    - name: ${elasticsearch_name}
+      clusterName: ${project_name}
+  config:
+    log.level: info
+    pipeline.batch.size: 125
+    pipeline.workers: 1
+    queue.type: memory
+  pipelines:
+    - pipeline.id: main
+      config.string: |
+        input {
+          kafka {
+            bootstrap_servers => "${kafka_bootstrap_servers}"
+            topics => ["${kafka_topic_name}"]
+            group_id => "${logstash_name}"
+            auto_offset_reset => "latest"
+            decorate_events => "basic"
+            codec => json
+          }
+        }
+
+        filter {
+          if [kubernetes] and [kubernetes][namespace_name] != "${app_namespace}" {
+            drop {}
+          }
+        }
+
+        output {
+          elasticsearch {
+            hosts => [ "$${${logstash_es_env_prefix}_ES_HOSTS}" ]
+            user => "$${${logstash_es_env_prefix}_ES_USER}"
+            password => "$${${logstash_es_env_prefix}_ES_PASSWORD}"
+            ssl_certificate_authorities => "$${${logstash_es_env_prefix}_ES_SSL_CERTIFICATE_AUTHORITY}"
+            index => "${project_name}-logs-%%{+YYYY.MM.dd}"
+          }
+        }
+  podTemplate:
+    spec:
+      containers:
+        - name: logstash
+          resources:
+            requests:
+              cpu: 250m
+              memory: 1Gi
+            limits:
+              cpu: 1000m
+              memory: 1Gi
+  volumeClaimTemplates:
+    - metadata:
+        name: logstash-data
+      spec:
+        accessModes:
+          - ReadWriteOnce
+        resources:
+          requests:
+            storage: 2Gi

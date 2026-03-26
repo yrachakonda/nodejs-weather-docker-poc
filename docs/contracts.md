@@ -62,8 +62,10 @@ Frontend:
 - `VITE_API_BASE_URL`
 
 Operational and local compose defaults:
-- `AWS_REGION`
-- `CLOUDWATCH_LOG_GROUP`
+- `SESSION_SECRET`
+- `weather-sim.logs`
+- `weather-sim-logs-*`
+- `/weather-sim-poc/observability/application`
 
 ## Platform naming conventions
 - Project slug: `weather-sim`
@@ -71,6 +73,11 @@ Operational and local compose defaults:
 - Terraform cluster name pattern: `<project_name>-<environment>`
 - Helm release: `weather-sim`
 - Kubernetes namespace: `weather-sim`
+- Observability namespace: `observability`
+- Kafka cluster: `weather-sim-kafka`
+- Kafka topic: `weather-sim.logs`
+- CloudWatch Logs group pattern: `/<project_name>-<environment>/observability/application`
+- Elasticsearch index pattern: `weather-sim-logs-*`
 - Default Terraform VPC CIDR: `10.0.0.0/16`
 
 ## Logging and security controls
@@ -80,3 +87,4 @@ Operational and local compose defaults:
 - Session state is stored in Redis
 - Passwords and API keys are stored as salted `scrypt` hashes
 - ALB ingress is intended to be protected by a regional WAFv2 ACL in AWS
+- Deployed application logs are routed by Fluent Bit to both Kafka and CloudWatch Logs
