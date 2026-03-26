@@ -143,6 +143,12 @@ resource "kubernetes_namespace" "app" {
   }
 }
 
+resource "kubernetes_namespace" "observability" {
+  metadata {
+    name = var.observability_namespace
+  }
+}
+
 resource "kubernetes_service_account" "aws_load_balancer_controller" {
   metadata {
     name      = "aws-load-balancer-controller"
@@ -193,6 +199,36 @@ resource "helm_release" "aws_load_balancer_controller" {
   }
 }
 
+module "observability" {
+  source = "./modules/observability"
+
+  app_namespace                 = kubernetes_namespace.app.metadata[0].name
+  aws_region                    = var.aws_region
+  cluster_name                  = local.cluster_name
+  cloudwatch_log_retention_days = var.cloudwatch_log_retention_days
+  eck_operator_chart_version    = var.eck_operator_chart_version
+  eck_stack_chart_version       = var.eck_stack_chart_version
+  elastic_stack_version         = var.elastic_stack_version
+  elasticsearch_storage_size    = var.elasticsearch_storage_size
+  eks_oidc_provider_arn         = module.eks.oidc_provider_arn
+  eks_oidc_provider_url         = module.eks.oidc_provider_url
+  fluent_bit_chart_version      = var.fluent_bit_chart_version
+  kafka_retention_hours         = var.kafka_retention_hours
+  kafka_storage_size            = var.kafka_storage_size
+  kafka_topic_name              = var.kafka_topic_name
+  kafka_version                 = var.kafka_version
+  kms_key_arn                   = module.logging.kms_key_arn
+  kafbat_ui_chart_version       = var.kafbat_ui_chart_version
+  observability_namespace       = kubernetes_namespace.observability.metadata[0].name
+  project_name                  = var.project_name
+  strimzi_chart_version         = var.strimzi_chart_version
+  tags                          = local.common_tags
+
+  depends_on = [
+    kubernetes_namespace.observability
+  ]
+}
+
 module "acm" {
   source = "./modules/acm"
 
@@ -227,10 +263,6 @@ resource "helm_release" "weather_sim" {
       image = {
         api = "${module.ecr.api_repository_url}:latest"
         web = "${module.ecr.web_repository_url}:latest"
-      }
-      cloudwatch = {
-        region   = var.aws_region
-        logGroup = module.logging.log_group_name
       }
       secrets = {
         sessionSecretName = module.secrets.session_secret_name

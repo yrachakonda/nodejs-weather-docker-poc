@@ -20,9 +20,6 @@ secrets:
   sessionSecretName: weather-sim-session-secret
   sessionSecretKey: SESSION_SECRET
   apiKeySecretName: weather-sim-api-keys
-cloudwatch:
-  region: us-east-1
-  logGroup: /weather-sim/poc/app
 ingress:
   enabled: true
   className: nginx

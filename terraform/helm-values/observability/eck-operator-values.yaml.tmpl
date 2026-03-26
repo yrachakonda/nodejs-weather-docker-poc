@@ -1,0 +1,12 @@
+managedNamespaces:
+  - ${observability_namespace}
+resources:
+  requests:
+    cpu: 100m
+    memory: 256Mi
+  limits:
+    cpu: 500m
+    memory: 512Mi
+podDisruptionBudget:
+  enabled: true
+  minAvailable: 1

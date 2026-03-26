@@ -11,5 +11,3 @@ data:
   APP_VERSION: {{ .Values.env.APP_VERSION | quote }}
   RATE_LIMIT_WINDOW_MS: {{ .Values.env.RATE_LIMIT_WINDOW_MS | quote }}
   RATE_LIMIT_MAX: {{ .Values.env.RATE_LIMIT_MAX | quote }}
-  CLOUDWATCH_LOG_GROUP: {{ .Values.cloudwatch.logGroup | quote }}
-  AWS_REGION: {{ .Values.cloudwatch.region | quote }}
