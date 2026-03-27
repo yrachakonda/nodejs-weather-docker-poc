@@ -20,9 +20,8 @@ spec:
           - path: /
             pathType: Prefix
             backend:
-              service: { name: weather-sim-web, port: { number: 80 } }
-          - path: /api
-            pathType: Prefix
-            backend:
-              service: { name: weather-sim-api, port: { number: 8080 } }
+              service:
+                name: weather-sim-web
+                port:
+                  number: {{ .Values.service.webPort }}
 {{- end }}

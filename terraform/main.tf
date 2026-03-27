@@ -26,7 +26,19 @@ provider "aws" {
 }
 
 locals {
-  cluster_name = "${var.project_name}-${var.environment}"
+  cluster_name    = "${var.project_name}-${var.environment}"
+  api_domain_name = coalesce(var.api_domain_name, "api.${var.domain_name}")
+  api_nlb_name    = "${var.project_name}-${var.environment}-api-nlb"
+  api_service_annotations = {
+    "service.beta.kubernetes.io/aws-load-balancer-healthcheck-path"     = "/api/v1/system/health"
+    "service.beta.kubernetes.io/aws-load-balancer-healthcheck-port"     = "8080"
+    "service.beta.kubernetes.io/aws-load-balancer-healthcheck-protocol" = "HTTP"
+    "service.beta.kubernetes.io/aws-load-balancer-name"                 = local.api_nlb_name
+    "service.beta.kubernetes.io/aws-load-balancer-nlb-target-type"      = "ip"
+    "service.beta.kubernetes.io/aws-load-balancer-scheme"               = "internal"
+    "service.beta.kubernetes.io/aws-load-balancer-subnets"              = join(",", module.networking.private_subnet_ids)
+    "service.beta.kubernetes.io/aws-load-balancer-type"                 = "external"
+  }
   common_tags = {
     Environment = var.environment
     Project     = var.project_name
@@ -234,7 +246,7 @@ module "acm" {
 
   domain_name               = var.domain_name
   hosted_zone_id            = var.hosted_zone_id
-  subject_alternative_names = var.subject_alternative_names
+  subject_alternative_names = distinct(concat(var.subject_alternative_names, [local.api_domain_name]))
   tags                      = local.common_tags
 }
 
@@ -242,6 +254,13 @@ module "waf" {
   source = "./modules/waf"
 
   project_name = local.cluster_name
+  tags         = local.common_tags
+}
+
+module "api_waf" {
+  source = "./modules/waf"
+
+  project_name = "${local.cluster_name}-api"
   tags         = local.common_tags
 }
 
@@ -269,44 +288,95 @@ resource "helm_release" "weather_sim" {
         apiKeySecretName  = module.secrets.api_keys_secret_name
       }
       ingress = {
-        enabled   = true
-        className = "alb"
-        host      = var.domain_name
-        annotations = {
-          "alb.ingress.kubernetes.io/certificate-arn"  = module.acm.certificate_arn
-          "alb.ingress.kubernetes.io/healthcheck-path" = "/"
-          "alb.ingress.kubernetes.io/listen-ports"     = "[{\"HTTP\":80},{\"HTTPS\":443}]"
-          "alb.ingress.kubernetes.io/scheme"           = "internet-facing"
-          "alb.ingress.kubernetes.io/ssl-redirect"     = "443"
-          "alb.ingress.kubernetes.io/subnets"          = join(",", module.networking.public_subnet_ids)
-          "alb.ingress.kubernetes.io/target-type"      = "ip"
-          "alb.ingress.kubernetes.io/wafv2-acl-arn"    = module.waf.web_acl_arn
-          "kubernetes.io/ingress.class"                = "alb"
-        }
-        tls = [
-          {
-            hosts      = [var.domain_name]
-            secretName = ""
-          }
-        ]
+        enabled = false
       }
       service = {
-        apiAnnotations = {
-          "alb.ingress.kubernetes.io/healthcheck-path" = "/api/v1/system/health"
-        }
+        apiAnnotations = local.api_service_annotations
       }
     })
   ]
 }
 
-data "kubernetes_ingress_v1" "weather_sim" {
+resource "kubernetes_ingress_v1" "weather_sim_public" {
   metadata {
     name      = "weather-sim"
     namespace = kubernetes_namespace.app.metadata[0].name
+    annotations = {
+      "alb.ingress.kubernetes.io/certificate-arn"  = module.acm.certificate_arn
+      "alb.ingress.kubernetes.io/healthcheck-path" = "/"
+      "alb.ingress.kubernetes.io/listen-ports"     = "[{\"HTTP\":80},{\"HTTPS\":443}]"
+      "alb.ingress.kubernetes.io/scheme"           = "internet-facing"
+      "alb.ingress.kubernetes.io/ssl-redirect"     = "443"
+      "alb.ingress.kubernetes.io/subnets"          = join(",", module.networking.public_subnet_ids)
+      "alb.ingress.kubernetes.io/target-type"      = "ip"
+      "alb.ingress.kubernetes.io/wafv2-acl-arn"    = module.waf.web_acl_arn
+      "kubernetes.io/ingress.class"                = "alb"
+    }
+  }
+
+  spec {
+    ingress_class_name = "alb"
+
+    rule {
+      host = var.domain_name
+
+      http {
+        path {
+          path      = "/"
+          path_type = "Prefix"
+
+          backend {
+            service {
+              name = "weather-sim-web"
+
+              port {
+                number = 80
+              }
+            }
+          }
+        }
+      }
+    }
+
+    tls {
+      hosts       = [var.domain_name]
+      secret_name = ""
+    }
   }
 
   depends_on = [
-    helm_release.weather_sim
+    helm_release.weather_sim,
+    module.acm
+  ]
+}
+
+data "kubernetes_ingress_v1" "weather_sim" {
+  metadata {
+    name      = kubernetes_ingress_v1.weather_sim_public.metadata[0].name
+    namespace = kubernetes_ingress_v1.weather_sim_public.metadata[0].namespace
+  }
+
+  depends_on = [
+    kubernetes_ingress_v1.weather_sim_public
+  ]
+}
+
+module "api_edge" {
+  source = "./modules/api_edge"
+
+  access_log_retention_days = var.cloudwatch_log_retention_days
+  api_domain_name           = local.api_domain_name
+  certificate_arn           = module.acm.certificate_arn
+  hosted_zone_id            = var.hosted_zone_id
+  kms_key_arn               = module.logging.kms_key_arn
+  nlb_name                  = local.api_nlb_name
+  project_name              = local.cluster_name
+  tags                      = local.common_tags
+  waf_acl_arn               = module.api_waf.web_acl_arn
+
+  depends_on = [
+    helm_release.weather_sim,
+    module.acm
   ]
 }
 

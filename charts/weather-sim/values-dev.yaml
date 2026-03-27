@@ -5,8 +5,12 @@ image:
   web: 123456789012.dkr.ecr.us-east-1.amazonaws.com/weather-sim-web:latest
 replicaCount: 2
 service:
+  apiType: LoadBalancer
   apiPort: 8080
+  apiTargetPort: 8080
   webPort: 80
+  webType: ClusterIP
+  webTargetPort: 80
 env:
   NODE_ENV: production
   API_PORT: "8080"

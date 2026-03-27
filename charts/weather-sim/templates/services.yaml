@@ -7,8 +7,12 @@ metadata:
     {{- toYaml . | nindent 4 }}
   {{- end }}
 spec:
+  type: {{ .Values.service.apiType }}
   selector: { app: weather-sim-api }
-  ports: [{ port: 8080, targetPort: 8080 }]
+  ports:
+    - port: {{ .Values.service.apiPort }}
+      targetPort: {{ .Values.service.apiTargetPort }}
+      protocol: TCP
 ---
 apiVersion: v1
 kind: Service
@@ -19,5 +23,9 @@ metadata:
     {{- toYaml . | nindent 4 }}
   {{- end }}
 spec:
+  type: {{ .Values.service.webType }}
   selector: { app: weather-sim-web }
-  ports: [{ port: 80, targetPort: 80 }]
+  ports:
+    - port: {{ .Values.service.webPort }}
+      targetPort: {{ .Values.service.webTargetPort }}
+      protocol: TCP

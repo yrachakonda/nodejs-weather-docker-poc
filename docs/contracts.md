@@ -86,5 +86,5 @@ Operational and local compose defaults:
 - Global rate limiting is enabled
 - Session state is stored in Redis
 - Passwords and API keys are stored as salted `scrypt` hashes
-- ALB ingress is intended to be protected by a regional WAFv2 ACL in AWS
+- Public web ingress is protected by a regional WAFv2 ACL on the ALB, and API traffic is protected by a regional WAFv2 ACL in front of API Gateway
 - Deployed application logs are routed by Fluent Bit to both Kafka and CloudWatch Logs

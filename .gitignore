@@ -177,6 +177,26 @@ terraform.rc
 # Uncomment the line below if you want to ignore planout files.
 planout
 
+
+# ------------------------------------------------------------------------------
+# Python
+# ------------------------------------------------------------------------------
+
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+*.so
+.Python
+env/
+venv/
+
+# Distribution / packaging
+.eggs/
+*.egg-info/
+dist/
+build/
+# ... and other common files
+
 # ------------------------------------------------------------------------------
 # Editor / IDE Files
 # ------------------------------------------------------------------------------

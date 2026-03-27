@@ -151,6 +151,30 @@ override_data {
   }
 }
 
+override_resource {
+  override_during = plan
+  target          = module.api_edge.aws_api_gateway_vpc_link.this
+  values = {
+    id = "vpclink-123456"
+  }
+}
+
+override_resource {
+  override_during = plan
+  target          = module.api_edge.aws_api_gateway_stage.this
+  values = {
+    arn = "arn:aws:apigateway:us-east-1::/restapis/test-api/stages/prod"
+  }
+}
+
+override_resource {
+  override_during = plan
+  target          = module.api_edge.aws_wafv2_web_acl_association.this
+  values = {
+    resource_arn = "arn:aws:apigateway:us-east-1::/restapis/test-api/stages/prod"
+  }
+}
+
 run "root_stack_wires_networking_ingress_and_waf" {
   command = plan
 
@@ -233,5 +257,80 @@ run "root_stack_wires_networking_ingress_and_waf" {
   assert {
     condition     = aws_iam_policy.aws_load_balancer_controller.name == "weather-sim-poc-aws-load-balancer-controller"
     error_message = "The root stack must provision the IAM policy for the AWS Load Balancer Controller."
+  }
+}
+
+run "root_stack_exposes_api_gateway_for_public_api_traffic" {
+  command = plan
+
+  variables {
+    aws_region           = "us-east-1"
+    desired_node_count   = 2
+    domain_name          = "weather-poc.example.com"
+    environment          = "poc"
+    hosted_zone_id       = "Z1234567890"
+    kubernetes_namespace = "weather-sim"
+    project_name         = "weather-sim"
+    vpc_cidr             = "10.0.0.0/16"
+  }
+
+  assert {
+    condition     = startswith(output.api_gateway_invoke_url, "https://")
+    error_message = "The root stack must expose an HTTPS API Gateway invoke URL."
+  }
+
+  assert {
+    condition     = output.api_gateway_vpc_link_id != null && output.api_gateway_vpc_link_id != ""
+    error_message = "The root stack must expose the VPC Link used for private API integration."
+  }
+
+  assert {
+    condition     = output.api_gateway_integration_type == "HTTP_PROXY"
+    error_message = "The API Gateway integration must be an HTTP proxy integration."
+  }
+
+  assert {
+    condition     = output.api_gateway_integration_connection_type == "VPC_LINK"
+    error_message = "The API Gateway integration must use a VPC Link."
+  }
+
+  assert {
+    condition     = startswith(output.api_gateway_stage_arn, "arn:aws:apigateway:")
+    error_message = "The API Gateway stage ARN must be exposed for downstream WAF association checks."
+  }
+
+  assert {
+    condition     = output.api_gateway_access_log_group_name == "/aws/apigateway/weather-sim-poc-api-prod"
+    error_message = "The API Gateway stage must publish access logs to the expected CloudWatch log group."
+  }
+
+  assert {
+    condition     = output.api_gateway_xray_tracing_enabled == true
+    error_message = "The API Gateway stage must enable X-Ray tracing."
+  }
+
+  assert {
+    condition     = output.api_gateway_waf_association_resource_arn == output.api_gateway_stage_arn
+    error_message = "The WAF association must target the API Gateway stage ARN."
+  }
+
+  assert {
+    condition     = output.api_service_load_balancer_scheme == "internal"
+    error_message = "The API workload must be published through an internal load balancer."
+  }
+
+  assert {
+    condition     = output.api_service_load_balancer_target_type == "ip"
+    error_message = "The API load balancer must use IP targets for the EKS pods."
+  }
+
+  assert {
+    condition     = output.api_service_healthcheck_port == "8080"
+    error_message = "The API load balancer health check port must match the backend API container port."
+  }
+
+  assert {
+    condition     = output.api_service_healthcheck_path == "/api/v1/system/health"
+    error_message = "The API load balancer health check path must target the API health endpoint."
   }
 }

@@ -17,7 +17,8 @@ What this provisions:
 - An EKS cluster and managed node group
 - AWS Load Balancer Controller IAM wiring
 - ACM certificate with Route53 DNS validation
-- WAFv2 ACL
+- WAFv2 protection for the public web ALB and the API Gateway edge
+- API Gateway with private integration through VPC Link to the EKS-hosted API service
 - `weather-sim` application release
 - `observability` namespace
 - CloudWatch log group for Fluent Bit application logs
@@ -25,6 +26,8 @@ What this provisions:
 
 What this does not currently provision:
 - A production Redis deployment for session storage
+
+The deployment keeps the browser UI on the ALB while exposing `/api/v1` through API Gateway.
 
 ## Build and Publish Images
 The Terraform stack assumes images are available in ECR. Build and push both application images before or after infrastructure creation, depending on your deployment flow.
@@ -58,8 +61,11 @@ Infrastructure checks:
 - Confirm the AWS Load Balancer Controller pod is running in `kube-system`
 - Confirm `kubectl get pods -n weather-sim` is healthy
 - Confirm `kubectl get pods -n observability` is healthy
-- Confirm the ingress has an ALB hostname
+- Confirm the web ingress has an ALB hostname
 - Confirm the Route53 record resolves to the ALB hostname
+- Confirm the API Gateway invoke URL or custom domain is published in `terraform output`
+- Confirm the API Gateway base URL responds to `/api/v1/system/health`
+- Confirm the ALB hostname no longer serves `/api/v1/*` as the supported API path
 
 Observability checks:
 - Confirm the Strimzi Kafka pod is running
@@ -72,10 +78,10 @@ Observability checks:
 - Confirm Logstash is consuming from Kafka and indexing into Elasticsearch
 
 Application smoke checks:
-- `GET /api/v1/system/live`
-- `GET /api/v1/system/ready`
-- `GET /api/v1/system/health`
-- Load the Web UI through the public hostname in `terraform/environments/poc/terraform.tfvars`
+- `GET /api/v1/system/live` against the API Gateway base URL
+- `GET /api/v1/system/ready` against the API Gateway base URL
+- `GET /api/v1/system/health` against the API Gateway base URL
+- Load the Web UI through the public ALB hostname
 
 Log verification:
 - Generate application traffic
@@ -101,11 +107,14 @@ Primary places to inspect:
 - Kafka topic state and Logstash logs
 - Elasticsearch health
 - Kibana access
+- API Gateway stage metrics, WAF metrics, and VPC Link health
 
 Useful symptoms and checks:
 - `401 Unauthorized` on `/weather/current`: missing both session and `x-api-key`, or invalid `x-api-key`
 - `401 Unauthorized` on `/weather/premium-forecast`: missing both session and `x-api-key`, or invalid `x-api-key`
 - `403 Forbidden` on `/weather/premium-forecast`: wrong role for the session or API key
+- `403` or `429` from the API edge: inspect WAF rules and API Gateway usage metrics
+- `502` or `504` from the API edge: inspect VPC Link health, internal NLB target health, and the `weather-sim-api` service endpoints
 - Ingress missing address: inspect AWS Load Balancer Controller logs
 - Kibana empty: confirm Logstash is consuming `weather-sim.logs` and Elasticsearch health is green
 - CloudWatch empty: confirm the Fluent Bit service account annotation points at the expected IRSA role and inspect the Fluent Bit pod logs for `cloudwatch_logs` delivery errors

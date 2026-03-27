@@ -26,6 +26,12 @@ variable "domain_name" {
   type        = string
 }
 
+variable "api_domain_name" {
+  description = "Optional DNS name for the public API Gateway custom domain. Defaults to api.<domain_name>."
+  type        = string
+  default     = null
+}
+
 variable "subject_alternative_names" {
   description = "Optional ACM subject alternative names."
   type        = list(string)

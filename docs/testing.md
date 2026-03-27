@@ -8,6 +8,7 @@ This repository currently has:
 - local perf, load, stress, and soak scripts with `k6`
 - automated Terraform validation and tests
 - manual API validation assets through `curl`, Swagger, and Postman
+- a Python-based AWS architecture diagram source under `docs/diagrams/`
 
 ## Test Inventory
 | Suite | Purpose | What it runs today | What it does not prove | Command |
@@ -17,7 +18,7 @@ This repository currently has:
 | Workspace aggregate test | Match the app CI stage. | Runs backend tests, then frontend tests. | Playwright browser flows, Compose startup, or infrastructure correctness. | `npm run test` |
 | E2E | Exercise browser-backed user journeys end to end against the running local stack. | Playwright runs all specs in `app/tests/e2e/` against an already-running app and API. | Throughput, long-duration stability, cross-browser coverage, or deployed ingress behavior. | `npm run test:e2e` |
 | Smoke | Fail fast on the minimum browser and API checks before running broader E2E coverage. | Playwright runs only tests tagged `@smoke`. | Full auth coverage, role transitions, or UI edge cases. | `npm run test:e2e:smoke` |
-| Perf / load / stress / soak | Exercise local non-functional checks against the API with `k6`. | Scripted baseline, load, stress, and soak runs are checked into `app/tests/perf/`. | Production benchmarking, cluster-scale capacity claims, or cross-environment SLO certification. | `npm run perf:baseline`, `npm run perf:load`, `npm run perf:stress`, `npm run perf:soak` |
+| Perf / load / stress / soak | Exercise local non-functional checks against the API with `k6`. | Scripted baseline, load, stress, and soak runs are checked into `app/tests/perf/`. | Production benchmarking, cluster-scale capacity claims, or SLO certification. | `npm run perf:baseline`, `npm run perf:load`, `npm run perf:stress`, `npm run perf:soak` |
 | Terraform validation and tests | Validate IaC syntax and run Terraform test cases. | `terraform validate` plus tests under `terraform/tests/`. | Application behavior, image correctness, Kubernetes runtime health, or Redis availability. | `terraform init -backend=false && terraform validate && terraform test` |
 | Manual API verification | Exercise auth and weather flows without Playwright. | `curl`, Swagger, and Postman requests against the local or deployed API. | Browser automation, repeatable CI gating, or load characteristics. | See `docs/runbook.md`. |
 
@@ -58,7 +59,20 @@ Playwright runtime values:
 ### Terraform Checks
 - Terraform installed locally
 - `terraform init -backend=false` must run before `terraform validate` or `terraform test`
-- Terraform tests now also assert the Fluent Bit CloudWatch log group and IRSA wiring in the AWS deployment path
+- Terraform tests now also assert the split edge: web ingress, API Gateway, WAF association, and the private API integration path
+
+### Diagram Rendering
+- Python 3.13 or later
+- `pip install diagrams graphviz`
+- Graphviz `dot` available on `PATH`
+
+Run the diagram renderer from the repo root:
+
+```powershell
+docs\diagrams\generate_architecture_diagram.ps1
+```
+
+That wrapper invokes `docs/diagrams/architecture_diagram.py` and renders the architecture diagram artifact(s) next to the script.
 
 ## Exact Commands
 
@@ -122,8 +136,29 @@ What this proves:
 - the basic API health endpoint responds from the Compose stack
 
 What this does not prove:
-- production ingress, TLS, WAF, EKS rollout, or external Redis behavior
+- production ingress, TLS, WAF, EKS rollout, external Redis behavior, or API Gateway integration
 - Kubernetes DaemonSet tailing of `/var/log/containers`
+
+## Deployed AWS Edge Checks
+Use the URLs from `terraform output`:
+- Web UI should resolve to the ALB hostname
+- API should resolve to the API Gateway invoke URL or custom domain
+
+Useful checks:
+
+```bash
+export WEB_URL="https://<web-hostname>"
+export API_URL="https://<api-gateway-host>/api/v1"
+
+curl -fsS "${API_URL}/system/health"
+curl -fsS "${API_URL}/system/live"
+curl -fsS "${API_URL}/system/ready"
+```
+
+What this proves:
+- the API is reachable through API Gateway
+- the web UI is still reachable through the public ALB
+- the ALB is no longer the supported public API path
 
 ## E2E With Docker Compose
 Run from `app/` after `docker compose up --build -d`.
@@ -207,6 +242,7 @@ Use this order for fast failure and parity with the current pipeline design:
 - Postman collection: `docs/postman/weather-sim.postman_collection.json`
 - OpenAPI contract: `docs/openapi.yaml`
 - Browser API explorer: `docs/swagger.html`
+- Architecture diagram source, render wrapper, and rendered PNG: `docs/diagrams/`
 
 ## Troubleshooting
 - `npm ci` fails because the lockfile is out of sync: regenerate `app/package-lock.json` before relying on CI-style installs.
@@ -219,4 +255,5 @@ Use this order for fast failure and parity with the current pipeline design:
 - Browser requests from the web app fail with CORS issues: confirm the API is using `CORS_ORIGIN=http://localhost:5173`.
 - Kibana is empty: confirm Logstash is reading `weather-sim.logs` and Elasticsearch health is green.
 - `docker compose logs api` is sparse: API logs are forwarded through the `fluent-bit` container; inspect `docker compose logs fluent-bit` as well.
-- Deployed smoke checks fail after rollout: confirm the ingress host resolves, the ALB is healthy, and `/api/v1/system/health` is reachable through HTTPS.
+- Deployed smoke checks fail after rollout: confirm the web hostname resolves, the ALB is healthy, the API Gateway invoke URL resolves, and `/api/v1/system/health` is reachable through the API Gateway edge.
+- Diagram rendering fails: confirm `diagrams`, Graphviz, and the `dot` executable are installed.
