@@ -16,8 +16,8 @@ This repository currently has:
 | Backend tests | Check API routes, auth/session behavior, role enforcement, and middleware logic without Docker. | Vitest runs unit and integration suites from `app/tests/backend/`. | Browser behavior, Compose wiring, or real Redis connectivity. | `npm run test -w backend` |
 | Frontend tests | Check React rendering, routing, auth context, form behavior, and API error states in JSDOM. | Vitest runs `*.test.tsx` files from `app/tests/frontend/` against the React app in `app/frontend/src/`. | Real browser execution, container networking, or backend API reachability. | `npm run test -w frontend` |
 | Workspace aggregate test | Match the app CI stage. | Runs backend tests, then frontend tests. | Playwright browser flows, Compose startup, or infrastructure correctness. | `npm run test` |
-| E2E | Exercise browser-backed user journeys end to end against the running local stack. | Playwright runs all specs in `app/tests/e2e/` against an already-running app and API. | Throughput, long-duration stability, cross-browser coverage, or deployed ingress behavior. | `npm run test:e2e` |
-| Smoke | Fail fast on the minimum browser and API checks before running broader E2E coverage. | Playwright runs only tests tagged `@smoke`. | Full auth coverage, role transitions, or UI edge cases. | `npm run test:e2e:smoke` |
+| E2E | Exercise browser-backed user journeys end to end against an already-running target. | Playwright runs all specs in `app/tests/e2e/` against the configured web app and API. | Throughput, long-duration stability, cross-browser coverage, or infrastructure certification. | `npm run test:e2e` or `npm run test:e2e:remote -- --base-url <web> --api-base-url <api>` |
+| Smoke | Fail fast on the minimum browser and API checks before running broader E2E coverage. | Playwright runs only tests tagged `@smoke`. | Full auth coverage, role transitions, or UI edge cases. | `npm run test:e2e:smoke` or `npm run test:e2e:remote:smoke -- --base-url <web> --api-base-url <api>` |
 | Perf / load / stress / soak | Exercise local non-functional checks against the API with `k6`. | Scripted baseline, load, stress, and soak runs are checked into `app/tests/perf/`. | Production benchmarking, cluster-scale capacity claims, or SLO certification. | `npm run perf:baseline`, `npm run perf:load`, `npm run perf:stress`, `npm run perf:soak` |
 | Terraform validation and tests | Validate IaC syntax and run Terraform test cases. | `terraform validate` plus tests under `terraform/tests/`. | Application behavior, image correctness, Kubernetes runtime health, or Redis availability. | `terraform init -backend=false && terraform validate && terraform test` |
 | Manual API verification | Exercise auth and weather flows without Playwright. | `curl`, Swagger, and Postman requests against the local or deployed API. | Browser automation, repeatable CI gating, or load characteristics. | See `docs/runbook.md`. |
@@ -55,6 +55,7 @@ Local Docker Compose runtime values:
 Playwright runtime values:
 - `PLAYWRIGHT_BASE_URL` defaults to `http://localhost:5173`
 - `PLAYWRIGHT_API_BASE_URL` defaults to `http://localhost:8080/api/v1`
+- `PLAYWRIGHT_IGNORE_HTTPS_ERRORS=true` is optional for self-signed or lab TLS targets
 
 ### Terraform Checks
 - Terraform installed locally
@@ -99,6 +100,8 @@ npm run test:e2e:install
 npm run test:e2e:smoke
 npm run test:e2e
 npm run test:e2e:headed
+npm run test:e2e:remote -- --base-url https://web.example.com --api-base-url https://api.example.com/api/v1
+npm run test:e2e:remote:smoke -- --base-url https://web.example.com --api-base-url https://api.example.com/api/v1
 ```
 
 Local perf suites:
@@ -138,6 +141,41 @@ What this proves:
 What this does not prove:
 - production ingress, TLS, WAF, EKS rollout, external Redis behavior, or API Gateway integration
 - Kubernetes DaemonSet tailing of `/var/log/containers`
+
+## Remote Playwright Execution
+Run from `app/` when you want the same Playwright coverage against a deployed environment instead of Docker Compose.
+
+Exact commands:
+
+```bash
+npm run test:e2e:remote -- --base-url https://web.example.com --api-base-url https://api.example.com/api/v1
+npm run test:e2e:remote:smoke -- --base-url https://web.example.com --api-base-url https://api.example.com/api/v1
+npm run test:e2e:remote:headed -- --base-url https://web.example.com --api-base-url https://api.example.com/api/v1
+```
+
+Optional variant for self-signed or lab certificates:
+
+```bash
+npm run test:e2e:remote -- --base-url https://web.example.com --api-base-url https://api.example.com/api/v1 --ignore-https-errors
+```
+
+What the remote target must satisfy:
+- The web UI at `--base-url` must already be deployed and reachable from the machine running Playwright.
+- The API at `--api-base-url` must expose `/system/health`, `/auth/login`, `/auth/me`, `/weather/current`, and `/weather/premium-forecast`.
+- The deployed frontend must already be configured to call the deployed API. In this repo that means `VITE_API_BASE_URL` was set correctly at build time.
+- The API must allow the frontend origin through `CORS_ORIGIN`.
+- Seeded users must exist with the credentials used in `app/tests/e2e/test-data.ts`: `basicuser/basic-pass` and `premiumuser/premium-pass`.
+- Session cookies must work for the deployment shape. Same-origin or a cookie-compatible frontend/API setup is the safest configuration.
+
+What this proves:
+- The deployed web app shell loads in Chromium.
+- Browser login, session reuse, and role-gated weather flows still work after deployment.
+- The API health endpoint remains reachable at the deployed API base URL.
+
+What this does not prove:
+- Multi-browser compatibility beyond Chromium.
+- Long-duration resilience, load, or soak characteristics.
+- WAF policy completeness, API Gateway quota behavior, or infrastructure internals beyond externally visible behavior.
 
 ## Deployed AWS Edge Checks
 Use the URLs from `terraform output`:
@@ -204,10 +242,12 @@ curl -i -H "x-api-key: ${BASIC_API_KEY}" "${BASE_URL}/weather/premium-forecast?l
 ```
 
 ### Option 2: Postman
-- Import `docs/postman/weather-sim.postman_collection.json`
-- Set `baseUrl` to `http://localhost:8080/api/v1`
+- Import `app/tests/postman/weather-sim.postman_collection.json`
+- Set `baseUrl` to either `http://localhost:8080/api/v1` or the deployed API URL such as `https://api.example.com/api/v1`
 - Set `apiKey` to `poc-premium-key-001`
-- Run the system, auth, weather, and negative authorization requests in order
+- Set `basicApiKey` when you want to exercise the negative authorization requests
+- Use the collection variables for `premiumUsername`, `premiumPassword`, `basicUsername`, and `basicPassword` if the target deployment does not use the default seeded values
+- Run the system, auth, weather, and negative authorization folders in order
 
 ### Option 3: Swagger
 - Start the stack with Docker Compose
@@ -230,17 +270,22 @@ Use this order for fast failure and parity with the current pipeline design:
 9. From `terraform/`, run `terraform validate`.
 10. From `terraform/`, run `terraform test`.
 
+Use the same order against a deployed environment after the deployment step, but replace steps 6 and 7 with the remote Playwright commands.
+
 ## Where Tests and Test Assets Live
 - Application workspace scripts: `app/package.json`, `app/backend/package.json`, `app/frontend/package.json`
 - Backend tests: `app/tests/backend/`
 - Frontend tests: `app/tests/frontend/`
 - Playwright E2E and smoke tests: `app/tests/e2e/` and `app/playwright.config.ts`
+- Playwright remote runner: `app/scripts/run-playwright-remote.mjs`
 - Local perf scripts: `app/tests/perf/`
+- Postman collection: `app/tests/postman/weather-sim.postman_collection.json`
 - Terraform tests: `terraform/tests/`
 - Local stack definition: `app/docker-compose.yml`
 - Manual API smoke and E2E commands: `docs/runbook.md`
-- Postman collection: `docs/postman/weather-sim.postman_collection.json`
 - OpenAPI contract: `docs/openapi.yaml`
+- Contract summary and behavioral expectations: `docs/contracts.md`
+- DAST checklist and hostile-path scenarios: `docs/dast-scenarios.md`
 - Browser API explorer: `docs/swagger.html`
 - Architecture diagram source, render wrapper, and rendered PNG: `docs/diagrams/`
 
@@ -250,6 +295,9 @@ Use this order for fast failure and parity with the current pipeline design:
 - `docker compose up --build` fails on port binding: free ports `5173`, `8080`, `5601`, `8081`, `9200`, `9092`, `24224`, or `5044`, then retry.
 - `npm run test:e2e` fails immediately with browser errors: run `npm run test:e2e:install`.
 - `npm run test:e2e` fails on navigation or API requests: confirm Docker Compose is already running and the Playwright base URLs point to the right ports.
+- `npm run test:e2e:remote` fails before Playwright starts: pass both `--base-url` and `--api-base-url`, or set `PLAYWRIGHT_BASE_URL` and `PLAYWRIGHT_API_BASE_URL`.
+- Remote Playwright login succeeds in the browser but API assertions fail: confirm the deployed frontend was built with the deployed `VITE_API_BASE_URL`, and confirm `CORS_ORIGIN` allows the frontend origin.
+- Remote Playwright login fails only on HTTPS environments: confirm secure cookies and same-site behavior are compatible with the deployment, and use `--ignore-https-errors` only for certificate issues, not as a general fix.
 - API health endpoints fail while containers are still starting: use `docker compose ps` and `docker compose logs api redis fluent-bit kafka logstash elasticsearch kibana`.
 - Login or session-backed weather requests fail: confirm Redis is running and the cookie jar file is being reused between requests.
 - Browser requests from the web app fail with CORS issues: confirm the API is using `CORS_ORIGIN=http://localhost:5173`.

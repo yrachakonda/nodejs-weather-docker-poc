@@ -1,5 +1,10 @@
 # Contract Reference
 
+Use this document alongside:
+- `docs/testing.md` for automated and manual verification workflows
+- `docs/runbook.md` for deployed-environment checks
+- `app/tests/postman/weather-sim.postman_collection.json` for manual API calls against the documented contract
+
 ## API base path
 - `/api/v1`
 

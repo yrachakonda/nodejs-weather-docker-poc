@@ -2,6 +2,11 @@
 
 These scenarios reflect the current application behavior and the AWS deployment model.
 
+Use this checklist with:
+- `docs/testing.md` when converting scenarios into repeatable test runs
+- `docs/runbook.md` when validating a deployed environment
+- `docs/contracts.md` when you need the expected response and auth contract for each route
+
 ## Unauthenticated and auth-bound routes
 - Access `GET /api/v1/auth/me` without a session and expect `401`
 - Access `POST /api/v1/auth/logout` without a session and expect `401`

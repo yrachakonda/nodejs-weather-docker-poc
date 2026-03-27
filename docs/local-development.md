@@ -359,10 +359,17 @@ $env:PLAYWRIGHT_API_BASE_URL="http://localhost:8080/api/v1"
 npm run test:e2e:smoke
 ```
 
+The remote runner works for this mode too and avoids shell-specific environment setup:
+
+```bash
+npm run test:e2e:remote:smoke -- --base-url http://localhost:8088 --api-base-url http://localhost:8080/api/v1
+```
+
 You can also run the broader suites from `app/`:
 
 ```bash
 npm run test:e2e
+npm run test:e2e:remote -- --base-url http://localhost:8088 --api-base-url http://localhost:8080/api/v1
 npm run perf:baseline
 npm run perf:load
 ```
@@ -481,8 +488,11 @@ Additional test commands from `app/`:
 ```bash
 npm run test:e2e:smoke
 npm run test:e2e
+npm run test:e2e:remote -- --base-url <web-url> --api-base-url <api-url>
 npm run perf:baseline
 npm run perf:load
 ```
 
-Use [Testing Guide](testing.md) for broader suite coverage, Docker Compose specifics, and Terraform checks.
+Manual API verification assets live in `app/tests/postman/weather-sim.postman_collection.json`. Import that collection into Postman, then set `baseUrl` to either the local API URL or your port-forwarded Kubernetes API URL.
+
+Use [Testing Guide](testing.md) for broader suite coverage, Docker Compose specifics, remote Playwright execution, Postman usage, and Terraform checks. Use [Contract Reference](contracts.md) for expected endpoint and auth behavior, and [DAST Scenarios](dast-scenarios.md) for adversarial checks.

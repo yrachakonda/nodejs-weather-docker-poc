@@ -14,8 +14,9 @@ export default defineConfig({
   },
   reporter: [['list']],
   use: {
-    // The local Docker Compose stack is expected to be running before Playwright starts.
+    // The target app and API are expected to already be running before Playwright starts.
     baseURL,
+    ignoreHTTPSErrors: process.env.PLAYWRIGHT_IGNORE_HTTPS_ERRORS === 'true',
     trace: 'on-first-retry',
     screenshot: 'only-on-failure',
     video: 'retain-on-failure'

@@ -29,6 +29,12 @@ What this does not currently provision:
 
 The deployment keeps the browser UI on the ALB while exposing `/api/v1` through API Gateway.
 
+Related references:
+- `docs/testing.md` for local and remote Playwright execution
+- `docs/contracts.md` for endpoint, auth, and payload expectations
+- `docs/dast-scenarios.md` for hostile-path and hardening checks
+- `app/tests/postman/weather-sim.postman_collection.json` for manual API verification
+
 ## Build and Publish Images
 The Terraform stack assumes images are available in ECR. Build and push both application images before or after infrastructure creation, depending on your deployment flow.
 
@@ -82,6 +88,7 @@ Application smoke checks:
 - `GET /api/v1/system/ready` against the API Gateway base URL
 - `GET /api/v1/system/health` against the API Gateway base URL
 - Load the Web UI through the public ALB hostname
+- Run `npm run test:e2e:remote:smoke -- --base-url <web-url> --api-base-url <api-url>` from `app/` if you want the same smoke path executed through Playwright
 
 Log verification:
 - Generate application traffic
