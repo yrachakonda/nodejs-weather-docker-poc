@@ -3,8 +3,8 @@
 This repository contains a TypeScript weather application plus the infrastructure and deployment assets used to run it on AWS.
 
 ## Repository Layout
-- `app/`: application source, local Docker Compose stack, and npm workspaces
-- `charts/weather-sim/`: Helm chart for the application workloads
+- `app/`: application source, local Docker Compose stack, deployment assets, and npm workspaces
+- `app/deployment/charts/weather-sim/`: Helm chart for the application workloads
 - `terraform/`: AWS infrastructure for networking, EKS, ECR, ACM, Route53, WAF, and observability wiring
 - `docs/`: architecture, local development, testing, and runbook guidance
 
@@ -99,6 +99,8 @@ Terraform provisions:
 - [Runbook](docs/runbook.md)
 - [OpenAPI Spec](docs/openapi.yaml)
 - [Swagger UI Page](docs/swagger.html)
-- [Postman Collection](docs/postman/weather-sim.postman_collection.json)
+- [Postman Collection](app/tests/postman/weather-sim.postman_collection.json)
+- [Contract Reference](docs/contracts.md)
+- [DAST Scenarios](docs/dast-scenarios.md)
 - [Architecture](docs/architecture.md)
 - [Local Development](docs/local-development.md)

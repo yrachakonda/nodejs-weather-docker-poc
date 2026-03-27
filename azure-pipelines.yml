@@ -6,8 +6,6 @@ trigger:
     include:
       - app/*
       - app/**
-      - charts/*
-      - charts/**
       - azure-pipelines.yml
       - pipelines/templates/*
       - pipelines/templates/**
@@ -19,8 +17,8 @@ variables:
   eksClusterName: weather-sim-poc
   kubernetesNamespace: weather-sim
   helmReleaseName: weather-sim
-  helmValuesFile: charts/weather-sim/values-poc.yaml
-  chartPath: charts/weather-sim
+  helmValuesFile: app/deployment/charts/weather-sim/values-poc.yaml
+  chartPath: app/deployment/charts/weather-sim
   appHost: weather-poc.example.com
   sessionSecretName: weather-sim-session-secret
   sessionSecretKey: SESSION_SECRET

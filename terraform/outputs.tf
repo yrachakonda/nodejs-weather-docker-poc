@@ -43,9 +43,99 @@ output "web_acl_arn" {
   value       = module.waf.web_acl_arn
 }
 
+output "api_web_acl_arn" {
+  description = "WAFv2 ACL ARN associated with the API Gateway stage."
+  value       = module.api_waf.web_acl_arn
+}
+
 output "application_hostname" {
   description = "DNS hostname published for the weather application."
   value       = var.domain_name
+}
+
+output "api_hostname" {
+  description = "DNS hostname published for the API Gateway custom domain."
+  value       = local.api_domain_name
+}
+
+output "api_invoke_url" {
+  description = "Public API base URL exposed through API Gateway."
+  value       = module.api_edge.api_base_url
+}
+
+output "api_gateway_invoke_url" {
+  description = "API Gateway stage invoke URL."
+  value       = module.api_edge.api_gateway_invoke_url
+}
+
+output "api_gateway_rest_api_id" {
+  description = "REST API identifier for the public API edge."
+  value       = module.api_edge.api_gateway_rest_api_id
+}
+
+output "api_gateway_vpc_link_id" {
+  description = "Identifier of the API Gateway VPC link."
+  value       = module.api_edge.api_gateway_vpc_link_id
+}
+
+output "api_gateway_integration_type" {
+  description = "Integration type used by the API Gateway route."
+  value       = module.api_edge.api_gateway_integration_type
+}
+
+output "api_gateway_integration_connection_type" {
+  description = "Connection type used by the API Gateway integration."
+  value       = module.api_edge.api_gateway_integration_connection_type
+}
+
+output "api_gateway_stage_arn" {
+  description = "ARN of the API Gateway stage protected by WAF."
+  value       = module.api_edge.api_gateway_stage_arn
+}
+
+output "api_gateway_access_log_group_name" {
+  description = "CloudWatch log group name receiving API Gateway access logs."
+  value       = module.api_edge.api_gateway_access_log_group_name
+}
+
+output "api_gateway_xray_tracing_enabled" {
+  description = "Whether X-Ray tracing is enabled for the API Gateway stage."
+  value       = module.api_edge.api_gateway_xray_tracing_enabled
+}
+
+output "api_gateway_waf_association_resource_arn" {
+  description = "Resource ARN targeted by the API Gateway WAF association."
+  value       = module.api_edge.api_gateway_waf_association_resource_arn
+}
+
+output "api_service_load_balancer_scheme" {
+  description = "Load balancer scheme annotation applied to the API service."
+  value       = local.api_service_annotations["service.beta.kubernetes.io/aws-load-balancer-scheme"]
+}
+
+output "api_service_load_balancer_target_type" {
+  description = "NLB target type annotation applied to the API service."
+  value       = local.api_service_annotations["service.beta.kubernetes.io/aws-load-balancer-nlb-target-type"]
+}
+
+output "api_service_healthcheck_port" {
+  description = "Health check port annotation applied to the API service."
+  value       = local.api_service_annotations["service.beta.kubernetes.io/aws-load-balancer-healthcheck-port"]
+}
+
+output "api_service_healthcheck_path" {
+  description = "Health check path annotation applied to the API service."
+  value       = local.api_service_annotations["service.beta.kubernetes.io/aws-load-balancer-healthcheck-path"]
+}
+
+output "api_nlb_hostname" {
+  description = "Hostname of the internal NLB fronting the API service."
+  value       = module.api_edge.api_nlb_hostname
+}
+
+output "api_nlb_arn" {
+  description = "ARN of the internal NLB fronting the API service."
+  value       = module.api_edge.api_nlb_arn
 }
 
 output "observability_namespace" {

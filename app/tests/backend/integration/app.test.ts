@@ -1,8 +1,47 @@
 import request from 'supertest';
-import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import { app } from '../../../backend/src/app';
+import type { Express } from 'express';
+import { GenericContainer, type StartedTestContainer } from 'testcontainers';
+import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
+import type Redis from 'ioredis';
+
+let app: Express;
+let redisContainer: StartedTestContainer;
+let redisProbeClient: Redis;
+let appRedisClient: Redis | undefined;
 
 describe('Express API integration', () => {
+  beforeAll(async () => {
+    redisContainer = await new GenericContainer('redis:8.6.1')
+      .withExposedPorts(6379)
+      .start();
+
+    process.env.NODE_ENV = 'test';
+    process.env.ENABLE_REDIS_INTEGRATION_TESTS = 'true';
+    process.env.REDIS_URL = `redis://${redisContainer.getHost()}:${redisContainer.getMappedPort(6379)}`;
+
+    vi.resetModules();
+
+    ({ app } = await import('../../../backend/src/app'));
+    ({ redisClient: appRedisClient } = await import('../../../backend/src/config/redis'));
+    const { default: Redis } = await import('ioredis');
+
+    redisProbeClient = new Redis(process.env.REDIS_URL, {
+      maxRetriesPerRequest: 1,
+      enableReadyCheck: true
+    });
+    await redisProbeClient.flushdb();
+  }, 60_000);
+
+  afterAll(async () => {
+    await redisProbeClient?.quit();
+    if (appRedisClient && appRedisClient.status !== 'end') {
+      await appRedisClient.quit();
+    }
+    await redisContainer?.stop();
+    delete process.env.ENABLE_REDIS_INTEGRATION_TESTS;
+    delete process.env.REDIS_URL;
+  }, 60_000);
+
   beforeEach(() => {
     vi.spyOn(Math, 'random').mockReturnValue(0);
   });
@@ -57,6 +96,9 @@ describe('Express API integration', () => {
 
       expect(meResponse.status).toBe(200);
       expect(meResponse.body).toEqual(registerResponse.body);
+
+      const sessionKeys = await redisProbeClient.keys('sess:*');
+      expect(sessionKeys).toHaveLength(1);
     });
 
     it('rejects duplicate registration', async () => {
@@ -78,6 +120,7 @@ describe('Express API integration', () => {
     });
 
     it('logs in a seeded user, exposes /me, and clears the session on logout', async () => {
+      await redisProbeClient.flushdb();
       const agent = request.agent(app);
 
       const loginResponse = await agent
@@ -98,9 +141,15 @@ describe('Express API integration', () => {
       expect(meResponse.status).toBe(200);
       expect(meResponse.body).toEqual(loginResponse.body);
 
+      const sessionKeysAfterLogin = await redisProbeClient.keys('sess:*');
+      expect(sessionKeysAfterLogin).toHaveLength(1);
+
       const logoutResponse = await agent.post('/api/v1/auth/logout');
 
       expect(logoutResponse.status).toBe(204);
+
+      const sessionKeysAfterLogout = await redisProbeClient.keys('sess:*');
+      expect(sessionKeysAfterLogout).toHaveLength(0);
 
       const afterLogout = await agent.get('/api/v1/auth/me');
 

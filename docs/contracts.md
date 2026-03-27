@@ -1,5 +1,10 @@
 # Contract Reference
 
+Use this document alongside:
+- `docs/testing.md` for automated and manual verification workflows
+- `docs/runbook.md` for deployed-environment checks
+- `app/tests/postman/weather-sim.postman_collection.json` for manual API calls against the documented contract
+
 ## API base path
 - `/api/v1`
 
@@ -86,5 +91,5 @@ Operational and local compose defaults:
 - Global rate limiting is enabled
 - Session state is stored in Redis
 - Passwords and API keys are stored as salted `scrypt` hashes
-- ALB ingress is intended to be protected by a regional WAFv2 ACL in AWS
+- Public web ingress is protected by a regional WAFv2 ACL on the ALB, and API traffic is protected by a regional WAFv2 ACL in front of API Gateway
 - Deployed application logs are routed by Fluent Bit to both Kafka and CloudWatch Logs

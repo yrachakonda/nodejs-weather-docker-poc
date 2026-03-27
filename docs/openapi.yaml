@@ -184,14 +184,14 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/AuthResponse'
-        '401':
-          description: Invalid credentials
+        '400':
+          description: Invalid request payload
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
-        '400':
-          description: Invalid request payload
+        '401':
+          description: Invalid credentials
           content:
             application/json:
               schema:
@@ -338,3 +338,4 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/VersionResponse'
+Transform: AWS::Serverless-2016-10-31

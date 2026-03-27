@@ -3,9 +3,12 @@ import RedisStore from 'connect-redis';
 import { env } from './env';
 import { redisClient } from './redis';
 
-const store = env.NODE_ENV === 'test'
-  ? new session.MemoryStore()
-  : new RedisStore({ client: redisClient as any, prefix: 'sess:' });
+const useRedisInTests = process.env.ENABLE_REDIS_INTEGRATION_TESTS === 'true';
+const useRedisStore = env.NODE_ENV !== 'test' || useRedisInTests;
+
+const store = useRedisStore
+  ? new RedisStore({ client: redisClient as any, prefix: 'sess:' })
+  : new session.MemoryStore();
 
 export const sessionMiddleware = session({
   store,
