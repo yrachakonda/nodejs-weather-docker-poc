@@ -95,7 +95,7 @@ curl "http://localhost:8080/api/v1/weather/current?location=seattle" -H "x-api-k
    - `statusCode >= 400`
 
 ## Local Kubernetes Workflow
-This workflow validates the Helm chart under `charts/weather-sim` against a real local cluster.
+This workflow validates the Helm chart under `app/deployment/charts/weather-sim` against a real local cluster.
 
 ### What The Local Kubernetes Workflow Covers
 - local image build and deployment
@@ -170,9 +170,9 @@ Image notes:
 - MicroK8s may need either image import or a local registry flow depending on your runtime setup.
 
 ## Prepare A Local Values Override
-The checked-in chart defaults are production-oriented. For local Kubernetes, use `charts/weather-sim/values-local.yaml` and add a small override file for local image pull policy and ingress host if needed.
+The checked-in chart defaults are production-oriented. For local Kubernetes, use `app/deployment/charts/weather-sim/values-local.yaml` and add a small override file for local image pull policy and ingress host if needed.
 
-Example file: `charts/weather-sim/values-local-k8s.yaml`
+Example file: `app/deployment/charts/weather-sim/values-local-k8s.yaml`
 
 ```yaml
 image:
@@ -223,11 +223,11 @@ This matches the chart's default local Redis target of `redis-master:6379`.
 Run from the repository root:
 
 ```bash
-helm upgrade --install weather-sim ./charts/weather-sim \
+helm upgrade --install weather-sim ./app/deployment/charts/weather-sim \
   --namespace weather-sim \
   --create-namespace \
-  -f ./charts/weather-sim/values-local.yaml \
-  -f ./charts/weather-sim/values-local-k8s.yaml
+  -f ./app/deployment/charts/weather-sim/values-local.yaml \
+  -f ./app/deployment/charts/weather-sim/values-local-k8s.yaml
 ```
 
 Verify the deployment:

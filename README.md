@@ -3,8 +3,8 @@
 This repository contains a TypeScript weather application plus the infrastructure and deployment assets used to run it on AWS.
 
 ## Repository Layout
-- `app/`: application source, local Docker Compose stack, and npm workspaces
-- `charts/weather-sim/`: Helm chart for the application workloads
+- `app/`: application source, local Docker Compose stack, deployment assets, and npm workspaces
+- `app/deployment/charts/weather-sim/`: Helm chart for the application workloads
 - `terraform/`: AWS infrastructure for networking, EKS, ECR, ACM, Route53, WAF, and observability wiring
 - `docs/`: architecture, local development, testing, and runbook guidance
 
