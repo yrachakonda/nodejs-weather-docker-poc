@@ -1,48 +1,80 @@
-# ------------------------------------------------------------------------------
+# ==============================================================================
 # Logs
-# ------------------------------------------------------------------------------
-logs
+# ==============================================================================
+
+logs/
 *.log
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
 lerna-debug.log*
 pnpm-debug.log*
+crash.log
+crash.*.log
 
 # Diagnostic reports
 report.[0-9]*.[0-9]*.[0-9]*.[0-9]*.json
 
-# ------------------------------------------------------------------------------
+# ==============================================================================
 # Runtime Data
-# ------------------------------------------------------------------------------
-pids
-*.pid
-*.seed
-*.pid.lock
+# ==============================================================================
 
-# ------------------------------------------------------------------------------
-# Dependency Directories
-# ------------------------------------------------------------------------------
+pids/
+*.pid
+*.pid.lock
+*.seed
+
+# ==============================================================================
+# Python
+# ==============================================================================
+
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+*.so
+.Python
+
+# Virtual environments
+env/
+venv/
+.venv/
+
+# Environment variables
+.env
+.env.*
+!.env.example
+
+# Distribution / packaging
+.eggs/
+*.egg-info/
+dist/
+build/
+
+# Testing / tooling caches
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.coverage
+coverage/
+
+# ==============================================================================
+# Node.js / Frontend
+# ==============================================================================
+
+# Dependency directories
 node_modules/
 jspm_packages/
 web_modules/
+bower_components/
 
-# ------------------------------------------------------------------------------
-# Build, Cache & Coverage
-# ------------------------------------------------------------------------------
-# Coverage tools (nyc, jest, istanbul)
-coverage/
-*.lcov
-.nyc_output
-
-# Cache
-.cache
-.parcel-cache
+# Build, cache & tooling output
+.cache/
+.temp/
 .parcel-cache/
-.temp
-.vite/
-.vitepress/cache
-.vitepress/dist
+.nyc_output
+*.lcov
 
 # Parcel
 .parcel-cache/
@@ -54,43 +86,38 @@ web_modules/
 .svelte-kit/
 
 # Next.js
-.next
-out
+.next/
+out/
 
 # Nuxt
-.nuxt
-dist
-.output
+.nuxt/
+.output/
 
 # Gatsby
 .cache/
-# public  # uncomment if needed
+# public/   # uncomment if needed
 
 # Vite
+.vite/
+.vitepress/cache/
+.vitepress/dist/
 vite.config.js.timestamp-*
 vite.config.ts.timestamp-*
 
 # Build output for Node addons
-build/Release
+build/Release/
 
-# ------------------------------------------------------------------------------
-# Environment Variables
-# ------------------------------------------------------------------------------
-.env
-.env.*
-!.env.example
-
-# ------------------------------------------------------------------------------
-# TypeScript
-# ------------------------------------------------------------------------------
-*.tsbuildinfo
-
-# ------------------------------------------------------------------------------
+# ==============================================================================
 # Package Manager Files
-# ------------------------------------------------------------------------------
-.npm
-.pnpm-store
+# ==============================================================================
+
+.npm/
+.pnpm-store/
+*.tgz
+
+# Yarn
 yarn.lock
+.yarn-integrity
 .pnp.*
 .yarn/*
 !.yarn/patches
@@ -99,128 +126,109 @@ yarn.lock
 !.yarn/sdks
 !.yarn/versions
 
-# Output of `npm pack`
-*.tgz
+# ==============================================================================
+# TypeScript
+# ==============================================================================
 
-# Yarn integrity file
-.yarn-integrity
+*.tsbuildinfo
 
-# ------------------------------------------------------------------------------
+# ==============================================================================
 # Linters & Formatters
-# ------------------------------------------------------------------------------
+# ==============================================================================
+
 .eslintcache
 .stylelintcache
 
-# ------------------------------------------------------------------------------
+# ==============================================================================
 # Frontend & Static Site Tools
-# ------------------------------------------------------------------------------
-.docusaurus
+# ==============================================================================
 
-# ------------------------------------------------------------------------------
+.docusaurus/
+
+# ==============================================================================
 # Serverless / Cloud Emulators
-# ------------------------------------------------------------------------------
+# ==============================================================================
+
 .serverless/
 .dynamodb/
 .firebase/
 
-# ------------------------------------------------------------------------------
+# ==============================================================================
 # Terraform
-# ------------------------------------------------------------------------------
+# ==============================================================================
 
-# Local .terraform directories
+# Local state & cache
 **/.terraform/*
+.terraformrc
+terraform.rc
 
-# .tfstate files
+# State files
 *.tfstate
 *.tfstate.*
 
-# Crash log files
-crash.log
-crash.*.log
+# Lock / plan files
+.terraform.tfstate.lock.info
+*tfplan*
+planout
 
-# Exclude all .tfvars files, which are likely to contain sensitive data, such as
-# password, private keys, and other secrets. These should not be part of version
-# control as they are data points which are potentially sensitive and subject
-# to change depending on the environment
-# *.tfvars
-# *.tfvars.json
-# terraform.tfvars
-# terraform.tfvars.json
-# *.auto.tfvars
-# *.auto.tfvars.json
-
-# Include override files you do wish to add to version control using negated patterns, 
-# for example:
-# !example_override.tf
-# Ignore override files as they are usually used to override resources locally and so
-# are not checked in
+# Override files
 override.tf
 override.tf.json
 *_override.tf
 *_override.tf.json
 
-# Ignore transient lock info files created by terraform apply
-.terraform.tfstate.lock.info
-
-# Include tfplan files to ignore the plan output of command: terraform plan -out=tfplan
-# example: *tfplan*
-*tfplan*
-
-# Ignore CLI configuration files
-.terraformrc
-terraform.rc
-
-# Optional: ignore graph output files generated by `terraform graph`
+# Graph output
 *.dot
 
-# Optional: ignore plan files saved before destroying Terraform configuration
-# Uncomment the line below if you want to ignore planout files.
-planout
+# ==============================================================================
+# Checkmarx (VS Code / CLI)
+# ==============================================================================
 
+# Local scan data and caches
+.checkmarx/
+.cx/
+.cxscans/
+cx_results/
+cx-reports/
 
-# ------------------------------------------------------------------------------
-# Python
-# ------------------------------------------------------------------------------
+# Generated config/output files
+cx.config.*
+cx-settings.*
+*.cx.json
+*checkmarx*.json
 
-# Byte-compiled / optimized / DLL files
-__pycache__/
-*.py[cod]
-*.so
-.Python
-env/
-venv/
-
-# Distribution / packaging
-.eggs/
-*.egg-info/
-dist/
-build/
-# ... and other common files
-
-# ------------------------------------------------------------------------------
+# ==============================================================================
 # Editor / IDE Files
-# ------------------------------------------------------------------------------
+# ==============================================================================
+
+# VS Code
 .vscode/
 !.vscode/settings.json
 !.vscode/tasks.json
 !.vscode/launch.json
 !.vscode/extensions.json
-.vscode-test
+.vscode-test/
 
-# JetBrains IDEs
+# JetBrains
 .idea/
-
-# Mac / System Files
-.DS_Store
-Thumbs.db
 
 # REPL history
 .node_repl_history
 
-# ------------------------------------------------------------------------------
-# Misc
-# ------------------------------------------------------------------------------
-bower_components/
+# ==============================================================================
+# OS / System Files
+# ==============================================================================
+
+# macOS
+.DS_Store
+
+# Windows
+Thumbs.db
+
+# ==============================================================================
+# Miscellaneous
+# ==============================================================================
+
 .lock-wscript
 .fusebox/
 .tern-port

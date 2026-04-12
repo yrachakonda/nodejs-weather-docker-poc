@@ -2,3 +2,4 @@ apiVersion: v2
 name: weather-sim
 version: 0.1.0
 appVersion: "1.0.0"
+icon: https://raw.githubusercontent.com/hfg-gmuend/openmoji/master/color/618x618/2601.png
