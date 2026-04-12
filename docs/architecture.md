@@ -1,5 +1,17 @@
 # Architecture
 
+## Table of Contents
+- [Edge Routing](#edge-routing)
+- [Runtime Flow](#runtime-flow)
+- [AWS Infrastructure Context](#aws-infrastructure-context)
+- [Kubernetes Layout](#kubernetes-layout)
+  - [Application Namespace: `weather-sim`](#application-namespace-weather-sim)
+  - [Observability Namespace: `observability`](#observability-namespace-observability)
+- [Traffic and Log Routing](#traffic-and-log-routing)
+- [Key Design Points](#key-design-points)
+- [Storage and Retention](#storage-and-retention)
+- [Important AWS Constraint](#important-aws-constraint)
+
 ## Edge Routing
 The deployment now uses two separate internet edges:
 - Web UI: Route53 -> public ALB -> Kubernetes Ingress -> `weather-sim-web`
@@ -8,6 +20,8 @@ The deployment now uses two separate internet edges:
 The shared ALB ingress no longer publishes `/api` directly. API traffic stays behind API Gateway and its WAF layer, while the browser-facing web app keeps the existing ALB ingress path.
 
 The detailed AWS architecture diagram is defined in [diagrams/architecture_diagram.py](diagrams/architecture_diagram.py), renders as ![diagrams/weather-sim-aws-architecture.png](diagrams/weather-sim-aws-architecture.png).
+
+[Back to Table of Contents](#table-of-contents)
 
 ## Runtime Flow
 
@@ -34,6 +48,8 @@ flowchart LR
   Elasticsearch --> Kibana
 ```
 
+[Back to Table of Contents](#table-of-contents)
+
 ## AWS Infrastructure Context
 - Route53 publishes separate public records for the web and API edges.
 - ACM provides certificates for HTTPS termination on the public web ALB and, when enabled, the API Gateway custom domain.
@@ -41,6 +57,8 @@ flowchart LR
 - The API edge uses API Gateway plus VPC Link so requests reach EKS over private networking.
 - EKS worker nodes, VPC endpoints, and the internal NLB stay in private subnets.
 - ECR stores the API and web container images.
+
+[Back to Table of Contents](#table-of-contents)
 
 ## Kubernetes Layout
 ### Application Namespace: `weather-sim`
@@ -50,11 +68,15 @@ flowchart LR
 - The ALB ingress handles the web path only.
 - The API service is the target behind the internal NLB used by API Gateway.
 
+[Back to Table of Contents](#table-of-contents)
+
 ### Observability Namespace: `observability`
 - Strimzi manages the Kafka control plane resources.
 - Fluent Bit runs as a DaemonSet and tails container logs from the application namespace.
 - ECK manages Elasticsearch, Kibana, and Logstash custom resources.
 - Kafbat UI remains internal-only for Kafka inspection.
+
+[Back to Table of Contents](#table-of-contents)
 
 ## Traffic and Log Routing
 - Browser traffic reaches the web UI through the ALB and the Kubernetes Ingress.
@@ -64,16 +86,24 @@ flowchart LR
 - Logstash consumes Kafka topic `weather-sim.logs` and writes to Elasticsearch.
 - Kibana is the primary UI for searching application logs, while Kafbat is the fastest place to verify Kafka transport.
 
+[Back to Table of Contents](#table-of-contents)
+
 ## Key Design Points
 - The web and API edges are intentionally split.
 - The API path is protected by WAF before API Gateway and does not depend on ALB ingress.
 - Internal-only services remain VPC-local and are intended for port-forward access only.
 - The repository still does not provision Redis in EKS, even though the app expects it for sessions.
 
+[Back to Table of Contents](#table-of-contents)
+
 ## Storage and Retention
 - Kafka retains logs for `72` hours in this POC.
 - Elasticsearch uses a persistent volume and the default Terraform storage sizing.
 - Logstash uses a `2Gi` persistent volume claim in the ECK values.
 
+[Back to Table of Contents](#table-of-contents)
+
 ## Important AWS Constraint
 - An Application Load Balancer cannot be assigned an Elastic IP directly. If static public IPs are needed later, use AWS Global Accelerator or redesign the ingress path.
+
+[Back to Table of Contents](#table-of-contents)

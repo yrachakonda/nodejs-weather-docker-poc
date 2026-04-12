@@ -1,5 +1,27 @@
 # Testing Guide
 
+## Table of Contents
+- [Current State](#current-state)
+- [Test Inventory](#test-inventory)
+- [Prerequisites](#prerequisites)
+  - [Application and Docker-Based Checks](#application-and-docker-based-checks)
+  - [Terraform Checks](#terraform-checks)
+  - [Diagram Rendering](#diagram-rendering)
+- [Exact Commands](#exact-commands)
+  - [Application Test Commands](#application-test-commands)
+  - [Terraform Validation and Tests](#terraform-validation-and-tests)
+- [Smoke With Docker Compose](#smoke-with-docker-compose)
+- [Remote Playwright Execution](#remote-playwright-execution)
+- [Deployed AWS Edge Checks](#deployed-aws-edge-checks)
+- [E2E With Docker Compose](#e2e-with-docker-compose)
+- [Manual API Verification](#manual-api-verification)
+  - [Option 1: `curl`](#option-1-curl)
+  - [Option 2: Postman](#option-2-postman)
+  - [Option 3: Swagger](#option-3-swagger)
+- [CI-Friendly Execution Order](#ci-friendly-execution-order)
+- [Where Tests and Test Assets Live](#where-tests-and-test-assets-live)
+- [Troubleshooting](#troubleshooting)
+
 ## Current State
 This repository currently has:
 - backend unit and integration tests with Vitest and Supertest
@@ -9,6 +31,8 @@ This repository currently has:
 - automated Terraform validation and tests
 - manual API validation assets through `curl`, Swagger, and Postman
 - a Python-based AWS architecture diagram source under `docs/diagrams/`
+
+[Back to Table of Contents](#table-of-contents)
 
 ## Test Inventory
 | Suite | Purpose | What it runs today | What it does not prove | Command |
@@ -21,6 +45,8 @@ This repository currently has:
 | Perf / load / stress / soak | Exercise local non-functional checks against the API with `k6`. | Scripted baseline, load, stress, and soak runs are checked into `app/tests/perf/`. | Production benchmarking, cluster-scale capacity claims, or SLO certification. | `npm run perf:baseline`, `npm run perf:load`, `npm run perf:stress`, `npm run perf:soak` |
 | Terraform validation and tests | Validate IaC syntax and run Terraform test cases. | `terraform validate` plus tests under `terraform/tests/`. | Application behavior, image correctness, Kubernetes runtime health, or Redis availability. | `terraform init -backend=false && terraform validate && terraform test` |
 | Manual API verification | Exercise auth and weather flows without Playwright. | `curl`, Swagger, and Postman requests against the local or deployed API. | Browser automation, repeatable CI gating, or load characteristics. | See `docs/runbook.md`. |
+
+[Back to Table of Contents](#table-of-contents)
 
 ## Prerequisites
 
@@ -57,10 +83,14 @@ Playwright runtime values:
 - `PLAYWRIGHT_API_BASE_URL` defaults to `http://localhost:8080/api/v1`
 - `PLAYWRIGHT_IGNORE_HTTPS_ERRORS=true` is optional for self-signed or lab TLS targets
 
+[Back to Table of Contents](#table-of-contents)
+
 ### Terraform Checks
 - Terraform installed locally
 - `terraform init -backend=false` must run before `terraform validate` or `terraform test`
 - Terraform tests now also assert the split edge: web ingress, API Gateway, WAF association, and the private API integration path
+
+[Back to Table of Contents](#table-of-contents)
 
 ### Diagram Rendering
 - Python 3.13 or later
@@ -74,6 +104,8 @@ docs\diagrams\generate_architecture_diagram.ps1
 ```
 
 That wrapper invokes `docs/diagrams/architecture_diagram.py` and renders the architecture diagram artifact(s) next to the script.
+
+[Back to Table of Contents](#table-of-contents)
 
 ## Exact Commands
 
@@ -113,6 +145,8 @@ npm run perf:stress
 npm run perf:soak
 ```
 
+[Back to Table of Contents](#table-of-contents)
+
 ### Terraform Validation and Tests
 Run from `terraform/`:
 
@@ -121,6 +155,8 @@ terraform init -backend=false
 terraform validate
 terraform test
 ```
+
+[Back to Table of Contents](#table-of-contents)
 
 ## Smoke With Docker Compose
 Run from `app/`:
@@ -141,6 +177,8 @@ What this proves:
 What this does not prove:
 - production ingress, TLS, WAF, EKS rollout, external Redis behavior, or API Gateway integration
 - Kubernetes DaemonSet tailing of `/var/log/containers`
+
+[Back to Table of Contents](#table-of-contents)
 
 ## Remote Playwright Execution
 Run from `app/` when you want the same Playwright coverage against a deployed environment instead of Docker Compose.
@@ -177,6 +215,8 @@ What this does not prove:
 - Long-duration resilience, load, or soak characteristics.
 - WAF policy completeness, API Gateway quota behavior, or infrastructure internals beyond externally visible behavior.
 
+[Back to Table of Contents](#table-of-contents)
+
 ## Deployed AWS Edge Checks
 Use the URLs from `terraform output`:
 - Web UI should resolve to the ALB hostname
@@ -197,6 +237,8 @@ What this proves:
 - the API is reachable through API Gateway
 - the web UI is still reachable through the public ALB
 - the ALB is no longer the supported public API path
+
+[Back to Table of Contents](#table-of-contents)
 
 ## E2E With Docker Compose
 Run from `app/` after `docker compose up --build -d`.
@@ -220,6 +262,8 @@ What this suite depends on:
 - the API must be reachable at `PLAYWRIGHT_API_BASE_URL` or `http://localhost:8080/api/v1`
 - Playwright Chromium must already be installed
 
+[Back to Table of Contents](#table-of-contents)
+
 ## Manual API Verification
 ### Option 1: `curl`
 Set variables:
@@ -241,6 +285,8 @@ curl -i -b "${COOKIE_JAR}" "${BASE_URL}/weather/premium-forecast?location=seattl
 curl -i -H "x-api-key: ${BASIC_API_KEY}" "${BASE_URL}/weather/premium-forecast?location=seattle"
 ```
 
+[Back to Table of Contents](#table-of-contents)
+
 ### Option 2: Postman
 - Import `app/tests/postman/weather-sim.postman_collection.json`
 - Set `baseUrl` to either `http://localhost:8080/api/v1` or the deployed API URL such as `https://api.example.com/api/v1`
@@ -249,12 +295,16 @@ curl -i -H "x-api-key: ${BASIC_API_KEY}" "${BASE_URL}/weather/premium-forecast?l
 - Use the collection variables for `premiumUsername`, `premiumPassword`, `basicUsername`, and `basicPassword` if the target deployment does not use the default seeded values
 - Run the system, auth, weather, and negative authorization folders in order
 
+[Back to Table of Contents](#table-of-contents)
+
 ### Option 3: Swagger
 - Start the stack with Docker Compose
 - Open `docs/swagger.html`
 - Set the server URL to `http://localhost:8080/api/v1`
 - Use `Authorize` for API-key-backed weather requests
 - Use `/auth/login` first if you want to test cookie-backed routes
+
+[Back to Table of Contents](#table-of-contents)
 
 ## CI-Friendly Execution Order
 Use this order for fast failure and parity with the current pipeline design:
@@ -271,6 +321,8 @@ Use this order for fast failure and parity with the current pipeline design:
 10. From `terraform/`, run `terraform test`.
 
 Use the same order against a deployed environment after the deployment step, but replace steps 6 and 7 with the remote Playwright commands.
+
+[Back to Table of Contents](#table-of-contents)
 
 ## Where Tests and Test Assets Live
 - Application workspace scripts: `app/package.json`, `app/backend/package.json`, `app/frontend/package.json`
@@ -289,6 +341,8 @@ Use the same order against a deployed environment after the deployment step, but
 - Browser API explorer: `docs/swagger.html`
 - Architecture diagram source, render wrapper, and rendered PNG: `docs/diagrams/`
 
+[Back to Table of Contents](#table-of-contents)
+
 ## Troubleshooting
 - `npm ci` fails because the lockfile is out of sync: regenerate `app/package-lock.json` before relying on CI-style installs.
 - `terraform test` fails with `Module not installed`: run `terraform init -backend=false` first.
@@ -305,3 +359,5 @@ Use the same order against a deployed environment after the deployment step, but
 - `docker compose logs api` is sparse: API logs are forwarded through the `fluent-bit` container; inspect `docker compose logs fluent-bit` as well.
 - Deployed smoke checks fail after rollout: confirm the web hostname resolves, the ALB is healthy, the API Gateway invoke URL resolves, and `/api/v1/system/health` is reachable through the API Gateway edge.
 - Diagram rendering fails: confirm `diagrams`, Graphviz, and the `dot` executable are installed.
+
+[Back to Table of Contents](#table-of-contents)

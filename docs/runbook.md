@@ -1,5 +1,14 @@
 # Runbook
 
+## Table of Contents
+- [Deploy Infrastructure](#deploy-infrastructure)
+- [Build and Publish Images](#build-and-publish-images)
+- [Default POC Credentials](#default-poc-credentials)
+- [Verify Deployment](#verify-deployment)
+- [Port Forward Access](#port-forward-access)
+- [Incident Response](#incident-response)
+- [Rollback](#rollback)
+
 ## Deploy Infrastructure
 Run from `terraform/`:
 
@@ -35,6 +44,8 @@ Related references:
 - `docs/dast-scenarios.md` for hostile-path and hardening checks
 - `app/tests/postman/weather-sim.postman_collection.json` for manual API verification
 
+[Back to Table of Contents](#table-of-contents)
+
 ## Build and Publish Images
 The Terraform stack assumes images are available in ECR. Build and push both application images before or after infrastructure creation, depending on your deployment flow.
 
@@ -44,6 +55,8 @@ Example high-level sequence:
 3. Authenticate to ECR
 4. Push both images to the Terraform-created repositories
 5. Update the deployed tags if you are not using `:latest`
+
+[Back to Table of Contents](#table-of-contents)
 
 ## Default POC Credentials
 Default users:
@@ -59,6 +72,8 @@ Default valid `x-api-key` values:
 Source of truth:
 - `app/backend/src/data/seed-users.json`
 - `app/backend/src/data/seed-api-keys.json`
+
+[Back to Table of Contents](#table-of-contents)
 
 ## Verify Deployment
 Infrastructure checks:
@@ -97,6 +112,8 @@ Log verification:
 - Check Logstash logs in `observability`
 - Open Kibana and confirm recent events in the `weather-sim-logs-*` index pattern
 
+[Back to Table of Contents](#table-of-contents)
+
 ## Port Forward Access
 Kafka, Elasticsearch, Kibana, and Kafka UI are internal-only in EKS. Use `kubectl port-forward`:
 
@@ -105,6 +122,8 @@ kubectl -n observability port-forward svc/kafbat-ui 8081:80
 kubectl -n observability port-forward svc/weather-sim-kibana-kb-http 5601:5601
 kubectl -n observability port-forward svc/weather-sim-elasticsearch-es-http 9200:9200
 ```
+
+[Back to Table of Contents](#table-of-contents)
 
 ## Incident Response
 Primary places to inspect:
@@ -126,6 +145,8 @@ Useful symptoms and checks:
 - Kibana empty: confirm Logstash is consuming `weather-sim.logs` and Elasticsearch health is green
 - CloudWatch empty: confirm the Fluent Bit service account annotation points at the expected IRSA role and inspect the Fluent Bit pod logs for `cloudwatch_logs` delivery errors
 
+[Back to Table of Contents](#table-of-contents)
+
 ## Rollback
 - Helm application rollback: `helm rollback weather-sim`
 - Observability rollback depends on the component:
@@ -133,3 +154,5 @@ Useful symptoms and checks:
   - reapply the prior Terraform plan if the change was made through infrastructure code
 
 Do not use destructive Terraform commands against shared environments without first reviewing state and planned deletes.
+
+[Back to Table of Contents](#table-of-contents)

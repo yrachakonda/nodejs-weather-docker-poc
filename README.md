@@ -2,11 +2,30 @@
 
 This repository contains a TypeScript weather application plus the infrastructure and deployment assets used to run it on AWS and on local Kubernetes environments with Helm.
 
+## Table of Contents
+- [Repository Layout](#repository-layout)
+- [Current Platform Shape](#current-platform-shape)
+- [Logging Flow](#logging-flow)
+- [Local Docker Development](#local-docker-development)
+- [Kubernetes Deployments With Helm](#kubernetes-deployments-with-helm)
+  - [Build the Images](#build-the-images)
+  - [Common Kubernetes Prerequisites](#common-kubernetes-prerequisites)
+  - [Docker Desktop Kubernetes](#docker-desktop-kubernetes)
+  - [MicroK8S](#microk8s)
+  - [KinD](#kind)
+  - [Uninstall](#uninstall)
+- [Application Behavior](#application-behavior)
+- [Terraform](#terraform)
+- [Important Limitations](#important-limitations)
+- [API Docs and Test Assets](#api-docs-and-test-assets)
+
 ## Repository Layout
 - `app/`: application source, local Docker Compose stack, deployment assets, and npm workspaces
 - `app/deployment/charts/weather-sim/`: Helm chart for the API and web workloads
 - `terraform/`: AWS infrastructure for networking, EKS, ECR, ACM, Route53, WAF, and observability wiring
 - `docs/`: architecture, local development, testing, and runbook guidance
+
+[Back to Table of Contents](#table-of-contents)
 
 ## Current Platform Shape
 - `weather-sim` is the application namespace for the API and web workloads only
@@ -15,8 +34,12 @@ This repository contains a TypeScript weather application plus the infrastructur
 - The EKS control plane endpoint is not public, while the application API is exposed externally through API Gateway and remains internally reachable through the cluster service and internal NLB path
 - Kafka, Elasticsearch, Kibana, and Kafbat UI are internal-only in EKS and are intended for `kubectl port-forward`
 
+[Back to Table of Contents](#table-of-contents)
+
 ## Logging Flow
 Application containers write to stdout/stderr. Fluent Bit runs as a DaemonSet in `observability`, tails `/var/log/containers`, enriches log records with Kubernetes metadata, publishes log records to Kafka topic `weather-sim.logs`, and also ships the same records into the CloudWatch log group `/weather-sim-poc/observability/application`. Logstash consumes the Kafka topic and writes to Elasticsearch. Kibana reads from Elasticsearch and is used for viewing logs, while CloudWatch provides an AWS-native verification path.
+
+[Back to Table of Contents](#table-of-contents)
 
 ## Local Docker Development
 The local stack lives under `app/`.
@@ -46,6 +69,8 @@ Local services:
 - `elasticsearch`
 - `kibana`
 
+[Back to Table of Contents](#table-of-contents)
+
 ## Kubernetes Deployments With Helm
 The application Helm chart is in `app/deployment/charts/weather-sim`.
 
@@ -70,6 +95,8 @@ cd app
 docker build -t weather-sim-api:local ./backend
 docker build -t weather-sim-web:local ./frontend
 ```
+
+[Back to Table of Contents](#table-of-contents)
 
 ### Common Kubernetes Prerequisites
 Create the namespace, session secret, and a simple Redis dependency:
@@ -102,6 +129,8 @@ kubectl -n weather-sim rollout status deploy/weather-sim-api
 kubectl -n weather-sim rollout status deploy/weather-sim-web
 ```
 
+[Back to Table of Contents](#table-of-contents)
+
 ### Docker Desktop Kubernetes
 If you are using the Kubernetes cluster bundled with Docker Desktop, the Docker daemon already contains the images you built locally, so no extra image import step is required.
 
@@ -115,6 +144,8 @@ kubectl -n weather-sim port-forward svc/weather-sim-api 8080:8080
 Use:
 - Web UI: `http://localhost:8088`
 - API base: `http://localhost:8080/api/v1`
+
+[Back to Table of Contents](#table-of-contents)
 
 ### MicroK8S
 Enable the required addons first:
@@ -155,6 +186,8 @@ microk8s kubectl -n weather-sim port-forward svc/weather-sim-web 8088:80
 microk8s kubectl -n weather-sim port-forward svc/weather-sim-api 8080:8080
 ```
 
+[Back to Table of Contents](#table-of-contents)
+
 ### KinD
 Create a KinD cluster and load the images into the cluster nodes:
 
@@ -192,12 +225,16 @@ kubectl -n weather-sim port-forward svc/weather-sim-web 8088:80
 kubectl -n weather-sim port-forward svc/weather-sim-api 8080:8080
 ```
 
+[Back to Table of Contents](#table-of-contents)
+
 ### Uninstall
 
 ```bash
 helm uninstall weather-sim -n weather-sim
 kubectl delete namespace weather-sim
 ```
+
+[Back to Table of Contents](#table-of-contents)
 
 ## Application Behavior
 - API base path: `/api/v1`
@@ -210,6 +247,8 @@ kubectl delete namespace weather-sim
   - `/api/v1/system/ready`
   - `/api/v1/system/health`
   - `/api/v1/system/version`
+
+[Back to Table of Contents](#table-of-contents)
 
 ## Terraform
 Run from `terraform/`:
@@ -242,6 +281,8 @@ Terraform provisions:
 - CloudWatch log group for Fluent Bit application logs
 - DNS record for the application hostname
 
+[Back to Table of Contents](#table-of-contents)
+
 ## Important Limitations
 - Redis is still not provisioned for the EKS environment
 - The chart does not create the `weather-sim-session-secret`; it must exist before deployment
@@ -249,6 +290,8 @@ Terraform provisions:
 - The EKS control plane is not publicly exposed, so administrative cluster access still requires the appropriate network path and credentials
 - Kafka, Elasticsearch, Kibana, and Kafbat UI remain internal-only in EKS
 - An Application Load Balancer cannot have an Elastic IP attached directly; use AWS Global Accelerator or a different entry pattern if static public IPs are needed later
+
+[Back to Table of Contents](#table-of-contents)
 
 ## API Docs and Test Assets
 - [Testing Guide](docs/testing.md)
@@ -260,3 +303,5 @@ Terraform provisions:
 - [DAST Scenarios](docs/dast-scenarios.md)
 - [Architecture](docs/architecture.md)
 - [Local Development](docs/local-development.md)
+
+[Back to Table of Contents](#table-of-contents)

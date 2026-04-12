@@ -5,14 +5,28 @@ Use this document alongside:
 - `docs/runbook.md` for deployed-environment checks
 - `app/tests/postman/weather-sim.postman_collection.json` for manual API calls against the documented contract
 
+## Table of Contents
+- [API base path](#api-base-path)
+- [Roles](#roles)
+- [API endpoint contract](#api-endpoint-contract)
+- [Auth and authorization contract](#auth-and-authorization-contract)
+- [Response and error contract](#response-and-error-contract)
+- [Environment variable catalog](#environment-variable-catalog)
+- [Platform naming conventions](#platform-naming-conventions)
+- [Logging and security controls](#logging-and-security-controls)
+
 ## API base path
 - `/api/v1`
+
+[Back to Table of Contents](#table-of-contents)
 
 ## Roles
 - `anonymous`
 - `basic`
 - `premium`
 - `admin`
+
+[Back to Table of Contents](#table-of-contents)
 
 ## API endpoint contract
 - `POST /api/v1/auth/register`
@@ -26,6 +40,8 @@ Use this document alongside:
 - `GET /api/v1/system/health`
 - `GET /api/v1/system/version`
 
+[Back to Table of Contents](#table-of-contents)
+
 ## Auth and authorization contract
 - Session cookie is the authoritative authenticated identity state.
 - The WebUI does not transmit a bundled API key to the API.
@@ -34,6 +50,8 @@ Use this document alongside:
 - `GET /api/v1/weather/premium-forecast` requires either a valid `premium` or `admin` session, or a valid `premium`/`admin` `x-api-key`.
 - `POST /api/v1/auth/logout` requires a session.
 - `GET /api/v1/auth/me` requires a session.
+
+[Back to Table of Contents](#table-of-contents)
 
 ## Response and error contract
 Success payloads:
@@ -49,6 +67,8 @@ Common error payloads:
 - `{ error: "Too many requests" }`
 
 Validation failures from request parsing can also surface through the shared error handler.
+
+[Back to Table of Contents](#table-of-contents)
 
 ## Environment variable catalog
 Backend:
@@ -72,6 +92,8 @@ Operational and local compose defaults:
 - `weather-sim-logs-*`
 - `/weather-sim-poc/observability/application`
 
+[Back to Table of Contents](#table-of-contents)
+
 ## Platform naming conventions
 - Project slug: `weather-sim`
 - Default environment: `poc`
@@ -85,6 +107,8 @@ Operational and local compose defaults:
 - Elasticsearch index pattern: `weather-sim-logs-*`
 - Default Terraform VPC CIDR: `10.0.0.0/16`
 
+[Back to Table of Contents](#table-of-contents)
+
 ## Logging and security controls
 - `helmet` is enabled globally on the API
 - CORS is enabled with credentials support
@@ -93,3 +117,5 @@ Operational and local compose defaults:
 - Passwords and API keys are stored as salted `scrypt` hashes
 - Public web ingress is protected by a regional WAFv2 ACL on the ALB, and API traffic is protected by a regional WAFv2 ACL in front of API Gateway
 - Deployed application logs are routed by Fluent Bit to both Kafka and CloudWatch Logs
+
+[Back to Table of Contents](#table-of-contents)
