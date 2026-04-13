@@ -1,0 +1,9 @@
+Elasticsearch is available inside the namespace at:
+  http://{{ include "elasticsearch.fullname" . }}:{{ .Values.service.httpPort }}
+
+Common checks:
+  kubectl -n {{ .Release.Namespace }} get pods,svc -l app.kubernetes.io/name={{ include "elasticsearch.name" . }}
+  helm test {{ .Release.Name }} -n {{ .Release.Namespace }}
+
+If the pod does not start in a local cluster, confirm vm.max_map_count is set to 262144 on the node.
+If you need a second instance, set fullnameOverride so the service name stays predictable.

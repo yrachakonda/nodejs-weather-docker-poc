@@ -1,0 +1,100 @@
+apiVersion: apps/v1
+kind: DaemonSet
+metadata:
+  name: {{ include "fluent-bit.fullname" . }}
+  labels:
+    {{- include "fluent-bit.labels" . | nindent 4 }}
+spec:
+  selector:
+    matchLabels:
+      {{- include "fluent-bit.selectorLabels" . | nindent 6 }}
+  template:
+    metadata:
+      labels:
+        {{- include "fluent-bit.labels" . | nindent 8 }}
+        {{- with .Values.podLabels }}
+        {{- toYaml . | nindent 8 }}
+        {{- end }}
+      {{- with .Values.podAnnotations }}
+      annotations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+    spec:
+      serviceAccountName: {{ include "fluent-bit.serviceAccountName" . }}
+      securityContext:
+        {{- toYaml .Values.podSecurityContext | nindent 8 }}
+      containers:
+        - name: fluent-bit
+          image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          securityContext:
+            {{- toYaml .Values.containerSecurityContext | nindent 12 }}
+          {{- if .Values.command }}
+          command:
+            {{- toYaml .Values.command | nindent 12 }}
+          {{- else if eq .Values.config.profile "forward" }}
+          command:
+            - /fluent-bit/bin/fluent-bit
+            - -c
+            - /fluent-bit/etc/fluent-bit.local.conf
+          {{- else }}
+          command:
+            - /fluent-bit/bin/fluent-bit
+            - -c
+            - /fluent-bit/etc/fluent-bit.conf
+          {{- end }}
+          {{- with .Values.args }}
+          args:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+          {{- with .Values.extraEnv }}
+          env:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+          ports:
+            - name: metrics
+              containerPort: {{ .Values.service.ports.metrics }}
+            - name: forward
+              containerPort: {{ .Values.service.ports.forward }}
+          volumeMounts:
+            - name: config
+              mountPath: /fluent-bit/etc
+            - name: varlogcontainers
+              mountPath: {{ .Values.hostPaths.containers }}
+              readOnly: true
+            - name: varlogpods
+              mountPath: {{ .Values.hostPaths.pods }}
+              readOnly: true
+            - name: vardockercontainers
+              mountPath: {{ .Values.hostPaths.dockerContainers }}
+              readOnly: true
+            {{- with .Values.extraVolumeMounts }}
+            {{- toYaml . | nindent 12 }}
+            {{- end }}
+          resources:
+            {{- toYaml .Values.resources | nindent 12 }}
+      volumes:
+        - name: config
+          configMap:
+            name: {{ include "fluent-bit.fullname" . }}
+        - name: varlogcontainers
+          hostPath:
+            path: {{ .Values.hostPaths.containers }}
+            type: DirectoryOrCreate
+        - name: varlogpods
+          hostPath:
+            path: {{ .Values.hostPaths.pods }}
+            type: DirectoryOrCreate
+        - name: vardockercontainers
+          hostPath:
+            path: {{ .Values.hostPaths.dockerContainers }}
+            type: DirectoryOrCreate
+        {{- with .Values.extraVolumes }}
+        {{- toYaml . | nindent 8 }}
+        {{- end }}
+      nodeSelector:
+        {{- toYaml .Values.nodeSelector | nindent 8 }}
+      tolerations:
+        {{- toYaml .Values.tolerations | nindent 8 }}
+      affinity:
+        {{- toYaml .Values.affinity | nindent 8 }}

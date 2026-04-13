@@ -1,0 +1,35 @@
+{{- if .Values.topicInit.enabled }}
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: {{ include "kafka.topicInitName" . }}
+  labels:
+    {{- include "kafka.labels" . | nindent 4 }}
+  annotations:
+    "helm.sh/hook": post-install,post-upgrade
+    "helm.sh/hook-delete-policy": before-hook-creation,hook-succeeded
+spec:
+  backoffLimit: 5
+  template:
+    metadata:
+      labels:
+        {{- include "kafka.labels" . | nindent 8 }}
+    spec:
+      restartPolicy: OnFailure
+      containers:
+        - name: topic-init
+          image: "{{ .Values.topicInit.image.repository }}:{{ .Values.topicInit.image.tag }}"
+          imagePullPolicy: {{ .Values.topicInit.image.pullPolicy }}
+          command:
+            - /bin/bash
+            - /scripts/topic-init.sh
+          volumeMounts:
+            - name: script
+              mountPath: /scripts/topic-init.sh
+              subPath: topic-init.sh
+      volumes:
+        - name: script
+          configMap:
+            name: {{ include "kafka.topicInitName" . }}
+            defaultMode: 0755
+{{- end }}

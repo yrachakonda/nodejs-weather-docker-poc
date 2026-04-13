@@ -17,8 +17,8 @@ variables:
   eksClusterName: weather-sim-poc
   kubernetesNamespace: weather-sim
   helmReleaseName: weather-sim
-  helmValuesFile: app/deployment/charts/weather-sim/values-poc.yaml
-  chartPath: app/deployment/charts/weather-sim
+  helmValuesFile: app/deployment/weather-sim/charts/values-poc.yaml
+  chartPath: app/deployment/weather-sim/charts
   appHost: weather-poc.example.com
   sessionSecretName: weather-sim-session-secret
   sessionSecretKey: SESSION_SECRET

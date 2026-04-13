@@ -1,0 +1,84 @@
+# Number of Kibana replicas. One is enough for the repo's default observability stack.
+replicaCount: 1
+
+image:
+  # Official Kibana image used by the chart.
+  repository: docker.elastic.co/kibana/kibana
+  # Match Elasticsearch unless an environment needs a different patch release.
+  tag: 8.15.3
+  pullPolicy: IfNotPresent
+
+service:
+  # ClusterIP keeps Kibana internal unless you deliberately expose it.
+  type: ClusterIP
+  # Kibana HTTP port.
+  port: 5601
+  # Optional service annotations for ingress controllers, meshes, or service monitors.
+  annotations: {}
+
+kibana:
+  # Bind Kibana to all interfaces inside the pod.
+  serverHost: 0.0.0.0
+  # Default local URL used in docs and browser testing.
+  publicBaseUrl: http://localhost:5601
+  # Preserve the existing repo intent and avoid anonymous telemetry.
+  telemetryEnabled: false
+
+elasticsearch:
+  # Default service URL when Elasticsearch is installed in the same namespace with the default name.
+  hosts:
+    - http://elasticsearch:9200
+
+podAnnotations: {}
+podLabels: {}
+extraEnv: []
+extraEnvFrom: []
+extraVolumeMounts: []
+extraVolumes: []
+nodeSelector: {}
+tolerations: []
+affinity: {}
+
+podSecurityContext:
+  fsGroup: 1000
+  fsGroupChangePolicy: OnRootMismatch
+
+containerSecurityContext:
+  allowPrivilegeEscalation: false
+  capabilities:
+    drop:
+      - ALL
+  runAsNonRoot: true
+  runAsUser: 1000
+  runAsGroup: 1000
+  readOnlyRootFilesystem: true
+
+resources:
+  requests:
+    cpu: 100m
+    memory: 256Mi
+  limits:
+    cpu: 500m
+    memory: 768Mi
+
+probes:
+  startup:
+    enabled: true
+    failureThreshold: 30
+    periodSeconds: 10
+    timeoutSeconds: 5
+  liveness:
+    initialDelaySeconds: 60
+    failureThreshold: 6
+    periodSeconds: 10
+    timeoutSeconds: 5
+  readiness:
+    initialDelaySeconds: 20
+    failureThreshold: 6
+    periodSeconds: 10
+    timeoutSeconds: 5
+
+terminationGracePeriodSeconds: 60
+
+nameOverride: ""
+fullnameOverride: ""

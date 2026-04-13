@@ -1,0 +1,24 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: {{ include "kibana.fullname" . }}-test-connection
+  labels:
+    {{- include "kibana.labels" . | nindent 4 }}
+  annotations:
+    "helm.sh/hook": test
+    "helm.sh/hook-delete-policy": before-hook-creation,hook-succeeded
+spec:
+  template:
+    metadata:
+      labels:
+        {{- include "kibana.labels" . | nindent 8 }}
+    spec:
+      restartPolicy: Never
+      containers:
+        - name: curl
+          image: curlimages/curl:8.7.1
+          command:
+            - sh
+            - -ec
+            - >
+              curl -fsS http://{{ include "kibana.fullname" . }}:{{ .Values.service.port }}/api/status

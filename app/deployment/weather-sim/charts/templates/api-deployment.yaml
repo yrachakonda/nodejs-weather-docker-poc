@@ -1,0 +1,62 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: weather-sim-api
+spec:
+  replicas: {{ .Values.replicaCount }}
+  selector: { matchLabels: { app: weather-sim-api } }
+  template:
+    metadata: { labels: { app: weather-sim-api } }
+    spec:
+      containers:
+        - name: api
+          image: {{ .Values.image.api }}
+          {{- if .Values.fluentBitSidecar.enabled }}
+          command:
+            - /bin/sh
+            - -c
+            - node dist/index.js 2>&1 | tee -a {{ .Values.fluentBitSidecar.api.logPath }}/{{ .Values.fluentBitSidecar.api.logFile }}
+          {{- end }}
+          ports: [{ containerPort: 8080 }]
+          envFrom: [{ configMapRef: { name: weather-sim-config } }]
+          env:
+            - name: SESSION_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.secrets.sessionSecretName }}
+                  key: {{ .Values.secrets.sessionSecretKey }}
+          {{- if .Values.fluentBitSidecar.enabled }}
+          volumeMounts:
+            - name: api-logs
+              mountPath: {{ .Values.fluentBitSidecar.api.logPath }}
+          {{- end }}
+          livenessProbe: { httpGet: { path: /api/v1/system/live, port: 8080 } }
+          readinessProbe: { httpGet: { path: /api/v1/system/ready, port: 8080 } }
+        {{- if .Values.fluentBitSidecar.enabled }}
+        - name: fluent-bit
+          image: {{ .Values.fluentBitSidecar.image.repository }}:{{ .Values.fluentBitSidecar.image.tag }}
+          imagePullPolicy: {{ .Values.fluentBitSidecar.image.pullPolicy }}
+          command:
+            - /fluent-bit/bin/fluent-bit
+            - -c
+            - /fluent-bit/etc/fluent-bit-api.conf
+          resources:
+            {{- toYaml .Values.fluentBitSidecar.resources | nindent 12 }}
+          volumeMounts:
+            - name: api-logs
+              mountPath: {{ .Values.fluentBitSidecar.api.logPath }}
+            - name: fluent-bit-config
+              mountPath: /fluent-bit/etc
+            - name: fluent-bit-buffers
+              mountPath: /buffers
+        {{- end }}
+      {{- if .Values.fluentBitSidecar.enabled }}
+      volumes:
+        - name: api-logs
+          emptyDir: {}
+        - name: fluent-bit-config
+          configMap:
+            name: weather-sim-fluent-bit-config
+        - name: fluent-bit-buffers
+          emptyDir: {}
+      {{- end }}

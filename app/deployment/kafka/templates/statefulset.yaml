@@ -1,0 +1,126 @@
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: {{ include "kafka.fullname" . }}
+  labels:
+    {{- include "kafka.labels" . | nindent 4 }}
+spec:
+  serviceName: {{ include "kafka.headlessServiceName" . }}
+  replicas: {{ .Values.replicaCount }}
+  podManagementPolicy: Parallel
+  selector:
+    matchLabels:
+      {{- include "kafka.selectorLabels" . | nindent 6 }}
+  template:
+    metadata:
+      labels:
+        {{- include "kafka.labels" . | nindent 8 }}
+        {{- with .Values.podLabels }}
+        {{- toYaml . | nindent 8 }}
+        {{- end }}
+      {{- with .Values.podAnnotations }}
+      annotations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+    spec:
+      securityContext:
+        {{- toYaml .Values.podSecurityContext | nindent 8 }}
+      containers:
+        - name: kafka
+          image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          securityContext:
+            {{- toYaml .Values.containerSecurityContext | nindent 12 }}
+          ports:
+            - name: broker
+              containerPort: {{ .Values.service.port }}
+            - name: controller
+              containerPort: {{ .Values.service.controllerPort }}
+          env:
+            - name: CLUSTER_ID
+              value: {{ .Values.kraft.clusterId | quote }}
+            - name: KAFKA_NODE_ID
+              value: {{ .Values.kraft.nodeId | quote }}
+            - name: KAFKA_PROCESS_ROLES
+              value: {{ .Values.kraft.processRoles | quote }}
+            - name: KAFKA_CONTROLLER_LISTENER_NAMES
+              value: {{ .Values.kraft.controllerListenerNames | quote }}
+            - name: KAFKA_CONTROLLER_QUORUM_VOTERS
+              value: {{ printf "%d@%s" (.Values.kraft.nodeId | int) (include "kafka.controllerAddress" .) | quote }}
+            - name: KAFKA_INTER_BROKER_LISTENER_NAME
+              value: {{ .Values.kraft.interBrokerListenerName | quote }}
+            - name: KAFKA_LISTENER_SECURITY_PROTOCOL_MAP
+              value: {{ .Values.kraft.listenerSecurityProtocolMap | quote }}
+            - name: KAFKA_LISTENERS
+              value: {{ printf "%s,%s" .Values.kraft.listeners.broker .Values.kraft.listeners.controller | quote }}
+            - name: KAFKA_ADVERTISED_LISTENERS
+              value: {{ .Values.kraft.advertisedListeners.broker | quote }}
+            - name: KAFKA_LOG_DIRS
+              value: {{ .Values.kraft.logDirs | quote }}
+            - name: KAFKA_AUTO_CREATE_TOPICS_ENABLE
+              value: {{ .Values.kraft.autoCreateTopicsEnable | quote }}
+            - name: KAFKA_NUM_PARTITIONS
+              value: {{ .Values.kraft.numPartitions | quote }}
+            - name: KAFKA_DEFAULT_REPLICATION_FACTOR
+              value: {{ .Values.kraft.defaultReplicationFactor | quote }}
+            - name: KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR
+              value: {{ .Values.kraft.offsetsTopicReplicationFactor | quote }}
+            - name: KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR
+              value: {{ .Values.kraft.transactionStateLogReplicationFactor | quote }}
+            - name: KAFKA_TRANSACTION_STATE_LOG_MIN_ISR
+              value: {{ .Values.kraft.transactionStateLogMinIsr | quote }}
+            - name: KAFKA_MIN_INSYNC_REPLICAS
+              value: {{ .Values.kraft.minInSyncReplicas | quote }}
+            - name: KAFKA_GROUP_INITIAL_REBALANCE_DELAY_MS
+              value: {{ .Values.kraft.groupInitialRebalanceDelayMs | quote }}
+            - name: KAFKA_LOG_RETENTION_HOURS
+              value: {{ .Values.kraft.logRetentionHours | quote }}
+            - name: KAFKA_LOG_SEGMENT_BYTES
+              value: {{ .Values.kraft.logSegmentBytes | quote }}
+            - name: KAFKA_HEAP_OPTS
+              value: {{ .Values.kraft.heapOpts | quote }}
+          volumeMounts:
+            - name: data
+              mountPath: /var/lib/kafka/data
+          readinessProbe:
+            exec:
+              command:
+                - /bin/bash
+                - -ec
+                - /opt/kafka/bin/kafka-broker-api-versions.sh --bootstrap-server localhost:{{ .Values.service.port }} >/dev/null 2>&1
+            initialDelaySeconds: 20
+            periodSeconds: 10
+            timeoutSeconds: 5
+            failureThreshold: 12
+          livenessProbe:
+            exec:
+              command:
+                - /bin/bash
+                - -ec
+                - /opt/kafka/bin/kafka-broker-api-versions.sh --bootstrap-server localhost:{{ .Values.service.port }} >/dev/null 2>&1
+            initialDelaySeconds: 60
+            periodSeconds: 20
+            timeoutSeconds: 5
+            failureThreshold: 6
+          resources:
+            {{- toYaml .Values.resources | nindent 12 }}
+      nodeSelector:
+        {{- toYaml .Values.nodeSelector | nindent 8 }}
+      tolerations:
+        {{- toYaml .Values.tolerations | nindent 8 }}
+      affinity:
+        {{- toYaml .Values.affinity | nindent 8 }}
+  volumeClaimTemplates:
+    - metadata:
+        name: data
+        labels:
+          {{- include "kafka.labels" . | nindent 10 }}
+      spec:
+        accessModes:
+          {{- toYaml .Values.storage.accessModes | nindent 10 }}
+        resources:
+          requests:
+            storage: {{ .Values.storage.size }}
+        {{- if .Values.storage.storageClassName }}
+        storageClassName: {{ .Values.storage.storageClassName | quote }}
+        {{- end }}

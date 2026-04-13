@@ -1,0 +1,11 @@
+Kibana is available inside the namespace at:
+  http://{{ include "kibana.fullname" . }}:{{ .Values.service.port }}
+
+The default Elasticsearch endpoint is:
+  http://elasticsearch:9200
+
+Common checks:
+  kubectl -n {{ .Release.Namespace }} get pods,svc -l app.kubernetes.io/name={{ include "kibana.name" . }}
+  helm test {{ .Release.Name }} -n {{ .Release.Namespace }}
+
+If you install Kibana into a different namespace or rename Elasticsearch, override .Values.elasticsearch.hosts.

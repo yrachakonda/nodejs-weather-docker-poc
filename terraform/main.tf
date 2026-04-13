@@ -267,7 +267,7 @@ module "api_waf" {
 resource "helm_release" "weather_sim" {
   name             = "weather-sim"
   namespace        = kubernetes_namespace.app.metadata[0].name
-  chart            = "${path.module}/../app/deployment/charts/weather-sim"
+  chart            = "${path.module}/../app/deployment/weather-sim/charts"
   create_namespace = false
   wait             = true
 

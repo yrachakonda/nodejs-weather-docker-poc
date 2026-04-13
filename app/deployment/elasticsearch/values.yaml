@@ -1,0 +1,100 @@
+# Number of Elasticsearch replicas. Keep a single node by default for local and POC installs.
+replicaCount: 1
+
+image:
+  # Official Elasticsearch image used by the chart.
+  repository: docker.elastic.co/elasticsearch/elasticsearch
+  # Pin the chart to a known 8.x build and override in environments that need a different tag.
+  tag: 8.15.3
+  # Keep pull behavior predictable for local installs while still allowing overrides.
+  pullPolicy: IfNotPresent
+
+service:
+  # ClusterIP keeps Elasticsearch internal to the namespace by default.
+  type: ClusterIP
+  # HTTP port exposed by the service and used by Kibana.
+  httpPort: 9200
+  # Transport port kept for completeness and StatefulSet readiness.
+  transportPort: 9300
+  # Optional service annotations for service meshes, external-dns, or local overrides.
+  annotations: {}
+
+elasticsearch:
+  # Matches the existing docker-compose and repo docs.
+  clusterName: weather-sim-local
+  # Bind to all interfaces inside the pod.
+  networkHost: 0.0.0.0
+  # Single-node discovery keeps the chart usable without an external operator.
+  discoveryType: single-node
+  # HTTP port written into elasticsearch.yml.
+  httpPort: 9200
+  security:
+    # Preserve the existing functional intent: security is disabled unless explicitly enabled.
+    enabled: false
+    # Enrollment is also disabled to match the non-secure single-node flow.
+    enrollmentEnabled: false
+  # Heap tuning for the bundled JVM.
+  javaOpts: -Xms512m -Xmx512m
+
+persistence:
+  # Use a StatefulSet with persistent storage by default.
+  enabled: true
+  # Leave empty to use the cluster default storage class.
+  storageClass: ""
+  # Storage request for the Elasticsearch data volume.
+  size: 8Gi
+
+podAnnotations: {}
+podLabels: {}
+extraEnv: []
+extraEnvFrom: []
+extraVolumeMounts: []
+extraVolumes: []
+nodeSelector: {}
+tolerations: []
+affinity: {}
+
+podSecurityContext:
+  # Elasticsearch runs as uid 1000 in the official image.
+  fsGroup: 1000
+  fsGroupChangePolicy: OnRootMismatch
+
+containerSecurityContext:
+  allowPrivilegeEscalation: false
+  capabilities:
+    drop:
+      - ALL
+  runAsNonRoot: true
+  runAsUser: 1000
+  runAsGroup: 0
+
+resources:
+  requests:
+    cpu: 250m
+    memory: 1Gi
+  limits:
+    cpu: "1"
+    memory: 2Gi
+
+probes:
+  startup:
+    enabled: true
+    failureThreshold: 30
+    periodSeconds: 10
+    timeoutSeconds: 5
+  liveness:
+    initialDelaySeconds: 60
+    failureThreshold: 6
+    periodSeconds: 10
+    timeoutSeconds: 5
+  readiness:
+    initialDelaySeconds: 20
+    failureThreshold: 6
+    periodSeconds: 10
+    timeoutSeconds: 5
+
+# Give Elasticsearch time to close shards and flush data on shutdown.
+terminationGracePeriodSeconds: 120
+
+nameOverride: ""
+fullnameOverride: ""

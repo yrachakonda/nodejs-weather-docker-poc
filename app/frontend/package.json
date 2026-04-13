@@ -7,7 +7,7 @@
     "build": "tsc -b && vite build",
     "preview": "vite preview",
     "lint": "echo 'lint placeholder'",
-    "test": "vitest run --config ../tests/frontend/vitest.config.ts"
+    "test": "vitest run --config ../tests/frontend/vitest.config.mts"
   },
   "dependencies": {
     "react": "^18.3.1",

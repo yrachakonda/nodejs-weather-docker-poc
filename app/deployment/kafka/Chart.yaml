@@ -1,0 +1,6 @@
+apiVersion: v2
+name: kafka
+description: Stateful Kafka chart for the weather-sim observability stack
+type: application
+version: 0.1.0
+appVersion: "4.0.2"

@@ -1,0 +1,18 @@
+Observability stack release: {{ include "observability-stack.fullname" . }}
+Namespace: {{ .Release.Namespace }}
+
+Install with a dedicated namespace for the stack:
+
+  helm upgrade --install {{ include "observability-stack.fullname" . }} ./app/deployment/observability-stack \
+    --namespace {{ .Release.Namespace }} \
+    --create-namespace
+
+Useful checks after install:
+
+  kubectl get pods,svc -n {{ .Release.Namespace }}
+  kubectl port-forward -n {{ .Release.Namespace }} svc/elasticsearch 9200:9200
+  kubectl port-forward -n {{ .Release.Namespace }} svc/kibana 5601:5601
+  kubectl port-forward -n {{ .Release.Namespace }} svc/kafka 9092:9092
+  kubectl port-forward -n {{ .Release.Namespace }} svc/kafka-ui 8080:8080
+  kubectl port-forward -n {{ .Release.Namespace }} svc/fluent-bit 2020:2020
+  kubectl port-forward -n {{ .Release.Namespace }} svc/logstash 9600:9600

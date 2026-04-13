@@ -96,7 +96,7 @@ services:
         hard: -1
     volumes:
       - elasticsearch-data:/usr/share/elasticsearch/data
-      - ./deployment/elasticsearch/elasticsearch.yml:/usr/share/elasticsearch/config/elasticsearch.yml:ro
+      - ./deployment/elasticsearch/elasticsearch.compose.yml:/usr/share/elasticsearch/config/elasticsearch.yml:ro
     healthcheck:
       test: ["CMD-SHELL", "curl -fsS http://localhost:9200/_cluster/health >/dev/null"]
       interval: 10s
@@ -117,7 +117,7 @@ services:
       LS_JAVA_OPTS: "-Xms256m -Xmx256m"
     volumes:
       - ./deployment/logstash/pipeline:/usr/share/logstash/pipeline:ro
-      - ./deployment/logstash/logstash.yml:/usr/share/logstash/config/logstash.yml:ro
+      - ./deployment/logstash/logstash.compose.yml:/usr/share/logstash/config/logstash.yml:ro
     healthcheck:
       test: ["CMD-SHELL", "curl -fsS http://localhost:9600/_node/stats >/dev/null"]
       interval: 10s
@@ -136,7 +136,7 @@ services:
       SERVER_HOST: "0.0.0.0"
       ELASTICSEARCH_HOSTS: http://elasticsearch:9200
     volumes:
-      - ./deployment/kibana/kibana.yml:/usr/share/kibana/config/kibana.yml:ro
+      - ./deployment/kibana/kibana.compose.yml:/usr/share/kibana/config/kibana.yml:ro
     healthcheck:
       test: ["CMD-SHELL", "curl -fsS http://localhost:5601/api/status >/dev/null"]
       interval: 15s
@@ -152,7 +152,7 @@ services:
       kafka:
         condition: service_healthy
     volumes:
-      - ./deployment/fluent-bit/fluent-bit.local.conf:/fluent-bit/etc/fluent-bit.conf:ro
+      - ./deployment/fluent-bit/fluent-bit.compose.conf:/fluent-bit/etc/fluent-bit.conf:ro
     healthcheck:
       test: ["CMD", "/fluent-bit/bin/fluent-bit", "--help"]
       interval: 10s

@@ -1,0 +1,128 @@
+# Number of Kafka broker pods. Keep this at 1 for the local weather-sim stack.
+replicaCount: 1
+
+# Chart name helpers will default to the release name. Install as `kafka` for the
+# stable service names expected by the other observability components.
+fullnameOverride: ""
+
+image:
+  # Apache Kafka image used by the broker and topic bootstrap job.
+  repository: apache/kafka
+  tag: "4.0.2"
+  pullPolicy: IfNotPresent
+
+service:
+  # Cluster-internal listener exposed to Fluent Bit and Logstash.
+  type: ClusterIP
+  port: 29092
+  controllerPort: 9093
+
+storage:
+  # Persistent log directory for the single-node broker.
+  size: 10Gi
+  accessModes:
+    - ReadWriteOnce
+  storageClassName: ""
+
+kraft:
+  # Stable cluster ID matching the current docker-compose behavior.
+  clusterId: MkU3OEVBNTcwNTJENDM2Qk
+  nodeId: 1
+  processRoles: broker,controller
+  controllerListenerNames: CONTROLLER
+  interBrokerListenerName: PLAINTEXT
+  listenerSecurityProtocolMap: CONTROLLER:PLAINTEXT,PLAINTEXT:PLAINTEXT
+  listeners:
+    broker: PLAINTEXT://:29092
+    controller: CONTROLLER://:9093
+  advertisedListeners:
+    broker: PLAINTEXT://kafka:29092
+  logDirs: /var/lib/kafka/data
+  autoCreateTopicsEnable: "false"
+  numPartitions: "3"
+  defaultReplicationFactor: "1"
+  offsetsTopicReplicationFactor: "1"
+  transactionStateLogReplicationFactor: "1"
+  transactionStateLogMinIsr: "1"
+  minInSyncReplicas: "1"
+  groupInitialRebalanceDelayMs: "0"
+  logRetentionHours: "72"
+  logSegmentBytes: "1073741824"
+  heapOpts: -Xms512m -Xmx512m
+
+topicInit:
+  # Create the weather-sim topic after install and on upgrades.
+  enabled: true
+  image:
+    repository: apache/kafka
+    tag: "4.0.2"
+    pullPolicy: IfNotPresent
+  topics:
+    - name: weather-sim.logs
+      partitions: 3
+      replicationFactor: 1
+      config:
+        retention.ms: "259200000"
+        segment.bytes: "1073741824"
+
+ui:
+  # Optional Kafka UI for local inspection.
+  enabled: true
+  image:
+    repository: ghcr.io/kafbat/kafka-ui
+    tag: v1.4.2
+    pullPolicy: IfNotPresent
+  service:
+    type: ClusterIP
+    port: 8080
+  clusterName: weather-sim-local
+  bootstrapServers: kafka:29092
+  tolerations:
+    - key: node-role.kubernetes.io/control-plane
+      operator: Exists
+      effect: NoSchedule
+    - key: node-role.kubernetes.io/master
+      operator: Exists
+      effect: NoSchedule
+  resources:
+    requests:
+      cpu: 50m
+      memory: 128Mi
+    limits:
+      cpu: 250m
+      memory: 256Mi
+
+podAnnotations: {}
+
+podLabels: {}
+
+podSecurityContext:
+  fsGroup: 1000
+  seccompProfile:
+    type: RuntimeDefault
+
+containerSecurityContext:
+  allowPrivilegeEscalation: false
+  capabilities:
+    drop:
+      - ALL
+
+resources:
+  requests:
+    cpu: 250m
+    memory: 512Mi
+  limits:
+    cpu: "1"
+    memory: 1Gi
+
+nodeSelector: {}
+
+tolerations:
+  - key: node-role.kubernetes.io/control-plane
+    operator: Exists
+    effect: NoSchedule
+  - key: node-role.kubernetes.io/master
+    operator: Exists
+    effect: NoSchedule
+
+affinity: {}

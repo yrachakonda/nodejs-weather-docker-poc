@@ -1,0 +1,13 @@
+Logstash is installed.
+
+HTTP API service:
+  {{ include "logstash.serviceName" . }}:{{ .Values.service.port }}
+
+Elasticsearch output:
+  {{ join ", " .Values.elasticsearch.hosts }}
+
+Kafka input:
+  {{ .Values.kafka.bootstrapServers }} -> {{ join ", " .Values.kafka.topics }}
+
+Port-forward example:
+  kubectl -n {{ .Release.Namespace }} port-forward svc/{{ include "logstash.serviceName" . }} 9600:{{ .Values.service.port }}

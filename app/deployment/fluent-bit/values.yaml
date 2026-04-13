@@ -1,0 +1,92 @@
+# Release name helper; install as `fluent-bit` for stable local service names.
+fullnameOverride: ""
+
+image:
+  repository: cr.fluentbit.io/fluent/fluent-bit
+  tag: "5.0.0"
+  pullPolicy: IfNotPresent
+
+config:
+  # `kubernetes` tails pod logs from hostPath mounts. `forward` keeps the
+  # current Compose-style config available for manual debug flows.
+  profile: kubernetes
+  clusterName: weather-sim-local
+  namespaceFilter:
+    enabled: true
+    namespaces:
+      - observability
+  forward:
+    tag: weather-sim.*
+    listen: 0.0.0.0
+    port: 24224
+
+kafka:
+  brokers: kafka:29092
+  topic: weather-sim.logs
+  format: json
+  requiredAcks: "1"
+
+serviceAccount:
+  create: true
+  name: ""
+  automountToken: true
+
+rbac:
+  create: true
+
+service:
+  # Optional metrics or forward service. Disabled by default.
+  enabled: false
+  type: ClusterIP
+  ports:
+    metrics: 2020
+    forward: 24224
+
+podAnnotations: {}
+
+podLabels: {}
+
+command: []
+
+args: []
+
+extraEnv: []
+
+extraVolumeMounts: []
+
+extraVolumes: []
+
+podSecurityContext:
+  seccompProfile:
+    type: RuntimeDefault
+
+containerSecurityContext:
+  allowPrivilegeEscalation: false
+  capabilities:
+    drop:
+      - ALL
+
+resources:
+  requests:
+    cpu: 100m
+    memory: 128Mi
+  limits:
+    cpu: 250m
+    memory: 256Mi
+
+hostPaths:
+  containers: /var/log/containers
+  pods: /var/log/pods
+  dockerContainers: /var/lib/docker/containers
+
+nodeSelector: {}
+
+tolerations:
+  - key: node-role.kubernetes.io/control-plane
+    operator: Exists
+    effect: NoSchedule
+  - key: node-role.kubernetes.io/master
+    operator: Exists
+    effect: NoSchedule
+
+affinity: {}

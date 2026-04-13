@@ -1,5 +1,8 @@
-server.host: "0.0.0.0"
-server.publicBaseUrl: "http://localhost:5601"
+# Rendered by the Kibana chart via tpl from templates/configmap.yaml.
+server.host: {{ .Values.kibana.serverHost | quote }}
+server.publicBaseUrl: {{ .Values.kibana.publicBaseUrl | quote }}
 elasticsearch.hosts:
-  - "http://elasticsearch:9200"
-telemetry.enabled: false
+{{- range .Values.elasticsearch.hosts }}
+  - {{ . | quote }}
+{{- end }}
+telemetry.enabled: {{ .Values.kibana.telemetryEnabled }}

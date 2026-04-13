@@ -1,0 +1,67 @@
+nameOverride: weather-sim
+namespace: weather-sim
+image:
+  api: 123456789012.dkr.ecr.us-east-1.amazonaws.com/weather-sim-api:latest
+  web: 123456789012.dkr.ecr.us-east-1.amazonaws.com/weather-sim-web:latest
+replicaCount: 2
+service:
+  apiType: LoadBalancer
+  apiPort: 8080
+  apiTargetPort: 8080
+  apiAnnotations:
+    service.beta.kubernetes.io/aws-load-balancer-scheme: internal
+    service.beta.kubernetes.io/aws-load-balancer-type: external
+    service.beta.kubernetes.io/aws-load-balancer-nlb-target-type: ip
+    service.beta.kubernetes.io/aws-load-balancer-healthcheck-protocol: HTTP
+    service.beta.kubernetes.io/aws-load-balancer-healthcheck-path: /api/v1/system/ready
+    service.beta.kubernetes.io/aws-load-balancer-healthcheck-port: "8080"
+  webPort: 80
+  webType: ClusterIP
+  webTargetPort: 80
+  webAnnotations: {}
+env:
+  NODE_ENV: production
+  API_PORT: "8080"
+  REDIS_URL: redis://redis-master:6379
+  CORS_ORIGIN: https://weather-poc.example.com
+  LOG_LEVEL: info
+  APP_VERSION: 1.0.0
+  RATE_LIMIT_WINDOW_MS: "60000"
+  RATE_LIMIT_MAX: "100"
+secrets:
+  sessionSecretName: weather-sim-session-secret
+  sessionSecretKey: SESSION_SECRET
+  apiKeySecretName: weather-sim-api-keys
+fluentBitSidecar:
+  enabled: true
+  image:
+    repository: cr.fluentbit.io/fluent/fluent-bit
+    tag: "5.0.0"
+    pullPolicy: IfNotPresent
+  clusterName: weather-sim
+  observabilityNamespace: observability
+  kafka:
+    brokers: ""
+    serviceName: kafka
+    servicePort: 29092
+    topic: weather-sim.logs
+    format: json
+    requiredAcks: "1"
+  api:
+    logPath: /var/log/weather-sim
+    logFile: api.log
+  web:
+    logPath: /var/log/nginx
+  resources:
+    requests:
+      cpu: 50m
+      memory: 64Mi
+    limits:
+      cpu: 200m
+      memory: 128Mi
+ingress:
+  enabled: true
+  className: nginx
+  host: weather-poc.example.com
+  annotations: {}
+  tls: []

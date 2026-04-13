@@ -1,0 +1,6 @@
+api.http.host: "0.0.0.0"
+pipeline.ecs_compatibility: disabled
+queue.type: persisted
+queue.max_bytes: 1gb
+path.data: /usr/share/logstash/data
+path.queue: /usr/share/logstash/data/queue

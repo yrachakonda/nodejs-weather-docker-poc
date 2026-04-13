@@ -1,5 +1,7 @@
-cluster.name: weather-sim-local
-network.host: 0.0.0.0
-discovery.type: single-node
-xpack.security.enabled: false
-xpack.security.enrollment.enabled: false
+# Rendered by the Elasticsearch chart via tpl from templates/configmap.yaml.
+cluster.name: {{ .Values.elasticsearch.clusterName | quote }}
+network.host: {{ .Values.elasticsearch.networkHost | quote }}
+discovery.type: {{ .Values.elasticsearch.discoveryType | quote }}
+http.port: {{ .Values.service.httpPort }}
+xpack.security.enabled: {{ .Values.elasticsearch.security.enabled }}
+xpack.security.enrollment.enabled: {{ .Values.elasticsearch.security.enrollmentEnabled }}

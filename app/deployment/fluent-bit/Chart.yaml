@@ -1,0 +1,6 @@
+apiVersion: v2
+name: fluent-bit
+description: Fluent Bit DaemonSet for Kubernetes log collection and Kafka forwarding
+type: application
+version: 0.1.0
+appVersion: "5.0.0"

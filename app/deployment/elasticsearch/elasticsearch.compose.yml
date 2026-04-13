@@ -1,0 +1,6 @@
+cluster.name: "weather-sim-local"
+network.host: "0.0.0.0"
+discovery.type: "single-node"
+http.port: 9200
+xpack.security.enabled: false
+xpack.security.enrollment.enabled: false

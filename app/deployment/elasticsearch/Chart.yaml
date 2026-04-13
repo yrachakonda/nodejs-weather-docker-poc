@@ -1,0 +1,6 @@
+apiVersion: v2
+name: elasticsearch
+description: Stateful Elasticsearch chart for the weather-sim observability stack
+type: application
+version: 0.1.0
+appVersion: "8.15.3"

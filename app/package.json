@@ -9,6 +9,12 @@
     "lint": "npm run lint -w backend && npm run lint -w frontend",
     "build": "npm run build -w backend && npm run build -w frontend",
     "test": "npm run test -w backend && npm run test -w frontend",
+    "test:helm:weather-sim": "npm run test:helm:weather-sim:unit && npm run test:helm:weather-sim:integration",
+    "test:helm:weather-sim:unit": "vitest run --config tests/deployment/helm/weather-sim/support/vitest.config.mts",
+    "test:helm:weather-sim:integration": "vitest run --config tests/deployment/helm/weather-sim/integration/vitest.config.mts",
+    "test:helm:observability": "npm run test:helm:observability:unit && npm run test:helm:observability:integration",
+    "test:helm:observability:unit": "vitest run --config tests/deployment/observability/support/vitest.config.mts",
+    "test:helm:observability:integration": "vitest run --config tests/deployment/observability/integration/vitest.config.mts",
     "test:e2e": "playwright test",
     "test:e2e:smoke": "playwright test --grep @smoke",
     "test:e2e:headed": "playwright test --headed",
@@ -26,6 +32,9 @@
     "perf:soak:long": "k6 run -e SOAK_PROFILE=long tests/perf/soak.js"
   },
   "devDependencies": {
-    "@playwright/test": "^1.58.2"
+    "@playwright/test": "^1.58.2",
+    "testcontainers": "^11.13.0",
+    "vitest": "^3.2.4",
+    "yaml": "^2.8.1"
   }
 }

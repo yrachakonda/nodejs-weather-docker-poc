@@ -1,0 +1,19 @@
+Fluent Bit is installed in profile: {{ .Values.config.profile }}
+
+Kafka output:
+  {{ .Values.kafka.brokers }} -> {{ .Values.kafka.topic }}
+
+Namespace filter:
+  {{- if .Values.config.namespaceFilter.enabled }}
+  {{ include "fluent-bit.namespaceRegex" . }}
+  {{- else }}
+  disabled
+  {{- end }}
+
+{{- if .Values.service.enabled }}
+Port-forward example:
+  kubectl -n {{ .Release.Namespace }} port-forward svc/{{ include "fluent-bit.fullname" . }} 2020:{{ .Values.service.ports.metrics }}
+{{- else }}
+The metrics/forward Service is disabled by default. Enable `service.enabled` if you
+want a stable Service for local probing.
+{{- end }}

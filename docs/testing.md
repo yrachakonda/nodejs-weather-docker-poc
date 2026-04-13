@@ -6,10 +6,13 @@
 - [Prerequisites](#prerequisites)
   - [Application and Docker-Based Checks](#application-and-docker-based-checks)
   - [Terraform Checks](#terraform-checks)
+  - [Helm Deployment Checks](#helm-deployment-checks)
   - [Diagram Rendering](#diagram-rendering)
 - [Exact Commands](#exact-commands)
   - [Application Test Commands](#application-test-commands)
   - [Terraform Validation and Tests](#terraform-validation-and-tests)
+  - [Helm Chart Validation and KinD Smoke Tests](#helm-chart-validation-and-kind-smoke-tests)
+  - [Observability Helm Validation and KinD Integration Tests](#observability-helm-validation-and-kind-integration-tests)
 - [Smoke With Docker Compose](#smoke-with-docker-compose)
 - [Remote Playwright Execution](#remote-playwright-execution)
 - [Deployed AWS Edge Checks](#deployed-aws-edge-checks)
@@ -29,6 +32,9 @@ This repository currently has:
 - Playwright smoke and E2E browser coverage
 - local perf, load, stress, and soak scripts with `k6`
 - automated Terraform validation and tests
+- automated Helm render and KinD integration tests for `app/deployment/weather-sim/charts`
+- PowerShell-based manual Helm and KinD smoke scripts for `app/deployment/weather-sim/charts`
+- automated Helm render and KinD integration tests for `app/deployment/observability-stack` backed by the real sibling charts under `app/deployment/{elasticsearch,kibana,kafka,fluent-bit,logstash}`
 - manual API validation assets through `curl`, Swagger, and Postman
 - a Python-based AWS architecture diagram source under `docs/diagrams/`
 
@@ -44,6 +50,11 @@ This repository currently has:
 | Smoke | Fail fast on the minimum browser and API checks before running broader E2E coverage. | Playwright runs only tests tagged `@smoke`. | Full auth coverage, role transitions, or UI edge cases. | `npm run test:e2e:smoke` or `npm run test:e2e:remote:smoke -- --base-url <web> --api-base-url <api>` |
 | Perf / load / stress / soak | Exercise local non-functional checks against the API with `k6`. | Scripted baseline, load, stress, and soak runs are checked into `app/tests/perf/`. | Production benchmarking, cluster-scale capacity claims, or SLO certification. | `npm run perf:baseline`, `npm run perf:load`, `npm run perf:stress`, `npm run perf:soak` |
 | Terraform validation and tests | Validate IaC syntax and run Terraform test cases. | `terraform validate` plus tests under `terraform/tests/`. | Application behavior, image correctness, Kubernetes runtime health, or Redis availability. | `terraform init -backend=false && terraform validate && terraform test` |
+| Helm render unit tests | Validate Helm rendering across all weather-sim values files without creating a cluster. | Vitest shells out to `helm lint` and `helm template` from `app/tests/deployment/helm/weather-sim/unit/`. | Runtime pod health, image pull behavior, or live service reachability. | `npm run test:helm:weather-sim:unit` |
+| Helm KinD integration tests | Validate the chart install and upgrade path inside KinD with a Testcontainers-managed local registry and fixture images. | Vitest provisions the harness from `app/tests/deployment/helm/weather-sim/integration/` and `kind-fixtures/`. | AWS-specific ingress behavior, Terraform-managed infrastructure, or production load balancers. | `npm run test:helm:weather-sim:integration` |
+| Observability render unit tests | Validate the umbrella observability chart against the real sibling charts without creating a cluster. | Vitest copies the checked-in component charts into a temporary workspace, runs `helm dependency build`, then shells out to `helm lint` and `helm template` on the umbrella chart. | Real cluster scheduling, container health, or persistent volume binding in KinD. | `npm run test:helm:observability:unit` |
+| Observability KinD integration tests | Validate the umbrella chart install and the basic stack wiring inside KinD with Testcontainers-managed fixture images and a real Kafka broker image. | Vitest starts a local registry through Testcontainers, mirrors the chart-compatible fixture images plus the Kafka broker image into it, loads those images into KinD, installs the umbrella chart into `observability`, and checks the rendered config plus the live health endpoints. | Production-scale storage, full Elasticsearch or Logstash protocol compatibility, or managed Kubernetes storage classes. | `npm run test:helm:observability:integration` |
+| Manual Helm and KinD checks | Provide operator-run validation paths for chart rendering and an end-to-end local smoke flow. | Python helpers in `app/tests/deployment/helm/weather-sim/manual/` lint, render, and smoke test the chart against KinD. | CI gating, repeatable assertions across all chart variants, or automated upgrade coverage. | `python app/tests/deployment/helm/weather-sim/manual/Invoke-WeatherSimHelmChecks.py` and `python app/tests/deployment/helm/weather-sim/manual/Invoke-WeatherSimKindSmoke.py` |
 | Manual API verification | Exercise auth and weather flows without Playwright. | `curl`, Swagger, and Postman requests against the local or deployed API. | Browser automation, repeatable CI gating, or load characteristics. | See `docs/runbook.md`. |
 
 [Back to Table of Contents](#table-of-contents)
@@ -89,6 +100,19 @@ Playwright runtime values:
 - Terraform installed locally
 - `terraform init -backend=false` must run before `terraform validate` or `terraform test`
 - Terraform tests now also assert the split edge: web ingress, API Gateway, WAF association, and the private API integration path
+
+[Back to Table of Contents](#table-of-contents)
+
+### Helm Deployment Checks
+- Helm 3 installed locally
+- `kubectl` installed and configured for the KinD integration suite or manual KinD smoke flow
+- KinD and Docker installed if you want to run the local cluster smoke flow
+- `npm ci` run from `app/` so `vitest` and `testcontainers` are available for the automated Helm suites
+- The observability KinD suite also needs Docker because it mirrors the chart-compatible fixture images and the Kafka broker image into a Testcontainers-managed registry before loading them into KinD
+- PowerShell 7+ is recommended for the helper scripts in `app/tests/deployment/helm/weather-sim/manual/`
+- A local cluster is not required for the render-only Helm checks
+- The manual KinD smoke helper provisions `redis-master` in-cluster because the chart expects `redis-master:6379`
+- The observability test harness copies the real sibling charts into a temporary workspace at runtime, so it does not mutate the repo while still exercising the file:// dependencies
 
 [Back to Table of Contents](#table-of-contents)
 
@@ -155,6 +179,112 @@ terraform init -backend=false
 terraform validate
 terraform test
 ```
+
+[Back to Table of Contents](#table-of-contents)
+
+### Helm Chart Validation and KinD Smoke Tests
+Run the automated suites from `app/`.
+
+Automated Helm render tests:
+
+```bash
+npm run test:helm:weather-sim:unit
+```
+
+Automated KinD integration tests:
+
+```bash
+npm run test:helm:weather-sim:integration
+```
+
+Run both automated suites together:
+
+```bash
+npm run test:helm:weather-sim
+```
+
+Run the manual scripts from the repository root when you want an operator-driven check.
+
+Render and lint the chart:
+
+```bash
+python app/tests/deployment/helm/weather-sim/manual/Invoke-WeatherSimHelmChecks.py
+```
+
+Run the local KinD smoke flow:
+
+```bash
+python app/tests/deployment/helm/weather-sim/manual/Invoke-WeatherSimKindSmoke.py
+```
+
+Useful options for the KinD helper:
+
+```bash
+python app/tests/deployment/helm/weather-sim/manual/Invoke-WeatherSimKindSmoke.py --skip-image-build
+python app/tests/deployment/helm/weather-sim/manual/Invoke-WeatherSimKindSmoke.py --skip-cleanup
+```
+
+What the Helm render check proves:
+- the chart renders successfully with `values.yaml`, `values-local.yaml`, `values-dev.yaml`, `values-poc.yaml`, and `values-qa.yaml`
+- the rendered output includes the API and web Deployments, Services, ConfigMap, Ingress, HPA, and PodDisruptionBudget
+- the chart passes `helm lint` for the covered values combinations
+
+What the automated KinD integration test proves:
+- a Testcontainers-managed local registry can supply the fixture images used by the chart
+- the chart can be installed and upgraded into KinD with test-safe overrides
+- the API and web Deployments become available after install and upgrade
+- the ConfigMap, Services, Ingress, HPA, and PodDisruptionBudget are created as expected
+- the port-forwarded API and web endpoints answer after deployment
+
+What the manual KinD smoke flow proves:
+- the real app images can be built locally and loaded into KinD
+- the chart can be installed into a local cluster with the Redis dependency the script provisions
+- the API health, login, session, and premium forecast flows still work when the chart is installed into KinD
+
+What these checks do not prove:
+- AWS-specific ingress annotations and load balancer behavior
+- Terraform-managed networking, API Gateway, or WAF integration
+- production-scale load, soak, or failover characteristics
+
+[Back to Table of Contents](#table-of-contents)
+
+### Observability Helm Validation and KinD Integration Tests
+Run these from `app/`.
+
+Automated observability render tests:
+
+```bash
+npm run test:helm:observability:unit
+```
+
+Automated observability KinD integration tests:
+
+```bash
+npm run test:helm:observability:integration
+```
+
+Run both observability suites together:
+
+```bash
+npm run test:helm:observability
+```
+
+What the render suite proves:
+- the umbrella chart declares local file dependencies on `elasticsearch`, `kibana`, `kafka`, `fluent-bit`, and `logstash`
+- the stack renders the expected StatefulSets, Deployments, DaemonSet, Job, Services, ConfigMaps, and storage templates
+- the chart wiring still references the repository config files for Elasticsearch, Kibana, Kafka topic bootstrap, Fluent Bit, and Logstash
+
+What the KinD suite proves:
+- Testcontainers can start the temporary local registry used by the mirrored images
+- the mirrored fixture images and Kafka broker image can be pushed, pulled, loaded into KinD, and used by the umbrella chart
+- the release can be installed into the `observability` namespace and the workloads become ready
+- the key services answer the expected health endpoints and expose the configuration wiring used by the stack
+- the suite keeps persistence disabled in the KinD install so it does not depend on a local storage provisioner
+
+What these checks do not prove:
+- production-scale persistent storage provisioning or storage-class behavior in KinD
+- full upstream Elasticsearch, Kibana, Fluent Bit, or Logstash runtime behavior
+- cloud-managed ingress, WAF, or EKS-specific runtime details
 
 [Back to Table of Contents](#table-of-contents)
 
@@ -316,9 +446,13 @@ Use this order for fast failure and parity with the current pipeline design:
 5. Start `app/docker-compose.yml`.
 6. From `app/`, run `npm run test:e2e:smoke`.
 7. From `app/`, run `npm run test:e2e`.
-8. From `terraform/`, run `terraform init -backend=false`.
-9. From `terraform/`, run `terraform validate`.
-10. From `terraform/`, run `terraform test`.
+8. From `app/`, run `npm run test:helm:weather-sim:unit`.
+9. From `app/`, run `npm run test:helm:weather-sim:integration`.
+10. From `app/`, run `npm run test:helm:observability:unit`.
+11. From `app/`, run `npm run test:helm:observability:integration`.
+12. From `terraform/`, run `terraform init -backend=false`.
+13. From `terraform/`, run `terraform validate`.
+14. From `terraform/`, run `terraform test`.
 
 Use the same order against a deployed environment after the deployment step, but replace steps 6 and 7 with the remote Playwright commands.
 
@@ -329,6 +463,12 @@ Use the same order against a deployed environment after the deployment step, but
 - Backend tests: `app/tests/backend/`
 - Frontend tests: `app/tests/frontend/`
 - Playwright E2E and smoke tests: `app/tests/e2e/` and `app/playwright.config.ts`
+- Helm render helpers and unit tests: `app/tests/deployment/helm/weather-sim/support/` and `app/tests/deployment/helm/weather-sim/unit/`
+- Helm KinD integration tests and fixture harness: `app/tests/deployment/helm/weather-sim/integration/` and `app/tests/deployment/helm/weather-sim/kind-fixtures/`
+- Helm manual checks and manual KinD smoke assets: `app/tests/deployment/helm/weather-sim/manual/`
+- Observability umbrella and component charts: `app/deployment/observability-stack/`, `app/deployment/elasticsearch/`, `app/deployment/kibana/`, `app/deployment/kafka/`, `app/deployment/fluent-bit/`, and `app/deployment/logstash/`
+- Observability render helpers and unit tests: `app/tests/deployment/observability/support/` and `app/tests/deployment/observability/unit/`
+- Observability KinD integration tests and fixture harness: `app/tests/deployment/observability/integration/` and `app/tests/deployment/observability/kind-fixtures/`
 - Playwright remote runner: `app/scripts/run-playwright-remote.mjs`
 - Local perf scripts: `app/tests/perf/`
 - Postman collection: `app/tests/postman/weather-sim.postman_collection.json`

@@ -1,0 +1,94 @@
+# Keep the chart name and release name aligned for stable local service names.
+fullnameOverride: ""
+
+image:
+  repository: docker.elastic.co/logstash/logstash
+  tag: "9.3.2"
+  pullPolicy: IfNotPresent
+
+replicaCount: 1
+
+logstash:
+  javaOpts: -Xms256m -Xmx256m
+  ecsCompatibility: disabled
+  httpHost: 0.0.0.0
+  queue:
+    type: persisted
+    maxBytes: 1gb
+  path:
+    data: /usr/share/logstash/data
+    queue: /usr/share/logstash/data/queue
+
+kafka:
+  bootstrapServers: kafka:29092
+  topics:
+    - weather-sim.logs
+  groupId: weather-sim-logstash
+  codec: json
+  autoOffsetReset: earliest
+
+elasticsearch:
+  hosts:
+    - http://elasticsearch:9200
+  index: weather-sim-logs-%{+YYYY.MM.dd}
+
+observabilityNamespace: observability
+
+service:
+  type: ClusterIP
+  port: 9600
+
+serviceAccount:
+  create: false
+
+persistence:
+  enabled: true
+  size: 10Gi
+  accessModes:
+    - ReadWriteOnce
+  storageClassName: ""
+
+podAnnotations: {}
+
+podLabels: {}
+
+command: []
+
+args: []
+
+extraEnv: []
+
+extraVolumeMounts: []
+
+extraVolumes: []
+
+podSecurityContext:
+  fsGroup: 1000
+  seccompProfile:
+    type: RuntimeDefault
+
+containerSecurityContext:
+  allowPrivilegeEscalation: false
+  capabilities:
+    drop:
+      - ALL
+
+resources:
+  requests:
+    cpu: 250m
+    memory: 512Mi
+  limits:
+    cpu: "1"
+    memory: 1Gi
+
+nodeSelector: {}
+
+tolerations:
+  - key: node-role.kubernetes.io/control-plane
+    operator: Exists
+    effect: NoSchedule
+  - key: node-role.kubernetes.io/master
+    operator: Exists
+    effect: NoSchedule
+
+affinity: {}

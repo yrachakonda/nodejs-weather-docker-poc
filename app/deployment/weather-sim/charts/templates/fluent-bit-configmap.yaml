@@ -1,0 +1,79 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: weather-sim-fluent-bit-config
+data:
+  parsers.conf: |
+    [PARSER]
+        Name json
+        Format json
+        Time_Key timestamp
+        Time_Format %Y-%m-%dT%H:%M:%S.%LZ
+        Time_Keep On
+
+  fluent-bit-api.conf: |
+    [SERVICE]
+        Flush 1
+        Daemon Off
+        Log_Level info
+        Parsers_File /fluent-bit/etc/parsers.conf
+
+    [INPUT]
+        Name tail
+        Path {{ .Values.fluentBitSidecar.api.logPath }}/{{ .Values.fluentBitSidecar.api.logFile }}
+        Tag weather-sim.api
+        Parser json
+        DB /buffers/api-fluent-bit.db
+        Read_from_Head true
+        Mem_Buf_Limit 10MB
+        Skip_Long_Lines On
+
+    [FILTER]
+        Name modify
+        Match weather-sim.api
+        Add service weather-sim-api
+        Add kubernetes_namespace {{ .Release.Namespace }}
+        Add observability_namespace {{ .Values.fluentBitSidecar.observabilityNamespace }}
+        Add cluster_name {{ .Values.fluentBitSidecar.clusterName }}
+
+    [OUTPUT]
+        Name kafka
+        Match weather-sim.api
+        Brokers {{- if .Values.fluentBitSidecar.kafka.brokers }} {{ .Values.fluentBitSidecar.kafka.brokers }}{{- else }} {{ .Values.fluentBitSidecar.kafka.serviceName }}.{{ .Values.fluentBitSidecar.observabilityNamespace }}.svc.cluster.local:{{ .Values.fluentBitSidecar.kafka.servicePort }}{{- end }}
+        Topics {{ .Values.fluentBitSidecar.kafka.topic }}
+        Format {{ .Values.fluentBitSidecar.kafka.format }}
+        Retry_Limit False
+        rdkafka.request.required.acks {{ .Values.fluentBitSidecar.kafka.requiredAcks }}
+
+  fluent-bit-web.conf: |
+    [SERVICE]
+        Flush 1
+        Daemon Off
+        Log_Level info
+        Parsers_File /fluent-bit/etc/parsers.conf
+
+    [INPUT]
+        Name tail
+        Path {{ .Values.fluentBitSidecar.web.logPath }}/*.log
+        Tag weather-sim.web
+        DB /buffers/web-fluent-bit.db
+        Read_from_Head true
+        Mem_Buf_Limit 10MB
+        Skip_Long_Lines On
+
+    [FILTER]
+        Name modify
+        Match weather-sim.web
+        Add service weather-sim-web
+        Add kubernetes_namespace {{ .Release.Namespace }}
+        Add observability_namespace {{ .Values.fluentBitSidecar.observabilityNamespace }}
+        Add cluster_name {{ .Values.fluentBitSidecar.clusterName }}
+
+    [OUTPUT]
+        Name kafka
+        Match weather-sim.web
+        Brokers {{- if .Values.fluentBitSidecar.kafka.brokers }} {{ .Values.fluentBitSidecar.kafka.brokers }}{{- else }} {{ .Values.fluentBitSidecar.kafka.serviceName }}.{{ .Values.fluentBitSidecar.observabilityNamespace }}.svc.cluster.local:{{ .Values.fluentBitSidecar.kafka.servicePort }}{{- end }}
+        Topics {{ .Values.fluentBitSidecar.kafka.topic }}
+        Format {{ .Values.fluentBitSidecar.kafka.format }}
+        Retry_Limit False
+        rdkafka.request.required.acks {{ .Values.fluentBitSidecar.kafka.requiredAcks }}

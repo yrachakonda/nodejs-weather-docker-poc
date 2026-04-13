@@ -1,0 +1,19 @@
+{{- if .Values.service.enabled }}
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "fluent-bit.fullname" . }}
+  labels:
+    {{- include "fluent-bit.labels" . | nindent 4 }}
+spec:
+  type: {{ .Values.service.type }}
+  ports:
+    - name: metrics
+      port: {{ .Values.service.ports.metrics }}
+      targetPort: metrics
+    - name: forward
+      port: {{ .Values.service.ports.forward }}
+      targetPort: forward
+  selector:
+    {{- include "fluent-bit.selectorLabels" . | nindent 4 }}
+{{- end }}

@@ -1,0 +1,53 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ include "logstash.configMapName" . }}
+  labels:
+    {{- include "logstash.labels" . | nindent 4 }}
+data:
+  logstash.yml: |
+    api.http.host: {{ .Values.logstash.httpHost | quote }}
+    pipeline.ecs_compatibility: {{ .Values.logstash.ecsCompatibility }}
+    queue.type: {{ .Values.logstash.queue.type }}
+    queue.max_bytes: {{ .Values.logstash.queue.maxBytes }}
+    path.data: {{ .Values.logstash.path.data }}
+    path.queue: {{ .Values.logstash.path.queue }}
+
+  weather-sim.conf: |
+    input {
+      kafka {
+        bootstrap_servers => {{ .Values.kafka.bootstrapServers | quote }}
+        topics => [
+          {{- range $index, $topic := .Values.kafka.topics }}
+          {{- if $index }}, {{ end }}
+          {{ $topic | quote }}
+          {{- end }}
+        ]
+        group_id => {{ .Values.kafka.groupId | quote }}
+        codec => {{ .Values.kafka.codec | quote }}
+        auto_offset_reset => {{ .Values.kafka.autoOffsetReset | quote }}
+      }
+    }
+
+    filter {
+      mutate {
+        add_field => {
+          "observability_namespace" => {{ .Values.observabilityNamespace | quote }}
+        }
+      }
+    }
+
+    output {
+      elasticsearch {
+        hosts => [
+          {{- range $index, $host := .Values.elasticsearch.hosts }}
+          {{- if $index }}, {{ end }}
+          {{ $host | quote }}
+          {{- end }}
+        ]
+        index => {{ .Values.elasticsearch.index | quote }}
+      }
+      stdout {
+        codec => rubydebug
+      }
+    }

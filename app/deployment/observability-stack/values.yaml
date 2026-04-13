@@ -1,0 +1,139 @@
+# Shared defaults for the observability namespace stack.
+global:
+  namespace: observability
+  clusterName: weather-sim-observability
+  appNamespace: weather-sim
+  kafkaTopic: weather-sim.logs
+  kafkaBootstrapServers: kafka:29092
+  elasticsearchHost: http://elasticsearch:9200
+
+elasticsearch:
+  enabled: true
+  fullnameOverride: elasticsearch
+  service:
+    type: ClusterIP
+    httpPort: 9200
+    transportPort: 9300
+  elasticsearch:
+    clusterName: weather-sim-observability
+    networkHost: 0.0.0.0
+    discoveryType: single-node
+    httpPort: 9200
+    security:
+      enabled: false
+      enrollmentEnabled: false
+    javaOpts: -Xms256m -Xmx256m
+  persistence:
+    enabled: true
+    storageClass: ""
+    size: 8Gi
+
+kibana:
+  enabled: true
+  fullnameOverride: kibana
+  service:
+    type: ClusterIP
+    port: 5601
+  kibana:
+    serverHost: 0.0.0.0
+    publicBaseUrl: http://kibana:5601
+    telemetryEnabled: false
+  elasticsearch:
+    hosts:
+      - http://elasticsearch:9200
+
+kafka:
+  enabled: true
+  fullnameOverride: kafka
+  service:
+    type: ClusterIP
+    port: 29092
+    controllerPort: 9093
+  storage:
+    size: 10Gi
+    accessModes:
+      - ReadWriteOnce
+    storageClassName: ""
+  topicInit:
+    enabled: true
+    topics:
+      - name: weather-sim.logs
+        partitions: 3
+        replicationFactor: 1
+        config:
+          retention.ms: "259200000"
+          segment.bytes: "1073741824"
+  ui:
+    enabled: true
+    clusterName: weather-sim-observability
+    bootstrapServers: kafka:29092
+
+fluentBit:
+  enabled: true
+  fullnameOverride: fluent-bit
+  config:
+    profile: kubernetes
+    clusterName: weather-sim-observability
+    namespaceFilter:
+      enabled: true
+      namespaces:
+        - observability
+    forward:
+      tag: weather-sim.*
+      listen: 0.0.0.0
+      port: 24224
+  kafka:
+    brokers: kafka:29092
+    topic: weather-sim.logs
+    format: json
+    requiredAcks: "1"
+  serviceAccount:
+    create: true
+    name: ""
+    automountToken: true
+  rbac:
+    create: true
+  service:
+    enabled: true
+    type: ClusterIP
+    ports:
+      metrics: 2020
+      forward: 24224
+
+logstash:
+  enabled: true
+  fullnameOverride: logstash
+  replicaCount: 1
+  logstash:
+    javaOpts: -Xms256m -Xmx256m
+    ecsCompatibility: disabled
+    httpHost: 0.0.0.0
+    queue:
+      type: persisted
+      maxBytes: 1gb
+    path:
+      data: /usr/share/logstash/data
+      queue: /usr/share/logstash/data/queue
+  kafka:
+    bootstrapServers: kafka:29092
+    topics:
+      - weather-sim.logs
+    groupId: weather-sim-logstash
+    codec: json
+    autoOffsetReset: earliest
+  elasticsearch:
+    hosts:
+      - http://elasticsearch:9200
+    index: weather-sim-logs-%{+YYYY.MM.dd}
+  observabilityNamespace: observability
+  service:
+    type: ClusterIP
+    port: 9600
+  serviceAccount:
+    create: false
+  persistence:
+    enabled: true
+    size: 10Gi
+    accessModes:
+      - ReadWriteOnce
+    storageClassName: ""

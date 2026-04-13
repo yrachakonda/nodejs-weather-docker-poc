@@ -1,0 +1,18 @@
+Kafka is installed.
+
+Broker service:
+  {{ include "kafka.bootstrapAddress" . }}
+
+Topic bootstrap job:
+  {{ include "kafka.topicInitName" . }}
+
+{{- if .Values.ui.enabled }}
+Kafka UI service:
+  {{ include "kafka.uiName" . }}:{{ .Values.ui.service.port }}
+
+Port-forward example:
+  kubectl -n {{ .Release.Namespace }} port-forward svc/{{ include "kafka.uiName" . }} 8081:{{ .Values.ui.service.port }}
+{{- end }}
+
+Broker port-forward example:
+  kubectl -n {{ .Release.Namespace }} port-forward svc/{{ include "kafka.serviceName" . }} 9092:{{ .Values.service.port }}

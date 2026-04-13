@@ -1,0 +1,18 @@
+dependencies:
+- name: elasticsearch
+  repository: file://../elasticsearch
+  version: 0.1.0
+- name: kibana
+  repository: file://../kibana
+  version: 0.1.0
+- name: kafka
+  repository: file://../kafka
+  version: 0.1.0
+- name: fluent-bit
+  repository: file://../fluent-bit
+  version: 0.1.0
+- name: logstash
+  repository: file://../logstash
+  version: 0.1.0
+digest: sha256:885189473a7bc3cf2257d21a72de8a91f6d28c06b3e55246d4ebd5d767527858
+generated: "2026-04-12T20:48:28.2750086-04:00"

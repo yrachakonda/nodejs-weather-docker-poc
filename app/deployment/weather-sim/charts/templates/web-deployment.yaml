@@ -1,0 +1,47 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: weather-sim-web
+spec:
+  replicas: {{ .Values.replicaCount }}
+  selector: { matchLabels: { app: weather-sim-web } }
+  template:
+    metadata: { labels: { app: weather-sim-web } }
+    spec:
+      containers:
+        - name: web
+          image: {{ .Values.image.web }}
+          ports: [{ containerPort: 80 }]
+          {{- if .Values.fluentBitSidecar.enabled }}
+          volumeMounts:
+            - name: web-logs
+              mountPath: {{ .Values.fluentBitSidecar.web.logPath }}
+          {{- end }}
+        {{- if .Values.fluentBitSidecar.enabled }}
+        - name: fluent-bit
+          image: {{ .Values.fluentBitSidecar.image.repository }}:{{ .Values.fluentBitSidecar.image.tag }}
+          imagePullPolicy: {{ .Values.fluentBitSidecar.image.pullPolicy }}
+          command:
+            - /fluent-bit/bin/fluent-bit
+            - -c
+            - /fluent-bit/etc/fluent-bit-web.conf
+          resources:
+            {{- toYaml .Values.fluentBitSidecar.resources | nindent 12 }}
+          volumeMounts:
+            - name: web-logs
+              mountPath: {{ .Values.fluentBitSidecar.web.logPath }}
+            - name: fluent-bit-config
+              mountPath: /fluent-bit/etc
+            - name: fluent-bit-buffers
+              mountPath: /buffers
+        {{- end }}
+      {{- if .Values.fluentBitSidecar.enabled }}
+      volumes:
+        - name: web-logs
+          emptyDir: {}
+        - name: fluent-bit-config
+          configMap:
+            name: weather-sim-fluent-bit-config
+        - name: fluent-bit-buffers
+          emptyDir: {}
+      {{- end }}
