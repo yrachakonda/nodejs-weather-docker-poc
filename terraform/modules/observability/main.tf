@@ -75,7 +75,7 @@ resource "aws_iam_role_policy" "fluent_bit_cloudwatch" {
   policy = data.aws_iam_policy_document.fluent_bit_cloudwatch.json
 }
 
-resource "kubernetes_service_account" "fluent_bit" {
+resource "kubernetes_service_account_v1" "fluent_bit" {
   metadata {
     name      = local.fluent_bit_service_account_name
     namespace = var.observability_namespace
@@ -234,21 +234,22 @@ resource "helm_release" "fluent_bit" {
     })
   ]
 
-  set {
-    name  = "serviceAccount.create"
-    value = "false"
-  }
-
-  set {
-    name  = "serviceAccount.name"
-    value = local.fluent_bit_service_account_name
-  }
+  set = [
+    {
+      name  = "serviceAccount.create"
+      value = "false"
+    },
+    {
+      name  = "serviceAccount.name"
+      value = local.fluent_bit_service_account_name
+    }
+  ]
 
   depends_on = [
     aws_cloudwatch_log_group.fluent_bit,
     aws_cloudwatch_log_stream.fluent_bit,
     aws_iam_role_policy.fluent_bit_cloudwatch,
     kubernetes_manifest.kafka_cluster,
-    kubernetes_service_account.fluent_bit
+    kubernetes_service_account_v1.fluent_bit
   ]
 }

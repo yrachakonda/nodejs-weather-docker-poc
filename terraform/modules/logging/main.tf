@@ -24,7 +24,7 @@ locals {
         Sid    = "AllowCloudWatchLogsUseOfKey"
         Effect = "Allow"
         Principal = {
-          Service = "logs.${data.aws_region.current.name}.amazonaws.com"
+          Service = "logs.${data.aws_region.current.region}.amazonaws.com"
         }
         Action = [
           "kms:Decrypt",
@@ -36,7 +36,7 @@ locals {
         Resource = "*"
         Condition = {
           StringEquals = {
-            "kms:ViaService" = "logs.${data.aws_region.current.name}.amazonaws.com"
+            "kms:ViaService" = "logs.${data.aws_region.current.region}.amazonaws.com"
           }
         }
       },
@@ -59,7 +59,7 @@ locals {
         Resource = "*"
         Condition = {
           StringEquals = {
-            "kms:ViaService" = "eks.${data.aws_region.current.name}.amazonaws.com"
+            "kms:ViaService" = "eks.${data.aws_region.current.region}.amazonaws.com"
           }
         }
       }

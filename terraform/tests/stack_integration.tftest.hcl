@@ -220,12 +220,12 @@ run "root_stack_wires_networking_ingress_and_waf" {
   }
 
   assert {
-    condition     = kubernetes_namespace.app.metadata[0].name == "weather-sim"
+    condition     = kubernetes_namespace_v1.app.metadata[0].name == "weather-sim"
     error_message = "The application namespace should match the requested Kubernetes namespace."
   }
 
   assert {
-    condition     = kubernetes_namespace.observability.metadata[0].name == "observability"
+    condition     = kubernetes_namespace_v1.observability.metadata[0].name == "observability"
     error_message = "The observability namespace should use the dedicated default namespace."
   }
 

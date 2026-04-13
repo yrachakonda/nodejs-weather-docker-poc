@@ -385,6 +385,8 @@ kubectl delete namespace weather-sim
 ## Terraform
 Run from `terraform/`:
 
+Terraform CLI `1.14.8` or newer is required.
+
 ```bash
 terraform init -backend=false
 terraform validate

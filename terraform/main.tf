@@ -1,22 +1,22 @@
 terraform {
-  required_version = ">= 1.6.0"
+  required_version = ">= 1.14.8"
 
   required_providers {
     aws = {
       source  = "hashicorp/aws"
-      version = "~> 5.0"
+      version = "~> 6.40.0"
     }
     helm = {
       source  = "hashicorp/helm"
-      version = "~> 2.13"
+      version = "~> 3.1.1"
     }
     kubernetes = {
       source  = "hashicorp/kubernetes"
-      version = "~> 2.32"
+      version = "~> 3.0.1"
     }
     tls = {
       source  = "hashicorp/tls"
-      version = "~> 4.0"
+      version = "~> 4.2.1"
     }
   }
 }
@@ -99,7 +99,7 @@ provider "kubernetes" {
 }
 
 provider "helm" {
-  kubernetes {
+  kubernetes = {
     host                   = module.eks.cluster_endpoint
     cluster_ca_certificate = base64decode(module.eks.cluster_certificate_authority_data)
     token                  = data.aws_eks_cluster_auth.this.token
@@ -149,19 +149,19 @@ resource "aws_iam_role_policy_attachment" "aws_load_balancer_controller" {
   role       = aws_iam_role.aws_load_balancer_controller.name
 }
 
-resource "kubernetes_namespace" "app" {
+resource "kubernetes_namespace_v1" "app" {
   metadata {
     name = var.kubernetes_namespace
   }
 }
 
-resource "kubernetes_namespace" "observability" {
+resource "kubernetes_namespace_v1" "observability" {
   metadata {
     name = var.observability_namespace
   }
 }
 
-resource "kubernetes_service_account" "aws_load_balancer_controller" {
+resource "kubernetes_service_account_v1" "aws_load_balancer_controller" {
   metadata {
     name      = "aws-load-balancer-controller"
     namespace = "kube-system"
@@ -182,39 +182,37 @@ resource "helm_release" "aws_load_balancer_controller" {
   version    = var.aws_load_balancer_controller_chart_version
 
   depends_on = [
-    kubernetes_service_account.aws_load_balancer_controller
+    kubernetes_service_account_v1.aws_load_balancer_controller
   ]
 
-  set {
-    name  = "clusterName"
-    value = module.eks.cluster_name
-  }
-
-  set {
-    name  = "region"
-    value = var.aws_region
-  }
-
-  set {
-    name  = "vpcId"
-    value = module.networking.vpc_id
-  }
-
-  set {
-    name  = "serviceAccount.create"
-    value = "false"
-  }
-
-  set {
-    name  = "serviceAccount.name"
-    value = "aws-load-balancer-controller"
-  }
+  set = [
+    {
+      name  = "clusterName"
+      value = module.eks.cluster_name
+    },
+    {
+      name  = "region"
+      value = var.aws_region
+    },
+    {
+      name  = "vpcId"
+      value = module.networking.vpc_id
+    },
+    {
+      name  = "serviceAccount.create"
+      value = "false"
+    },
+    {
+      name  = "serviceAccount.name"
+      value = "aws-load-balancer-controller"
+    }
+  ]
 }
 
 module "observability" {
   source = "./modules/observability"
 
-  app_namespace                 = kubernetes_namespace.app.metadata[0].name
+  app_namespace                 = kubernetes_namespace_v1.app.metadata[0].name
   aws_region                    = var.aws_region
   cluster_name                  = local.cluster_name
   cloudwatch_log_retention_days = var.cloudwatch_log_retention_days
@@ -231,13 +229,13 @@ module "observability" {
   kafka_version                 = var.kafka_version
   kms_key_arn                   = module.logging.kms_key_arn
   kafbat_ui_chart_version       = var.kafbat_ui_chart_version
-  observability_namespace       = kubernetes_namespace.observability.metadata[0].name
+  observability_namespace       = kubernetes_namespace_v1.observability.metadata[0].name
   project_name                  = var.project_name
   strimzi_chart_version         = var.strimzi_chart_version
   tags                          = local.common_tags
 
   depends_on = [
-    kubernetes_namespace.observability
+    kubernetes_namespace_v1.observability
   ]
 }
 
@@ -266,7 +264,7 @@ module "api_waf" {
 
 resource "helm_release" "weather_sim" {
   name             = "weather-sim"
-  namespace        = kubernetes_namespace.app.metadata[0].name
+  namespace        = kubernetes_namespace_v1.app.metadata[0].name
   chart            = "${path.module}/../app/deployment/weather-sim/charts"
   create_namespace = false
   wait             = true
@@ -278,7 +276,7 @@ resource "helm_release" "weather_sim" {
 
   values = [
     yamlencode({
-      namespace = kubernetes_namespace.app.metadata[0].name
+      namespace = kubernetes_namespace_v1.app.metadata[0].name
       image = {
         api = "${module.ecr.api_repository_url}:latest"
         web = "${module.ecr.web_repository_url}:latest"
@@ -300,7 +298,7 @@ resource "helm_release" "weather_sim" {
 resource "kubernetes_ingress_v1" "weather_sim_public" {
   metadata {
     name      = "weather-sim"
-    namespace = kubernetes_namespace.app.metadata[0].name
+    namespace = kubernetes_namespace_v1.app.metadata[0].name
     annotations = {
       "alb.ingress.kubernetes.io/certificate-arn"  = module.acm.certificate_arn
       "alb.ingress.kubernetes.io/healthcheck-path" = "/"

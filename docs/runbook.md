@@ -12,6 +12,8 @@
 ## Deploy Infrastructure
 Run from `terraform/`:
 
+Terraform CLI `1.14.8` or newer is required.
+
 ```bash
 terraform init
 terraform plan -var-file=environments/poc/terraform.tfvars

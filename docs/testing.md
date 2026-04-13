@@ -97,7 +97,7 @@ Playwright runtime values:
 [Back to Table of Contents](#table-of-contents)
 
 ### Terraform Checks
-- Terraform installed locally
+- Terraform `1.14.8` or newer installed locally
 - `terraform init -backend=false` must run before `terraform validate` or `terraform test`
 - Terraform tests now also assert the split edge: web ingress, API Gateway, WAF association, and the private API integration path
 
@@ -173,6 +173,8 @@ npm run perf:soak
 
 ### Terraform Validation and Tests
 Run from `terraform/`:
+
+Terraform CLI `1.14.8` or newer is required.
 
 ```bash
 terraform init -backend=false

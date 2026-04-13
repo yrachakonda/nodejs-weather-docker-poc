@@ -46,7 +46,7 @@ locals {
         Resource = "*"
         Condition = {
           StringEquals = {
-            "kms:ViaService" = "eks.${data.aws_region.current.name}.amazonaws.com"
+            "kms:ViaService" = "eks.${data.aws_region.current.region}.amazonaws.com"
           }
         }
       }
