@@ -20,6 +20,26 @@ jobs:
       - bash: |
           set -euo pipefail
 
+          if [[ -z "${AWS_ACCESS_KEY_ID:-}" || -z "${AWS_SECRET_ACCESS_KEY:-}" || "${AWS_ACCESS_KEY_ID}" == *'$('* || "${AWS_SECRET_ACCESS_KEY}" == *'$('* ]]; then
+            echo "##vso[task.logissue type=error]AWS credentials are missing. Set AWS_ACCESS_KEY_ID and AWS_SECRET_ACCESS_KEY as secure pipeline variables."
+            exit 1
+          fi
+
+          # Treat unresolved macro values as absent so long-lived keys still work.
+          if [[ "${AWS_SESSION_TOKEN:-}" == *'$('* ]]; then
+            unset AWS_SESSION_TOKEN
+          fi
+
+          # Long-lived IAM access keys (AKIA...) should not be paired with a session token.
+          if [[ "${AWS_ACCESS_KEY_ID}" != ASIA* ]]; then
+            unset AWS_SESSION_TOKEN
+          fi
+
+          if ! aws sts get-caller-identity --output json >/dev/null 2>&1; then
+            echo "##vso[task.logissue type=error]Invalid AWS credentials/token. If using temporary STS credentials, refresh AWS_SESSION_TOKEN. If using long-lived keys, clear AWS_SESSION_TOKEN."
+            exit 1
+          fi
+
           IMAGE_TAG="$(Build.SourceVersion)"
           AWS_ACCOUNT_ID="$(aws sts get-caller-identity --query Account --output text)"
           ECR_REGISTRY="${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com"
@@ -34,18 +54,15 @@ jobs:
 
           docker build \
             -t "${ECR_REGISTRY}/${API_REPOSITORY}:${IMAGE_TAG}" \
-            -t "${ECR_REGISTRY}/${API_REPOSITORY}:latest" \
             "${APP_DIRECTORY}/backend"
 
           docker build \
+            --build-arg VITE_API_BASE_URL="${VITE_API_BASE_URL}" \
             -t "${ECR_REGISTRY}/${WEB_REPOSITORY}:${IMAGE_TAG}" \
-            -t "${ECR_REGISTRY}/${WEB_REPOSITORY}:latest" \
             "${APP_DIRECTORY}/frontend"
 
           docker push "${ECR_REGISTRY}/${API_REPOSITORY}:${IMAGE_TAG}"
-          docker push "${ECR_REGISTRY}/${API_REPOSITORY}:latest"
           docker push "${ECR_REGISTRY}/${WEB_REPOSITORY}:${IMAGE_TAG}"
-          docker push "${ECR_REGISTRY}/${WEB_REPOSITORY}:latest"
         displayName: Push API and Web images to ECR
         env:
           API_REPOSITORY: ${{ parameters.apiRepositoryName }}
@@ -54,4 +71,5 @@ jobs:
           AWS_REGION: ${{ parameters.awsRegion }}
           AWS_SECRET_ACCESS_KEY: $(AWS_SECRET_ACCESS_KEY)
           AWS_SESSION_TOKEN: $(AWS_SESSION_TOKEN)
+          VITE_API_BASE_URL: $(viteApiBaseUrl)
           WEB_REPOSITORY: ${{ parameters.webRepositoryName }}

@@ -433,9 +433,27 @@ Terraform provisions:
 - [OpenAPI Spec](docs/openapi.yaml)
 - [Swagger UI Page](docs/swagger.html)
 - [Postman Collection](app/tests/postman/weather-sim.postman_collection.json)
+- [Postman Local Docker Environment](app/tests/postman/weather-sim-local.postman_environment.json)
+- [Postman EKS POC Environment](app/tests/postman/weather-sim-eks.postman_environment.json)
 - [Contract Reference](docs/contracts.md)
 - [DAST Scenarios](docs/dast-scenarios.md)
 - [Architecture](docs/architecture.md)
 - [Local Development](docs/local-development.md)
+
+Run the collection locally against Docker Compose:
+
+```bash
+newman run app/tests/postman/weather-sim.postman_collection.json \
+  --environment app/tests/postman/weather-sim-local.postman_environment.json
+```
+
+Run the same collection against the EKS API Gateway DNS:
+
+```bash
+newman run app/tests/postman/weather-sim.postman_collection.json \
+  --environment app/tests/postman/weather-sim-eks.postman_environment.json
+```
+
+The local Docker environment uses `baseUrl=http://localhost:8080` and `basePath=/api/v1`. The EKS API Gateway DNS already maps to the API base path, so it uses `baseUrl=https://api.weather-poc.rheemconnect.com` and an empty `basePath`.
 
 [Back to Table of Contents](#table-of-contents)

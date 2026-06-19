@@ -52,6 +52,13 @@ locals {
       }
     ]
   })
+
+  # Terraform tests can mock caller identity with placeholders; normalize assumed-role ARNs and
+  # only create EKS access entries when the resulting principal is a valid IAM user/role ARN.
+  caller_principal_arn       = try(data.aws_caller_identity.current.arn, "")
+  assumed_role_match         = regexall("^arn:aws[a-z-]*:sts::([0-9]{12}):assumed-role/([^/]+)/.+$", local.caller_principal_arn)
+  creator_principal_arn      = length(local.assumed_role_match) > 0 ? "arn:aws:iam::${local.assumed_role_match[0][0]}:role/${local.assumed_role_match[0][1]}" : local.caller_principal_arn
+  creator_principal_is_valid = can(regex("^arn:aws[a-z-]*:iam::[0-9]{12}:(role|user)/.+$", local.creator_principal_arn))
 }
 
 data "aws_iam_policy_document" "cluster_assume_role" {
@@ -259,4 +266,28 @@ resource "aws_eks_node_group" "this" {
   ]
 
   tags = var.tags
+}
+
+resource "aws_eks_access_entry" "creator" {
+  count = local.creator_principal_is_valid ? 1 : 0
+
+  cluster_name  = aws_eks_cluster.this.name
+  principal_arn = local.creator_principal_arn
+  type          = "STANDARD"
+}
+
+resource "aws_eks_access_policy_association" "creator" {
+  count = local.creator_principal_is_valid ? 1 : 0
+
+  cluster_name  = aws_eks_cluster.this.name
+  policy_arn    = "arn:aws:eks::aws:cluster-access-policy/AmazonEKSClusterAdminPolicy"
+  principal_arn = local.creator_principal_arn
+
+  access_scope {
+    type = "cluster"
+  }
+
+  depends_on = [
+    aws_eks_access_entry.creator
+  ]
 }

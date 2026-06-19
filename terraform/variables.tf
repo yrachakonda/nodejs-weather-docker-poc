@@ -27,7 +27,7 @@ variable "domain_name" {
 }
 
 variable "api_domain_name" {
-  description = "Optional DNS name for the public API Gateway custom domain. Defaults to api.<domain_name>."
+  description = "Deprecated. The API now shares the main ingress hostname and this variable is ignored."
   type        = string
   default     = null
 }

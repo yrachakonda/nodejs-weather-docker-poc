@@ -1,0 +1,6 @@
+apiVersion: v2
+name: strimzi-resources
+description: Helm chart for weather-sim Strimzi custom resources
+type: application
+version: 0.1.0
+appVersion: "1.0.0"

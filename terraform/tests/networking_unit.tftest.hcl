@@ -15,7 +15,8 @@ mock_provider "aws" {
 
   mock_data "aws_region" {
     defaults = {
-      name = "us-east-1"
+      name   = "us-east-1"
+      region = "us-east-1"
     }
   }
 }
@@ -79,13 +80,18 @@ run "networking_builds_expected_subnets" {
   }
 
   assert {
-    condition     = aws_cloudwatch_log_group.vpc_flow_logs.kms_key_id == "arn:aws:kms:us-east-1:123456789012:key/test"
-    error_message = "The VPC flow log group must use the shared KMS key."
+     condition     = alltrue(flatten([for rule in aws_s3_bucket_server_side_encryption_configuration.vpc_flow_logs.rule : [for encryption_default in rule.apply_server_side_encryption_by_default : encryption_default.kms_master_key_id == "arn:aws:kms:us-east-1:123456789012:key/test"]]))
+    error_message = "The VPC flow logs bucket must use the shared KMS key."
   }
 
   assert {
-    condition     = aws_flow_log.this.traffic_type == "ALL"
+    condition     = aws_flow_log.this.traffic_type == "ALL" && aws_flow_log.this.log_destination_type == "s3"
     error_message = "The module must enable VPC flow logs for all traffic."
+  }
+
+  assert {
+    condition     = aws_s3_bucket.vpc_flow_logs.bucket == "weather-sim-test-us-east-1-123456789012-vpc-flow-logs"
+    error_message = "The module must use the expected S3 bucket naming scheme for VPC flow logs."
   }
 
   assert {

@@ -3,12 +3,49 @@
     "_postman_id": "7eb390d8-5270-4c6d-99b5-0c35db6172b3",
     "name": "Weather Simulation API",
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
-    "description": "Postman collection for the Weather Simulation POC API. Set API keys and passwords in your Postman environment or current values; do not commit populated secrets."
+    "description": "Postman collection for the Weather Simulation POC API. Set API keys and passwords in your Postman environment or current values; do not commit populated secrets. For local Docker, use baseUrl=http://localhost:8080 and basePath=/api/v1. For EKS API Gateway, use baseUrl=https://api.weather-poc.rheemconnect.com and basePath= (empty)."
   },
+  "event": [
+    {
+      "listen": "prerequest",
+      "script": {
+        "type": "text/javascript",
+        "exec": [
+          "const normalizePath = (pathValue) => {",
+          "  const trimmed = (pathValue || '').trim();",
+          "  if (!trimmed || trimmed === '/') {",
+          "    return '';",
+          "  }",
+          "",
+          "  return trimmed.startsWith('/') ? trimmed : `/${trimmed}`;",
+          "};",
+          "",
+          "const rawBaseUrl = (pm.variables.get('baseUrl') || '').trim().replace(/\\/$/, '');",
+          "let rawBasePath = normalizePath(pm.variables.get('basePath'));",
+          "",
+          "let resolvedBaseUrl = rawBaseUrl;",
+          "if (resolvedBaseUrl.startsWith('http://api.weather-poc.rheemconnect.com')) {",
+          "  resolvedBaseUrl = resolvedBaseUrl.replace('http://', 'https://');",
+          "}",
+          "",
+          "if (resolvedBaseUrl.includes('api.weather-poc.rheemconnect.com')) {",
+          "  rawBasePath = '';",
+          "}",
+          "",
+          "pm.variables.set('resolvedBaseUrl', resolvedBaseUrl);",
+          "pm.variables.set('resolvedBasePath', rawBasePath);"
+        ]
+      }
+    }
+  ],
   "variable": [
     {
       "key": "baseUrl",
-      "value": "http://localhost:8080/api/v1"
+      "value": "http://localhost:8080"
+    },
+    {
+      "key": "basePath",
+      "value": "/api/v1"
     },
     {
       "key": "apiKey",
@@ -49,6 +86,18 @@
     {
       "key": "lastLoggedInUsername",
       "value": ""
+    },
+    {
+      "key": "expectSessionPersistence",
+      "value": "true"
+    },
+    {
+      "key": "resolvedBaseUrl",
+      "value": "http://localhost:8080"
+    },
+    {
+      "key": "resolvedBasePath",
+      "value": "/api/v1"
     }
   ],
   "item": [
@@ -78,7 +127,7 @@
           "request": {
             "method": "GET",
             "header": [],
-            "url": "{{baseUrl}}/system/live"
+            "url": "{{resolvedBaseUrl}}{{resolvedBasePath}}/system/live"
           }
         },
         {
@@ -104,7 +153,7 @@
           "request": {
             "method": "GET",
             "header": [],
-            "url": "{{baseUrl}}/system/ready"
+            "url": "{{resolvedBaseUrl}}{{resolvedBasePath}}/system/ready"
           }
         },
         {
@@ -130,7 +179,7 @@
           "request": {
             "method": "GET",
             "header": [],
-            "url": "{{baseUrl}}/system/health"
+            "url": "{{resolvedBaseUrl}}{{resolvedBasePath}}/system/health"
           }
         },
         {
@@ -156,7 +205,7 @@
           "request": {
             "method": "GET",
             "header": [],
-            "url": "{{baseUrl}}/system/version"
+            "url": "{{resolvedBaseUrl}}{{resolvedBasePath}}/system/version"
           }
         }
       ]
@@ -214,7 +263,7 @@
               "mode": "raw",
               "raw": "{\n  \"username\": \"{{generatedUsername}}\",\n  \"password\": \"{{generatedPassword}}\"\n}"
             },
-            "url": "{{baseUrl}}/auth/register"
+            "url": "{{resolvedBaseUrl}}{{resolvedBasePath}}/auth/register"
           }
         },
         {
@@ -279,7 +328,7 @@
               "mode": "raw",
               "raw": "{\n  \"username\": \"{{loginUsername}}\",\n  \"password\": \"{{loginPassword}}\"\n}"
             },
-            "url": "{{baseUrl}}/auth/login"
+            "url": "{{resolvedBaseUrl}}{{resolvedBasePath}}/auth/login"
           }
         },
         {
@@ -290,14 +339,22 @@
               "script": {
                 "type": "text/javascript",
                 "exec": [
-                  "pm.test('status is 200', function () {",
-                  "  pm.response.to.have.status(200);",
-                  "});",
+                  "const expectSessionPersistence = (pm.variables.get('expectSessionPersistence') || 'true').toLowerCase() === 'true';",
                   "",
-                  "const body = pm.response.json();",
-                  "pm.test('me returns the logged-in user', function () {",
-                  "  pm.expect(body.user.username).to.eql(pm.collectionVariables.get('lastLoggedInUsername'));",
-                  "});"
+                  "if (expectSessionPersistence) {",
+                  "  pm.test('status is 200', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "  });",
+                  "",
+                  "  const body = pm.response.json();",
+                  "  pm.test('me returns the logged-in user', function () {",
+                  "    pm.expect(body.user.username).to.eql(pm.collectionVariables.get('lastLoggedInUsername'));",
+                  "  });",
+                  "} else {",
+                  "  pm.test('status is 200 or 401 when session persistence is disabled', function () {",
+                  "    pm.expect(pm.response.code).to.be.oneOf([200, 401]);",
+                  "  });",
+                  "}"
                 ]
               }
             }
@@ -305,7 +362,7 @@
           "request": {
             "method": "GET",
             "header": [],
-            "url": "{{baseUrl}}/auth/me"
+            "url": "{{resolvedBaseUrl}}{{resolvedBasePath}}/auth/me"
           }
         },
         {
@@ -316,9 +373,17 @@
               "script": {
                 "type": "text/javascript",
                 "exec": [
-                  "pm.test('status is 204', function () {",
-                  "  pm.response.to.have.status(204);",
-                  "});"
+                  "const expectSessionPersistence = (pm.variables.get('expectSessionPersistence') || 'true').toLowerCase() === 'true';",
+                  "",
+                  "if (expectSessionPersistence) {",
+                  "  pm.test('status is 204', function () {",
+                  "    pm.response.to.have.status(204);",
+                  "  });",
+                  "} else {",
+                  "  pm.test('status is 204 or 401 when session persistence is disabled', function () {",
+                  "    pm.expect(pm.response.code).to.be.oneOf([204, 401]);",
+                  "  });",
+                  "}"
                 ]
               }
             }
@@ -326,7 +391,7 @@
           "request": {
             "method": "POST",
             "header": [],
-            "url": "{{baseUrl}}/auth/logout"
+            "url": "{{resolvedBaseUrl}}{{resolvedBasePath}}/auth/logout"
           }
         }
       ]
@@ -380,7 +445,7 @@
                 "value": "{{resolvedApiKey}}"
               }
             ],
-            "url": "{{baseUrl}}/weather/current?location={{resolvedLocation}}"
+            "url": "{{resolvedBaseUrl}}{{resolvedBasePath}}/weather/current?location={{resolvedLocation}}"
           }
         },
         {
@@ -428,12 +493,26 @@
                 "value": "{{resolvedApiKey}}"
               }
             ],
-            "url": "{{baseUrl}}/weather/premium-forecast?location={{resolvedLocation}}"
+            "url": "{{resolvedBaseUrl}}{{resolvedBasePath}}/weather/premium-forecast?location={{resolvedLocation}}"
           }
         },
         {
           "name": "Current Weather Without API Key",
           "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const cookieUrl = pm.variables.get('resolvedBaseUrl') || pm.variables.get('baseUrl');",
+                  "pm.cookies.jar().clear(cookieUrl, function (error) {",
+                  "  if (error) {",
+                  "    console.warn(`Unable to clear cookies for ${cookieUrl}: ${error.message || error}`);",
+                  "  }",
+                  "});"
+                ]
+              }
+            },
             {
               "listen": "test",
               "script": {
@@ -454,7 +533,7 @@
           "request": {
             "method": "GET",
             "header": [],
-            "url": "{{baseUrl}}/weather/current?location={{location}}"
+            "url": "{{resolvedBaseUrl}}{{resolvedBasePath}}/weather/current?location={{location}}"
           }
         },
         {
@@ -477,14 +556,22 @@
               "script": {
                 "type": "text/javascript",
                 "exec": [
-                  "pm.test('status is 403', function () {",
-                  "  pm.response.to.have.status(403);",
-                  "});",
+                  "const expectSessionPersistence = (pm.variables.get('expectSessionPersistence') || 'true').toLowerCase() === 'true';",
                   "",
-                  "const body = pm.response.json();",
-                  "pm.test('error is Forbidden', function () {",
-                  "  pm.expect(body.error).to.eql('Forbidden');",
-                  "});"
+                  "if (expectSessionPersistence) {",
+                  "  pm.test('status is 403', function () {",
+                  "    pm.response.to.have.status(403);",
+                  "  });",
+                  "",
+                  "  const body = pm.response.json();",
+                  "  pm.test('error is Forbidden', function () {",
+                  "    pm.expect(body.error).to.eql('Forbidden');",
+                  "  });",
+                  "} else {",
+                  "  pm.test('status is 401 or 403 when session persistence is disabled', function () {",
+                  "    pm.expect(pm.response.code).to.be.oneOf([401, 403]);",
+                  "  });",
+                  "}"
                 ]
               }
             }
@@ -497,7 +584,7 @@
                 "value": "{{resolvedBasicApiKey}}"
               }
             ],
-            "url": "{{baseUrl}}/weather/premium-forecast?location={{resolvedLocation}}"
+            "url": "{{resolvedBaseUrl}}{{resolvedBasePath}}/weather/premium-forecast?location={{resolvedLocation}}"
           }
         },
         {
@@ -549,7 +636,7 @@
               "mode": "raw",
               "raw": "{\n  \"username\": \"{{resolvedBasicUsername}}\",\n  \"password\": \"{{resolvedBasicPassword}}\"\n}"
             },
-            "url": "{{baseUrl}}/auth/login"
+            "url": "{{resolvedBaseUrl}}{{resolvedBasePath}}/auth/login"
           }
         },
         {
@@ -560,14 +647,22 @@
               "script": {
                 "type": "text/javascript",
                 "exec": [
-                  "pm.test('status is 403', function () {",
-                  "  pm.response.to.have.status(403);",
-                  "});",
+                  "const expectSessionPersistence = (pm.variables.get('expectSessionPersistence') || 'true').toLowerCase() === 'true';",
                   "",
-                  "const body = pm.response.json();",
-                  "pm.test('error is Forbidden', function () {",
-                  "  pm.expect(body.error).to.eql('Forbidden');",
-                  "});"
+                  "if (expectSessionPersistence) {",
+                  "  pm.test('status is 403', function () {",
+                  "    pm.response.to.have.status(403);",
+                  "  });",
+                  "",
+                  "  const body = pm.response.json();",
+                  "  pm.test('error is Forbidden', function () {",
+                  "    pm.expect(body.error).to.eql('Forbidden');",
+                  "  });",
+                  "} else {",
+                  "  pm.test('status is 401 or 403 when session persistence is disabled', function () {",
+                  "    pm.expect(pm.response.code).to.be.oneOf([401, 403]);",
+                  "  });",
+                  "}"
                 ]
               }
             }
@@ -575,7 +670,7 @@
           "request": {
             "method": "GET",
             "header": [],
-            "url": "{{baseUrl}}/weather/premium-forecast?location={{location}}"
+            "url": "{{resolvedBaseUrl}}{{resolvedBasePath}}/weather/premium-forecast?location={{location}}"
           }
         }
       ]

@@ -7,7 +7,8 @@ data "aws_availability_zones" "available" {
 }
 
 locals {
-  availability_zones = slice(data.aws_availability_zones.available.names, 0, 2)
+  availability_zones    = slice(data.aws_availability_zones.available.names, 0, 2)
+  flow_logs_bucket_name = "${var.name}-${data.aws_region.current.region}-${data.aws_caller_identity.current.account_id}-vpc-flow-logs"
   private_subnets = {
     for index, az in local.availability_zones :
     az => cidrsubnet(var.vpc_cidr, 4, index + 8)
@@ -183,60 +184,134 @@ resource "aws_vpc_endpoint" "s3" {
   })
 }
 
-resource "aws_iam_role" "flow_logs" {
-  name = "${var.name}-vpc-flow-logs"
-  assume_role_policy = jsonencode({
-    Version = "2012-10-17"
-    Statement = [
-      {
-        Effect = "Allow"
-        Action = "sts:AssumeRole"
-        Principal = {
-          Service = "vpc-flow-logs.amazonaws.com"
-        }
-      }
-    ]
-  })
+data "aws_iam_policy_document" "vpc_flow_logs_bucket" {
+  statement {
+    sid = "AWSLogDeliveryAclCheck"
+
+    actions = ["s3:GetBucketAcl"]
+
+    principals {
+      identifiers = ["delivery.logs.amazonaws.com"]
+      type        = "Service"
+    }
+
+    resources = [aws_s3_bucket.vpc_flow_logs.arn]
+
+    condition {
+      test     = "StringEquals"
+      variable = "aws:SourceAccount"
+      values   = [data.aws_caller_identity.current.account_id]
+    }
+
+    condition {
+      test     = "ArnLike"
+      variable = "aws:SourceArn"
+      values   = ["arn:aws:logs:${data.aws_region.current.region}:${data.aws_caller_identity.current.account_id}:*"]
+    }
+  }
+
+  statement {
+    sid = "AWSLogDeliveryWrite"
+
+    actions = ["s3:PutObject"]
+
+    principals {
+      identifiers = ["delivery.logs.amazonaws.com"]
+      type        = "Service"
+    }
+
+    resources = ["${aws_s3_bucket.vpc_flow_logs.arn}/AWSLogs/${data.aws_caller_identity.current.account_id}/*"]
+
+    condition {
+      test     = "StringEquals"
+      variable = "s3:x-amz-acl"
+      values   = ["bucket-owner-full-control"]
+    }
+
+    condition {
+      test     = "StringEquals"
+      variable = "aws:SourceAccount"
+      values   = [data.aws_caller_identity.current.account_id]
+    }
+
+    condition {
+      test     = "ArnLike"
+      variable = "aws:SourceArn"
+      values   = ["arn:aws:logs:${data.aws_region.current.region}:${data.aws_caller_identity.current.account_id}:*"]
+    }
+  }
+}
+
+resource "aws_s3_bucket" "vpc_flow_logs" {
+  bucket = local.flow_logs_bucket_name
 
   tags = var.tags
 }
 
-#tfsec:ignore:aws-iam-no-policy-wildcards VPC Flow Logs creates dynamic log streams beneath this dedicated log group, which requires a wildcard log-stream suffix.
-resource "aws_iam_role_policy" "flow_logs" {
-  name = "${var.name}-vpc-flow-logs"
-  role = aws_iam_role.flow_logs.id
-  policy = jsonencode({
-    Version = "2012-10-17"
-    Statement = [
-      {
-        Effect = "Allow"
-        Action = [
-          "logs:CreateLogStream",
-          "logs:DescribeLogGroups",
-          "logs:DescribeLogStreams",
-          "logs:PutLogEvents"
-        ]
-        Resource = [
-          aws_cloudwatch_log_group.vpc_flow_logs.arn,
-          "${aws_cloudwatch_log_group.vpc_flow_logs.arn}:*"
-        ]
-      }
-    ]
-  })
+resource "aws_s3_bucket_policy" "vpc_flow_logs" {
+  bucket = aws_s3_bucket.vpc_flow_logs.id
+  policy = data.aws_iam_policy_document.vpc_flow_logs_bucket.json
 }
 
-resource "aws_cloudwatch_log_group" "vpc_flow_logs" {
-  name              = "/${var.name}/networking/vpc-flow-logs"
-  kms_key_id        = var.kms_key_arn
-  retention_in_days = 14
+resource "aws_s3_bucket_public_access_block" "vpc_flow_logs" {
+  bucket = aws_s3_bucket.vpc_flow_logs.id
 
-  tags = var.tags
+  block_public_acls       = true
+  block_public_policy     = true
+  ignore_public_acls      = true
+  restrict_public_buckets = true
+}
+
+resource "aws_s3_bucket_server_side_encryption_configuration" "vpc_flow_logs" {
+  bucket = aws_s3_bucket.vpc_flow_logs.id
+
+  rule {
+    apply_server_side_encryption_by_default {
+      kms_master_key_id = var.kms_key_arn
+      sse_algorithm     = "aws:kms"
+    }
+
+    bucket_key_enabled = true
+  }
+}
+
+resource "aws_s3_bucket_versioning" "vpc_flow_logs" {
+  bucket = aws_s3_bucket.vpc_flow_logs.id
+
+  versioning_configuration {
+    status = "Enabled"
+  }
+}
+
+resource "aws_s3_bucket_lifecycle_configuration" "vpc_flow_logs" {
+  bucket = aws_s3_bucket.vpc_flow_logs.id
+
+  rule {
+    id     = "expire-flow-logs"
+    status = "Enabled"
+
+    expiration {
+      days = 30
+    }
+  }
+
+  depends_on = [aws_s3_bucket_versioning.vpc_flow_logs]
+}
+
+resource "aws_s3_bucket_logging" "vpc_flow_logs" {
+  bucket        = aws_s3_bucket.vpc_flow_logs.id
+  target_bucket = aws_s3_bucket.vpc_flow_logs.id
+  target_prefix = "access-logs/"
 }
 
 resource "aws_flow_log" "this" {
-  iam_role_arn         = aws_iam_role.flow_logs.arn
-  log_destination_type = "cloud-watch-logs"
-  log_destination      = aws_cloudwatch_log_group.vpc_flow_logs.arn
+  log_destination_type = "s3"
+  log_destination      = aws_s3_bucket.vpc_flow_logs.arn
   traffic_type         = "ALL"
   vpc_id               = aws_vpc.this.id
+
+  depends_on = [
+    aws_s3_bucket_policy.vpc_flow_logs,
+    aws_s3_bucket_server_side_encryption_configuration.vpc_flow_logs
+  ]
 }

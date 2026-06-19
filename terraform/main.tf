@@ -26,18 +26,12 @@ provider "aws" {
 }
 
 locals {
-  cluster_name    = "${var.project_name}-${var.environment}"
-  api_domain_name = coalesce(var.api_domain_name, "api.${var.domain_name}")
-  api_nlb_name    = "${var.project_name}-${var.environment}-api-nlb"
+  cluster_name = "${var.project_name}-${var.environment}"
   api_service_annotations = {
-    "service.beta.kubernetes.io/aws-load-balancer-healthcheck-path"     = "/api/v1/system/health"
-    "service.beta.kubernetes.io/aws-load-balancer-healthcheck-port"     = "8080"
-    "service.beta.kubernetes.io/aws-load-balancer-healthcheck-protocol" = "HTTP"
-    "service.beta.kubernetes.io/aws-load-balancer-name"                 = local.api_nlb_name
-    "service.beta.kubernetes.io/aws-load-balancer-nlb-target-type"      = "ip"
-    "service.beta.kubernetes.io/aws-load-balancer-scheme"               = "internal"
-    "service.beta.kubernetes.io/aws-load-balancer-subnets"              = join(",", module.networking.private_subnet_ids)
-    "service.beta.kubernetes.io/aws-load-balancer-type"                 = "external"
+    "alb.ingress.kubernetes.io/healthcheck-path" = "/api/v1/system/ready"
+    "alb.ingress.kubernetes.io/healthcheck-port" = "8080"
+    "alb.ingress.kubernetes.io/success-codes"    = "200"
+    "alb.ingress.kubernetes.io/target-type"      = "ip"
   }
   common_tags = {
     Environment = var.environment
@@ -88,21 +82,27 @@ module "eks" {
   vpc_id             = module.networking.vpc_id
 }
 
-data "aws_eks_cluster_auth" "this" {
-  name = module.eks.cluster_name
-}
-
 provider "kubernetes" {
   host                   = module.eks.cluster_endpoint
   cluster_ca_certificate = base64decode(module.eks.cluster_certificate_authority_data)
-  token                  = data.aws_eks_cluster_auth.this.token
+  
+  exec {
+    api_version = "client.authentication.k8s.io/v1beta1"
+    args        = ["eks", "get-token", "--cluster-name", module.eks.cluster_name]
+    command     = "aws"
+  }
 }
 
 provider "helm" {
   kubernetes = {
     host                   = module.eks.cluster_endpoint
     cluster_ca_certificate = base64decode(module.eks.cluster_certificate_authority_data)
-    token                  = data.aws_eks_cluster_auth.this.token
+    
+    exec = {
+      api_version = "client.authentication.k8s.io/v1beta1"
+      args        = ["eks", "get-token", "--cluster-name", module.eks.cluster_name]
+      command     = "aws"
+    }
   }
 }
 
@@ -235,7 +235,8 @@ module "observability" {
   tags                          = local.common_tags
 
   depends_on = [
-    kubernetes_namespace_v1.observability
+    kubernetes_namespace_v1.observability,
+    helm_release.aws_load_balancer_controller
   ]
 }
 
@@ -244,7 +245,7 @@ module "acm" {
 
   domain_name               = var.domain_name
   hosted_zone_id            = var.hosted_zone_id
-  subject_alternative_names = distinct(concat(var.subject_alternative_names, [local.api_domain_name]))
+  subject_alternative_names = var.subject_alternative_names
   tags                      = local.common_tags
 }
 
@@ -255,19 +256,12 @@ module "waf" {
   tags         = local.common_tags
 }
 
-module "api_waf" {
-  source = "./modules/waf"
-
-  project_name = "${local.cluster_name}-api"
-  tags         = local.common_tags
-}
-
 resource "helm_release" "weather_sim" {
   name             = "weather-sim"
   namespace        = kubernetes_namespace_v1.app.metadata[0].name
   chart            = "${path.module}/../app/deployment/weather-sim/charts"
   create_namespace = false
-  wait             = true
+  wait             = false
 
   depends_on = [
     helm_release.aws_load_balancer_controller,
@@ -282,13 +276,14 @@ resource "helm_release" "weather_sim" {
         web = "${module.ecr.web_repository_url}:latest"
       }
       secrets = {
-        sessionSecretName = module.secrets.session_secret_name
-        apiKeySecretName  = module.secrets.api_keys_secret_name
+        sessionSecretName = replace(module.secrets.session_secret_name, "/", "-")
+        apiKeySecretName  = replace(module.secrets.api_keys_secret_name, "/", "-")
       }
       ingress = {
         enabled = false
       }
       service = {
+        apiType        = "ClusterIP"
         apiAnnotations = local.api_service_annotations
       }
     })
@@ -296,6 +291,8 @@ resource "helm_release" "weather_sim" {
 }
 
 resource "kubernetes_ingress_v1" "weather_sim_public" {
+  wait_for_load_balancer = true
+
   metadata {
     name      = "weather-sim"
     namespace = kubernetes_namespace_v1.app.metadata[0].name
@@ -319,6 +316,21 @@ resource "kubernetes_ingress_v1" "weather_sim_public" {
       host = var.domain_name
 
       http {
+        path {
+          path      = "/api"
+          path_type = "Prefix"
+
+          backend {
+            service {
+              name = "weather-sim-api"
+
+              port {
+                number = 8080
+              }
+            }
+          }
+        }
+
         path {
           path      = "/"
           path_type = "Prefix"
@@ -356,25 +368,6 @@ data "kubernetes_ingress_v1" "weather_sim" {
 
   depends_on = [
     kubernetes_ingress_v1.weather_sim_public
-  ]
-}
-
-module "api_edge" {
-  source = "./modules/api_edge"
-
-  access_log_retention_days = var.cloudwatch_log_retention_days
-  api_domain_name           = local.api_domain_name
-  certificate_arn           = module.acm.certificate_arn
-  hosted_zone_id            = var.hosted_zone_id
-  kms_key_arn               = module.logging.kms_key_arn
-  nlb_name                  = local.api_nlb_name
-  project_name              = local.cluster_name
-  tags                      = local.common_tags
-  waf_acl_arn               = module.api_waf.web_acl_arn
-
-  depends_on = [
-    helm_release.weather_sim,
-    module.acm
   ]
 }
 

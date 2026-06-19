@@ -8,15 +8,16 @@ let app: Express;
 let redisContainer: StartedTestContainer;
 let redisProbeClient: Redis;
 let appRedisClient: Redis | undefined;
+const runRedisIntegration = process.env.ENABLE_REDIS_INTEGRATION_TESTS === 'true';
+const describeRedisIntegration = runRedisIntegration ? describe : describe.skip;
 
-describe('Express API integration', () => {
+describeRedisIntegration('Express API integration', () => {
   beforeAll(async () => {
     redisContainer = await new GenericContainer('redis:8.6.1')
       .withExposedPorts(6379)
       .start();
 
     process.env.NODE_ENV = 'test';
-    process.env.ENABLE_REDIS_INTEGRATION_TESTS = 'true';
     process.env.REDIS_URL = `redis://${redisContainer.getHost()}:${redisContainer.getMappedPort(6379)}`;
 
     vi.resetModules();

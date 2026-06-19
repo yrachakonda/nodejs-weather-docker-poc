@@ -105,42 +105,27 @@ resource "helm_release" "strimzi" {
   ]
 }
 
-resource "kubernetes_manifest" "kafka_node_pool" {
-  manifest = yamldecode(templatefile("${path.module}/../../manifests/observability/kafka-node-pool.yaml.tmpl", {
-    kafka_cluster_name      = local.kafka_cluster_name
-    observability_namespace = var.observability_namespace
-    kafka_storage_size      = var.kafka_storage_size
-  }))
+resource "helm_release" "strimzi_resources" {
+  name             = "strimzi-resources"
+  namespace        = var.observability_namespace
+  chart            = "${path.module}/charts/strimzi-resources"
+  create_namespace = false
+  wait             = true
+  timeout          = 600
+
+  values = [
+    yamlencode({
+      kafkaClusterName      = local.kafka_cluster_name
+      kafkaRetentionHours   = var.kafka_retention_hours
+      kafkaStorageSize      = var.kafka_storage_size
+      kafkaTopicName        = var.kafka_topic_name
+      kafkaVersion          = var.kafka_version
+      observabilityNamespace = var.observability_namespace
+    })
+  ]
 
   depends_on = [
     helm_release.strimzi
-  ]
-}
-
-resource "kubernetes_manifest" "kafka_cluster" {
-  manifest = yamldecode(templatefile("${path.module}/../../manifests/observability/kafka-cluster.yaml.tmpl", {
-    kafka_cluster_name      = local.kafka_cluster_name
-    observability_namespace = var.observability_namespace
-    kafka_version           = var.kafka_version
-    kafka_retention_hours   = var.kafka_retention_hours
-  }))
-
-  depends_on = [
-    helm_release.strimzi,
-    kubernetes_manifest.kafka_node_pool
-  ]
-}
-
-resource "kubernetes_manifest" "kafka_topic" {
-  manifest = yamldecode(templatefile("${path.module}/../../manifests/observability/kafka-topic.yaml.tmpl", {
-    kafka_cluster_name      = local.kafka_cluster_name
-    kafka_topic_name        = var.kafka_topic_name
-    observability_namespace = var.observability_namespace
-    kafka_retention_hours   = var.kafka_retention_hours
-  }))
-
-  depends_on = [
-    kubernetes_manifest.kafka_cluster
   ]
 }
 
@@ -161,7 +146,7 @@ resource "helm_release" "kafbat_ui" {
   ]
 
   depends_on = [
-    kubernetes_manifest.kafka_cluster
+    helm_release.strimzi_resources
   ]
 }
 
@@ -249,7 +234,7 @@ resource "helm_release" "fluent_bit" {
     aws_cloudwatch_log_group.fluent_bit,
     aws_cloudwatch_log_stream.fluent_bit,
     aws_iam_role_policy.fluent_bit_cloudwatch,
-    kubernetes_manifest.kafka_cluster,
+    helm_release.strimzi_resources,
     kubernetes_service_account_v1.fluent_bit
   ]
 }

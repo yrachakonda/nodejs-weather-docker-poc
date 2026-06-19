@@ -22,7 +22,7 @@ jobs:
                 set -euo pipefail
 
                 if ! command -v terraform >/dev/null 2>&1; then
-                  TERRAFORM_VERSION="1.11.4"
+                  TERRAFORM_VERSION="1.14.8"
                   curl -fsSL "https://releases.hashicorp.com/terraform/${TERRAFORM_VERSION}/terraform_${TERRAFORM_VERSION}_linux_amd64.zip" -o terraform.zip
                   unzip terraform.zip
                   sudo mv terraform /usr/local/bin/terraform
