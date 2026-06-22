@@ -9,7 +9,8 @@ mock_provider "aws" {
 
   mock_data "aws_region" {
     defaults = {
-      name = "us-east-1"
+      name   = "us-east-1"
+      region = "us-east-1"
     }
   }
 
@@ -40,5 +41,10 @@ run "logging_exposes_shared_telemetry_key" {
   assert {
     condition     = aws_kms_alias.telemetry.name == "alias/weather-sim-test-telemetry"
     error_message = "The telemetry KMS key should expose a stable alias."
+  }
+
+  assert {
+    condition     = strcontains(aws_kms_key.telemetry.policy, "delivery.logs.amazonaws.com")
+    error_message = "The telemetry KMS key must allow the VPC flow logs delivery service to use the key."
   }
 }

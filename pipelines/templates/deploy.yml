@@ -51,6 +51,26 @@ jobs:
             - bash: |
                 set -euo pipefail
 
+                if [[ -z "${AWS_ACCESS_KEY_ID:-}" || -z "${AWS_SECRET_ACCESS_KEY:-}" || "${AWS_ACCESS_KEY_ID}" == *'$('* || "${AWS_SECRET_ACCESS_KEY}" == *'$('* ]]; then
+                  echo "##vso[task.logissue type=error]AWS credentials are missing. Set AWS_ACCESS_KEY_ID and AWS_SECRET_ACCESS_KEY as secure pipeline variables."
+                  exit 1
+                fi
+
+                # Treat unresolved macro values as absent so long-lived keys still work.
+                if [[ "${AWS_SESSION_TOKEN:-}" == *'$('* ]]; then
+                  unset AWS_SESSION_TOKEN
+                fi
+
+                # Long-lived IAM access keys (AKIA...) should not be paired with a session token.
+                if [[ "${AWS_ACCESS_KEY_ID}" != ASIA* ]]; then
+                  unset AWS_SESSION_TOKEN
+                fi
+
+                if ! aws sts get-caller-identity --output json >/dev/null 2>&1; then
+                  echo "##vso[task.logissue type=error]Invalid AWS credentials/token. If using temporary STS credentials, refresh AWS_SESSION_TOKEN. If using long-lived keys, clear AWS_SESSION_TOKEN."
+                  exit 1
+                fi
+
                 AWS_ACCOUNT_ID="$(aws sts get-caller-identity --query Account --output text)"
                 ECR_REGISTRY="${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com"
 
@@ -63,25 +83,48 @@ jobs:
                   --from-literal="${SESSION_SECRET_KEY}=${SESSION_SECRET_VALUE}" \
                   --dry-run=client -o yaml | kubectl apply -f -
 
+                # If ingress already exists (created outside Helm), adopt it into this release.
+                if kubectl get ingress weather-sim --namespace "${KUBERNETES_NAMESPACE}" >/dev/null 2>&1; then
+                  kubectl label ingress weather-sim \
+                    --namespace "${KUBERNETES_NAMESPACE}" \
+                    app.kubernetes.io/managed-by=Helm \
+                    --overwrite
+
+                  kubectl annotate ingress weather-sim \
+                    --namespace "${KUBERNETES_NAMESPACE}" \
+                    meta.helm.sh/release-name="${HELM_RELEASE_NAME}" \
+                    meta.helm.sh/release-namespace="${KUBERNETES_NAMESPACE}" \
+                    --overwrite
+                fi
+
+                # Older deployments may have SESSION_SECRET key parsed as a number.
+                # Normalize it to a string so Helm strategic patching can proceed.
+                if kubectl get deployment weather-sim-api --namespace "${KUBERNETES_NAMESPACE}" >/dev/null 2>&1; then
+                  kubectl patch deployment weather-sim-api \
+                    --namespace "${KUBERNETES_NAMESPACE}" \
+                    --type strategic \
+                    -p "{\"spec\":{\"template\":{\"spec\":{\"containers\":[{\"name\":\"api\",\"env\":[{\"name\":\"SESSION_SECRET\",\"valueFrom\":{\"secretKeyRef\":{\"name\":\"${SESSION_SECRET_NAME}\",\"key\":\"${SESSION_SECRET_KEY}\"}}}]}]}}}}"
+                fi
+
                 HELM_ARGS=(
                   upgrade --install "${HELM_RELEASE_NAME}" "${CHART_PATH}"
                   --namespace "${KUBERNETES_NAMESPACE}"
                   --create-namespace
                   --wait
                   -f "${HELM_VALUES_FILE}"
-                  --set "image.api=${ECR_REGISTRY}/${API_REPOSITORY}:latest"
-                  --set "image.web=${ECR_REGISTRY}/${WEB_REPOSITORY}:latest"
+                  --set "image.api=${ECR_REGISTRY}/${API_REPOSITORY}:$(Build.SourceVersion)"
+                  --set "image.web=${ECR_REGISTRY}/${WEB_REPOSITORY}:$(Build.SourceVersion)"
                   --set "env.CORS_ORIGIN=https://${APP_HOST}"
                   --set "env.APP_VERSION=$(Build.SourceVersion)"
                   --set "ingress.enabled=true"
                   --set "ingress.className=alb"
                   --set "ingress.host=${APP_HOST}"
-                  --set "secrets.sessionSecretName=${SESSION_SECRET_NAME}"
-                  --set "secrets.sessionSecretKey=${SESSION_SECRET_KEY}"
+                  --set-string "secrets.sessionSecretName=${SESSION_SECRET_NAME}"
+                  --set-string "secrets.sessionSecretKey=${SESSION_SECRET_KEY}"
                   --set-string "ingress.annotations.kubernetes\\.io/ingress\\.class=alb"
                   --set-string "ingress.annotations.alb\\.ingress\\.kubernetes\\.io/scheme=internet-facing"
                   --set-string "ingress.annotations.alb\\.ingress\\.kubernetes\\.io/target-type=ip"
-                  --set-string "ingress.annotations.alb\\.ingress\\.kubernetes\\.io/listen-ports=[{\"HTTP\":80},{\"HTTPS\":443}]"
+                  --set-string "ingress.annotations.alb\\.ingress\\.kubernetes\\.io/listen-ports=[{\"HTTP\":80}\,{\"HTTPS\":443}]"
                   --set-string "ingress.annotations.alb\\.ingress\\.kubernetes\\.io/ssl-redirect=443"
                   --set-string "service.apiAnnotations.alb\\.ingress\\.kubernetes\\.io/healthcheck-path=/api/v1/system/health"
                 )

@@ -44,8 +44,8 @@ output "web_acl_arn" {
 }
 
 output "api_web_acl_arn" {
-  description = "WAFv2 ACL ARN associated with the API Gateway stage."
-  value       = module.api_waf.web_acl_arn
+  description = "WAFv2 ACL ARN associated with the shared ingress ALB, including the API path."
+  value       = module.waf.web_acl_arn
 }
 
 output "application_hostname" {
@@ -54,88 +54,88 @@ output "application_hostname" {
 }
 
 output "api_hostname" {
-  description = "DNS hostname published for the API Gateway custom domain."
-  value       = local.api_domain_name
+  description = "DNS hostname published for the API path on the shared ingress."
+  value       = var.domain_name
 }
 
 output "api_invoke_url" {
-  description = "Public API base URL exposed through API Gateway."
-  value       = module.api_edge.api_base_url
+  description = "Public API base URL exposed through the shared ingress ALB."
+  value       = "https://${var.domain_name}/api/v1"
 }
 
 output "api_gateway_invoke_url" {
-  description = "API Gateway stage invoke URL."
-  value       = module.api_edge.api_gateway_invoke_url
+  description = "Deprecated alias for api_invoke_url after moving API traffic to the shared ingress ALB."
+  value       = "https://${var.domain_name}/api/v1"
 }
 
 output "api_gateway_rest_api_id" {
-  description = "REST API identifier for the public API edge."
-  value       = module.api_edge.api_gateway_rest_api_id
+  description = "Deprecated. API Gateway is no longer provisioned for the public API edge."
+  value       = null
 }
 
 output "api_gateway_vpc_link_id" {
-  description = "Identifier of the API Gateway VPC link."
-  value       = module.api_edge.api_gateway_vpc_link_id
+  description = "Deprecated. API Gateway VPC Link is no longer provisioned."
+  value       = null
 }
 
 output "api_gateway_integration_type" {
-  description = "Integration type used by the API Gateway route."
-  value       = module.api_edge.api_gateway_integration_type
+  description = "Deprecated. API Gateway integration is no longer provisioned."
+  value       = null
 }
 
 output "api_gateway_integration_connection_type" {
-  description = "Connection type used by the API Gateway integration."
-  value       = module.api_edge.api_gateway_integration_connection_type
+  description = "Deprecated. API Gateway integration is no longer provisioned."
+  value       = null
 }
 
 output "api_gateway_stage_arn" {
-  description = "ARN of the API Gateway stage protected by WAF."
-  value       = module.api_edge.api_gateway_stage_arn
+  description = "Deprecated. API Gateway stage is no longer provisioned."
+  value       = null
 }
 
 output "api_gateway_access_log_group_name" {
-  description = "CloudWatch log group name receiving API Gateway access logs."
-  value       = module.api_edge.api_gateway_access_log_group_name
+  description = "Deprecated. API Gateway access logging is no longer provisioned."
+  value       = null
 }
 
 output "api_gateway_xray_tracing_enabled" {
-  description = "Whether X-Ray tracing is enabled for the API Gateway stage."
-  value       = module.api_edge.api_gateway_xray_tracing_enabled
+  description = "Deprecated. API Gateway X-Ray tracing is no longer provisioned."
+  value       = null
 }
 
 output "api_gateway_waf_association_resource_arn" {
-  description = "Resource ARN targeted by the API Gateway WAF association."
-  value       = module.api_edge.api_gateway_waf_association_resource_arn
+  description = "Deprecated. API Gateway WAF association is no longer provisioned."
+  value       = null
 }
 
 output "api_service_load_balancer_scheme" {
-  description = "Load balancer scheme annotation applied to the API service."
-  value       = local.api_service_annotations["service.beta.kubernetes.io/aws-load-balancer-scheme"]
+  description = "Scheme applied to the shared ingress ALB that serves the API path."
+  value       = kubernetes_ingress_v1.weather_sim_public.metadata[0].annotations["alb.ingress.kubernetes.io/scheme"]
 }
 
 output "api_service_load_balancer_target_type" {
-  description = "NLB target type annotation applied to the API service."
-  value       = local.api_service_annotations["service.beta.kubernetes.io/aws-load-balancer-nlb-target-type"]
+  description = "Target type annotation applied to the API service for ingress backends."
+  value       = local.api_service_annotations["alb.ingress.kubernetes.io/target-type"]
 }
 
 output "api_service_healthcheck_port" {
   description = "Health check port annotation applied to the API service."
-  value       = local.api_service_annotations["service.beta.kubernetes.io/aws-load-balancer-healthcheck-port"]
+  value       = local.api_service_annotations["alb.ingress.kubernetes.io/healthcheck-port"]
 }
 
 output "api_service_healthcheck_path" {
   description = "Health check path annotation applied to the API service."
-  value       = local.api_service_annotations["service.beta.kubernetes.io/aws-load-balancer-healthcheck-path"]
+  value       = local.api_service_annotations["alb.ingress.kubernetes.io/healthcheck-path"]
 }
 
 output "api_nlb_hostname" {
-  description = "Hostname of the internal NLB fronting the API service."
-  value       = module.api_edge.api_nlb_hostname
+  description = "Deprecated. The API service is no longer fronted by a dedicated NLB."
+  value       = null
 }
 
 output "api_nlb_arn" {
-  description = "ARN of the internal NLB fronting the API service."
-  value       = module.api_edge.api_nlb_arn
+  description = "Deprecated. The API service is no longer fronted by a dedicated NLB."
+  value       = null
 }
 
 output "observability_namespace" {

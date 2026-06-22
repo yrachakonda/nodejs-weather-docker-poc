@@ -1,0 +1,6 @@
+kafkaClusterName: weather-sim-kafka
+observabilityNamespace: observability
+kafkaStorageSize: 20Gi
+kafkaVersion: 4.0.0
+kafkaRetentionHours: 72
+kafkaTopicName: weather-sim.logs

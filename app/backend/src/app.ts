@@ -13,6 +13,9 @@ import { errorHandler } from './middleware/error-handler';
 
 export const app = express();
 
+// Required when running behind API Gateway / load balancers so secure cookies are honored.
+app.set('trust proxy', 1);
+
 app.use(helmet());
 app.use(cors({ origin: env.CORS_ORIGIN, credentials: true }));
 app.use(express.json());

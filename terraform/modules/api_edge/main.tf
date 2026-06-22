@@ -25,10 +25,7 @@ resource "aws_api_gateway_resource" "proxy" {
   rest_api_id = aws_api_gateway_rest_api.this.id
 }
 
-# This edge is intentionally internet-reachable behind WAF and forwards to an
-# application that already enforces its own session and API-key authorization.
 resource "aws_api_gateway_method" "proxy" {
-  #tfsec:ignore:aws-api-gateway-no-public-access
   authorization = "NONE"
   http_method   = "ANY"
   resource_id   = aws_api_gateway_resource.proxy.id

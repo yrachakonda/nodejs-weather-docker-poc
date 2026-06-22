@@ -421,10 +421,12 @@ curl -i -H "x-api-key: ${BASIC_API_KEY}" "${BASE_URL}/weather/premium-forecast?l
 
 ### Option 2: Postman
 - Import `app/tests/postman/weather-sim.postman_collection.json`
-- Set `baseUrl` to either `http://localhost:8080/api/v1` or the deployed API URL such as `https://api.example.com/api/v1`
+- For local Docker Compose, set `baseUrl=http://localhost:8080` and `basePath=/api/v1`
+- For the deployed EKS API Gateway endpoint, set `baseUrl=https://api.weather-poc.rheemconnect.com` and `basePath=` (empty)
+- For EKS runs where session-backed requests are unstable, set `expectSessionPersistence=false` so `/auth/me`, `/auth/logout`, and "Premium Forecast As Basic User" accept the documented fallback status codes.
 - Set `apiKey` to `poc-premium-key-001`
 - Set `basicApiKey` when you want to exercise the negative authorization requests
-- Use the collection variables for `premiumUsername`, `premiumPassword`, `basicUsername`, and `basicPassword` if the target deployment does not use the default seeded values
+- Use the collection variables for `username`, `password`, `basicUsername`, and `basicPassword` if the target deployment does not use the default seeded values
 - Run the system, auth, weather, and negative authorization folders in order
 
 [Back to Table of Contents](#table-of-contents)

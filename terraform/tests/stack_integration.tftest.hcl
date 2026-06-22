@@ -15,13 +15,15 @@ mock_provider "aws" {
 
   mock_data "aws_caller_identity" {
     defaults = {
+      arn        = "arn:aws:iam::123456789012:role/terraform-test-role"
       account_id = "123456789012"
     }
   }
 
   mock_data "aws_region" {
     defaults = {
-      name = "us-east-1"
+      name   = "us-east-1"
+      region = "us-east-1"
     }
   }
 
@@ -151,30 +153,6 @@ override_data {
   }
 }
 
-override_resource {
-  override_during = plan
-  target          = module.api_edge.aws_api_gateway_vpc_link.this
-  values = {
-    id = "vpclink-123456"
-  }
-}
-
-override_resource {
-  override_during = plan
-  target          = module.api_edge.aws_api_gateway_stage.this
-  values = {
-    arn = "arn:aws:apigateway:us-east-1::/restapis/test-api/stages/prod"
-  }
-}
-
-override_resource {
-  override_during = plan
-  target          = module.api_edge.aws_wafv2_web_acl_association.this
-  values = {
-    resource_arn = "arn:aws:apigateway:us-east-1::/restapis/test-api/stages/prod"
-  }
-}
-
 run "root_stack_wires_networking_ingress_and_waf" {
   command = plan
 
@@ -210,8 +188,8 @@ run "root_stack_wires_networking_ingress_and_waf" {
   }
 
   assert {
-    condition     = module.networking.vpc_flow_log_group_name == "/weather-sim-poc/networking/vpc-flow-logs"
-    error_message = "The root stack must enable VPC flow logs in the expected log group."
+    condition     = module.networking.vpc_flow_logs_bucket_name == "weather-sim-poc-us-east-1-123456789012-vpc-flow-logs"
+    error_message = "The root stack must enable VPC flow logs in the expected S3 bucket."
   }
 
   assert {
@@ -260,7 +238,7 @@ run "root_stack_wires_networking_ingress_and_waf" {
   }
 }
 
-run "root_stack_exposes_api_gateway_for_public_api_traffic" {
+run "root_stack_exposes_api_via_shared_ingress" {
   command = plan
 
   variables {
@@ -275,62 +253,72 @@ run "root_stack_exposes_api_gateway_for_public_api_traffic" {
   }
 
   assert {
-    condition     = startswith(output.api_gateway_invoke_url, "https://")
-    error_message = "The root stack must expose an HTTPS API Gateway invoke URL."
+    condition     = output.api_invoke_url == "https://weather-poc.example.com/api/v1"
+    error_message = "The root stack must expose the API through the shared application hostname and /api/v1 path."
   }
 
   assert {
-    condition     = output.api_gateway_vpc_link_id != null && output.api_gateway_vpc_link_id != ""
-    error_message = "The root stack must expose the VPC Link used for private API integration."
+    condition     = output.api_hostname == output.application_hostname
+    error_message = "The API hostname should reuse the shared application hostname."
   }
 
   assert {
-    condition     = output.api_gateway_integration_type == "HTTP_PROXY"
-    error_message = "The API Gateway integration must be an HTTP proxy integration."
+    condition     = output.api_web_acl_arn == output.web_acl_arn
+    error_message = "The API path should share the same WAF-protected ALB edge as the web application."
   }
 
   assert {
-    condition     = output.api_gateway_integration_connection_type == "VPC_LINK"
-    error_message = "The API Gateway integration must use a VPC Link."
+    condition     = output.api_gateway_invoke_url == output.api_invoke_url
+    error_message = "The deprecated API Gateway invoke URL output should point to the shared ingress API URL."
   }
 
   assert {
-    condition     = startswith(output.api_gateway_stage_arn, "arn:aws:apigateway:")
-    error_message = "The API Gateway stage ARN must be exposed for downstream WAF association checks."
+    condition     = output.api_gateway_rest_api_id == null
+    error_message = "The root stack should no longer provision a separate API Gateway REST API."
   }
 
   assert {
-    condition     = output.api_gateway_access_log_group_name == "/aws/apigateway/weather-sim-poc-api-prod"
-    error_message = "The API Gateway stage must publish access logs to the expected CloudWatch log group."
+    condition     = output.api_gateway_vpc_link_id == null
+    error_message = "The root stack should no longer provision a VPC Link for API traffic."
   }
 
   assert {
-    condition     = output.api_gateway_xray_tracing_enabled == true
-    error_message = "The API Gateway stage must enable X-Ray tracing."
+    condition     = output.api_gateway_integration_type == null && output.api_gateway_integration_connection_type == null
+    error_message = "The root stack should no longer expose API Gateway integration metadata."
   }
 
   assert {
-    condition     = output.api_gateway_waf_association_resource_arn == output.api_gateway_stage_arn
-    error_message = "The WAF association must target the API Gateway stage ARN."
+    condition     = output.api_gateway_stage_arn == null && output.api_gateway_waf_association_resource_arn == null
+    error_message = "The root stack should no longer expose API Gateway stage or WAF association outputs."
   }
 
   assert {
-    condition     = output.api_service_load_balancer_scheme == "internal"
-    error_message = "The API workload must be published through an internal load balancer."
+    condition     = output.api_gateway_access_log_group_name == null && output.api_gateway_xray_tracing_enabled == null
+    error_message = "The root stack should no longer provision API Gateway access logging or X-Ray metadata."
+  }
+
+  assert {
+    condition     = output.api_service_load_balancer_scheme == "internet-facing"
+    error_message = "The API path should be served through the shared internet-facing ALB ingress."
   }
 
   assert {
     condition     = output.api_service_load_balancer_target_type == "ip"
-    error_message = "The API load balancer must use IP targets for the EKS pods."
+    error_message = "The shared ingress target group for the API should use IP targets."
   }
 
   assert {
     condition     = output.api_service_healthcheck_port == "8080"
-    error_message = "The API load balancer health check port must match the backend API container port."
+    error_message = "The API ingress health check port must match the backend API container port."
   }
 
   assert {
-    condition     = output.api_service_healthcheck_path == "/api/v1/system/health"
-    error_message = "The API load balancer health check path must target the API health endpoint."
+    condition     = output.api_service_healthcheck_path == "/api/v1/system/ready"
+    error_message = "The API ingress health check path must target the API readiness endpoint."
+  }
+
+  assert {
+    condition     = output.api_nlb_hostname == null && output.api_nlb_arn == null
+    error_message = "The root stack should no longer provision a dedicated internal NLB for the API service."
   }
 }

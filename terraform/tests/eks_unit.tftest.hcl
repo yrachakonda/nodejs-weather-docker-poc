@@ -3,13 +3,15 @@ mock_provider "aws" {
 
   mock_data "aws_caller_identity" {
     defaults = {
+      arn        = "arn:aws:iam::123456789012:role/terraform-test-role"
       account_id = "123456789012"
     }
   }
 
   mock_data "aws_region" {
     defaults = {
-      name = "us-east-1"
+      name   = "us-east-1"
+      region = "us-east-1"
     }
   }
 

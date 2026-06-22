@@ -19,9 +19,11 @@ variables:
   helmReleaseName: weather-sim
   helmValuesFile: app/deployment/weather-sim/charts/values-poc.yaml
   chartPath: app/deployment/weather-sim/charts
-  appHost: weather-poc.example.com
+  appHost: weather-poc.rheemconnect.com
+  apiHost: api.weather-poc.rheemconnect.com
+  viteApiBaseUrl: https://api.weather-poc.rheemconnect.com
   sessionSecretName: weather-sim-session-secret
-  sessionSecretKey: SESSION_SECRET
+  sessionSecretKey: "1804042234242424544434345"
 
 stages:
   - stage: BuildAndTest

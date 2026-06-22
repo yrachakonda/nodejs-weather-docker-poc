@@ -3,7 +3,7 @@ import { env } from './env';
 import { logger } from './logger';
 
 const useRedisInTests = process.env.ENABLE_REDIS_INTEGRATION_TESTS === 'true';
-const shouldUseRedis = env.NODE_ENV !== 'test' || useRedisInTests;
+const shouldUseRedis = env.SESSION_STORE === 'redis' && (env.NODE_ENV !== 'test' || useRedisInTests);
 
 export const redisClient = shouldUseRedis
   ? new Redis(env.REDIS_URL, {

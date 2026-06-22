@@ -18,7 +18,7 @@ output "vpc_flow_log_id" {
   value       = aws_flow_log.this.id
 }
 
-output "vpc_flow_log_group_name" {
-  description = "CloudWatch log group name for VPC flow logs."
-  value       = aws_cloudwatch_log_group.vpc_flow_logs.name
+output "vpc_flow_logs_bucket_name" {
+  description = "S3 bucket name used for VPC flow logs."
+  value       = local.flow_logs_bucket_name
 }

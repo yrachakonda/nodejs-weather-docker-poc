@@ -12,7 +12,7 @@ export default defineConfig({
   },
   resolve: {
     alias: {
-      'react-router-dom': path.resolve(currentDir, '../../frontend/node_modules/react-router-dom')
+      'react-router-dom': path.resolve(currentDir, '../../node_modules/react-router-dom')
     }
   },
   test: {

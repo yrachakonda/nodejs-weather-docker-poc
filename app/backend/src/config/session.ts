@@ -4,7 +4,7 @@ import { env } from './env';
 import { redisClient } from './redis';
 
 const useRedisInTests = process.env.ENABLE_REDIS_INTEGRATION_TESTS === 'true';
-const useRedisStore = env.NODE_ENV !== 'test' || useRedisInTests;
+const useRedisStore = env.SESSION_STORE === 'redis' && (env.NODE_ENV !== 'test' || useRedisInTests);
 
 const store = useRedisStore
   ? new RedisStore({ client: redisClient as any, prefix: 'sess:' })

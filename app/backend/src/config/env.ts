@@ -20,6 +20,7 @@ const envSchema = z.object({
   NODE_ENV: z.enum(['development', 'test', 'production']).default('development'),
   API_PORT: z.string().default('8080'),
   SESSION_SECRET: z.string().min(16),
+  SESSION_STORE: z.enum(['redis', 'memory']).default('redis'),
   REDIS_URL: z.string().default('redis://redis:6379'),
   CORS_ORIGIN: z.string().default('http://localhost:5173'),
   LOG_LEVEL: z.string().default('info'),

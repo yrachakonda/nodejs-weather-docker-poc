@@ -17,7 +17,17 @@ export const register = (req: Request, res: Response): void => {
       createdRole: created.role,
       ...getRequestLogContext(req)
     });
-    res.status(201).json({ user: req.session.user });
+    req.session.save((err) => {
+      if (err) {
+        logger.error('auth_register_session_save_failed', {
+          reason: err.message,
+          ...getRequestLogContext(req)
+        });
+        res.status(500).json({ error: 'Internal server error' });
+        return;
+      }
+      res.status(201).json({ user: req.session.user });
+    });
   } catch (e) {
     logger.warn('auth_register_failed', {
       attemptedUsername: payload.username,
@@ -46,7 +56,17 @@ export const login = (req: Request, res: Response): void => {
     authenticatedRole: user.role,
     ...getRequestLogContext(req)
   });
-  res.json({ user: req.session.user });
+  req.session.save((err) => {
+    if (err) {
+      logger.error('auth_login_session_save_failed', {
+        reason: err.message,
+        ...getRequestLogContext(req)
+      });
+      res.status(500).json({ error: 'Internal server error' });
+      return;
+    }
+    res.json({ user: req.session.user });
+  });
 };
 
 export const logout = (req: Request, res: Response): void => {

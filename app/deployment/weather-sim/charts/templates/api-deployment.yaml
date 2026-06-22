@@ -23,8 +23,8 @@ spec:
             - name: SESSION_SECRET
               valueFrom:
                 secretKeyRef:
-                  name: {{ .Values.secrets.sessionSecretName }}
-                  key: {{ .Values.secrets.sessionSecretKey }}
+                  name: {{ .Values.secrets.sessionSecretName | quote }}
+                  key: {{ .Values.secrets.sessionSecretKey | quote }}
           {{- if .Values.fluentBitSidecar.enabled }}
           volumeMounts:
             - name: api-logs
